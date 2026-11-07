@@ -27,12 +27,42 @@ export interface BulkUpload {
   topicId?: string;
   examIds: string[];
   tagIds?: string[];
+  promptEnhancers?: string[];
   s3Key: string;
   markdownS3Key?: string;
   errorMessage?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface PromptEnhancerCatalogItem {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export interface PromptEnhancersListResponse {
+  message: string;
+  data: PromptEnhancerCatalogItem[];
+}
+
+/** Fallback when GET /imports/prompt-enhancers is unavailable. */
+export const FALLBACK_PROMPT_ENHANCERS: PromptEnhancerCatalogItem[] = [
+  {
+    id: "shared-passage",
+    label: "Shared passage (multiple questions)",
+    description:
+      "Use when one reading passage (or similar stem) is followed by several questions that all depend on it. Each saved question gets the full passage prepended to its specific stem.",
+  },
+  {
+    id: "multi-correct-statements",
+    label: "More than one correct (statement MCQ)",
+    description:
+      "Use when some items allow more than one true option. Those questions are rewritten as I–IV statements with a single combination answer; ordinary single-correct questions are left unchanged.",
+  },
+];
+
+export const PROMPT_ENHANCER_NONE_VALUE = "none";
 
 export interface BulkUploadPagination {
   page: number;
