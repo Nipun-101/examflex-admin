@@ -109,9 +109,18 @@ describe("proxy", () => {
     );
   });
 
-  it("does not add next when redirecting from /", async () => {
+  it("lets anonymous users view the landing page", async () => {
     const response = await proxy(request("/"));
-    expect(response.headers.get("location")).toBe("http://localhost/login");
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("lets authenticated users stay on the landing page", async () => {
+    const token = await signJwt({
+      role: "admin",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    });
+    const response = await proxy(request("/", token));
+    expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
   it("treats missing JWT_SECRET, malformed tokens, bad signatures, expiry, and non-admin roles as unauthenticated", async () => {

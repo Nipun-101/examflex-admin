@@ -1,0 +1,184 @@
+.ef-shell {
+  --ef-ink: #0a1628;
+  --ef-ink-soft: #1c3148;
+  --ef-paper: #eef3f8;
+  --ef-paper-bright: #f7fafc;
+  --ef-line: #c5d2e0;
+  --ef-mark: #f0b429;
+  --ef-mark-deep: #d97706;
+  --ef-steel: #486581;
+  --ef-mist: #9fb3c8;
+  color: var(--ef-ink);
+  font-family: var(--font-ef-sans), "Outfit", sans-serif;
+  background: var(--ef-paper);
+}
+
+.ef-brand {
+  font-family: var(--font-ef-display), "Fraunces", serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+}
+
+.ef-rise {
+  animation: ef-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ef-rise-delay-1 {
+  animation-delay: 90ms;
+}
+
+.ef-rise-delay-2 {
+  animation-delay: 160ms;
+}
+
+.ef-rise-delay-3 {
+  animation-delay: 240ms;
+}
+
+.ef-drift {
+  animation: ef-drift 18s ease-in-out infinite alternate;
+}
+
+.ef-pulse-mark {
+  animation: ef-pulse-mark 3.6s ease-in-out infinite;
+}
+
+.ef-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: 0.35rem;
+  background: var(--ef-ink);
+  color: var(--ef-paper-bright);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.ef-cta:hover {
+  background: var(--ef-ink-soft);
+  transform: translateY(-2px);
+}
+
+.ef-cta:focus-visible {
+  outline: 2px solid var(--ef-mark);
+  outline-offset: 3px;
+}
+
+.ef-cta::after {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0.55rem;
+  height: 2px;
+  background: var(--ef-mark);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 220ms ease;
+}
+
+.ef-cta:hover::after {
+  transform: scaleX(1);
+}
+
+.ef-field {
+  width: 100%;
+  min-height: 3rem;
+  border-radius: 0.35rem;
+  border: 1.5px solid var(--ef-line);
+  background: var(--ef-paper-bright);
+  padding: 0.75rem 0.95rem;
+  font-size: 1rem;
+  color: var(--ef-ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ef-field::placeholder {
+  color: var(--ef-mist);
+}
+
+.ef-field:focus {
+  outline: none;
+  border-color: var(--ef-ink-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ef-mark) 45%, transparent);
+}
+
+.ef-submit {
+  width: 100%;
+  min-height: 3rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: var(--ef-ink);
+  color: var(--ef-paper-bright);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.ef-submit:hover:not(:disabled) {
+  background: var(--ef-ink-soft);
+  transform: translateY(-1px);
+}
+
+.ef-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ef-submit:focus-visible {
+  outline: 2px solid var(--ef-mark);
+  outline-offset: 3px;
+}
+
+@keyframes ef-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ef-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-1.5%, 1.2%, 0) scale(1.03);
+  }
+}
+
+@keyframes ef-pulse-mark {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ef-rise,
+  .ef-drift,
+  .ef-pulse-mark {
+    animation: none !important;
+  }
+
+  .ef-cta,
+  .ef-submit,
+  .ef-cta::after {
+    transition: none !important;
+  }
+}

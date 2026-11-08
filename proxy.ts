@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const ADMIN_SESSION_COOKIE = "ezprep_admin_session";
 
-const PUBLIC_PAGES = new Set(["/login"]);
+const PUBLIC_PAGES = new Set(["/", "/login"]);
 const PUBLIC_API_PREFIXES = ["/api/auth/login", "/api/auth/logout"];
 
 function isPublicApi(pathname: string): boolean {
@@ -111,7 +111,8 @@ export async function proxy(request: NextRequest) {
   }
 
   if (PUBLIC_PAGES.has(pathname)) {
-    if (authenticated) {
+    // Signed-in users skip the login screen; the landing page stays reachable.
+    if (authenticated && pathname === "/login") {
       const dest = request.nextUrl.clone();
       dest.pathname = safeReturnPath(request.nextUrl.searchParams.get("next"));
       dest.search = "";

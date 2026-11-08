@@ -3,23 +3,20 @@ import { describe, expect, it } from "vitest";
 import Home from "./page";
 
 describe("Home", () => {
-  it("renders the admin landing title, feature cards, and sign-in link", () => {
+  it("renders the ExamFlex landing brand, headline, and sign-in link", () => {
     render(<Home />);
 
+    expect(screen.getByText("ExamFlex")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Mock Test Admin" })
+      screen.getByRole("heading", {
+        name: "Staff console for the question bank and papers.",
+      })
     ).toBeInTheDocument();
-    expect(screen.getByText("Staff only")).toBeInTheDocument();
-
-    expect(screen.getByText("Question bank")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Create, edit, and bulk-import questions, then fix failed imports."
+        /Manage catalog, uploads, and mock tests from one place/
       )
     ).toBeInTheDocument();
-    expect(screen.getByText("Mock papers")).toBeInTheDocument();
-    expect(screen.getByText("Live snapshot")).toBeInTheDocument();
-    expect(screen.getByText("Catalog & uploads")).toBeInTheDocument();
 
     const signIn = screen.getByRole("link", { name: /sign in to admin/i });
     expect(signIn).toHaveAttribute("href", "/login");
