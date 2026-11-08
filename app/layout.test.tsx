@@ -12,8 +12,9 @@ import RootLayout, { metadata } from "./layout";
 describe("RootLayout", () => {
   it("exports admin metadata", () => {
     expect(metadata).toEqual({
-      title: "Mock Test Admin",
-      description: "Admin console for questions, papers, catalog, and uploads",
+      title: "ExamFlex Admin",
+      description:
+        "ExamFlex staff console for questions, papers, catalog, and uploads",
     });
   });
 
