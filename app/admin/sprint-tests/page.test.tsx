@@ -30,7 +30,6 @@ vi.mock("./api", () => ({
     listDrafts: vi.fn(),
     listPublished: vi.fn(),
     discardDraft: vi.fn(),
-    deletePublished: vi.fn(),
   },
 }));
 

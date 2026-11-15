@@ -145,23 +145,13 @@ export default function MockTestsPage() {
       title: "Actions",
       key: "actions",
       render: (record: any) => (
-        <Space>
-          <Button 
-            type="link" 
-            size="small"
-            onClick={() => router.push(`/admin/mock-tests/${record.id}`)}
-          >
-            View
-          </Button>
-          <Button 
-            type="link" 
-            size="small" 
-            danger 
-            onClick={() => handleDelete(record.id)}
-          >
-            Delete
-          </Button>
-        </Space>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => router.push(`/admin/mock-tests/${record.id}`)}
+        >
+          View
+        </Button>
       ),
     },
   ];
@@ -389,25 +379,6 @@ export default function MockTestsPage() {
           setDiscardingId(null);
         }
       },
-    });
-  };
-
-  const handleDelete = async (id: string) => {
-    showConfirmModal({
-      title: 'Delete Mock Test',
-      content: 'Are you sure you want to delete this mock test? This action cannot be undone.',
-      onConfirm: async () => {
-        setTableLoading(true);
-        try {
-          await mockTestsApi.delete(id);
-          message.success('Mock test deleted successfully');
-          fetchMockTests();
-        } catch (error) {
-          message.error(formatEzPrepError(error, 'Failed to delete mock test'));
-        } finally {
-          setTableLoading(false);
-        }
-      }
     });
   };
 
