@@ -507,6 +507,12 @@ export default function MockTestsPage() {
               <Form.Item
                 label="Topic"
                 name="topic"
+                rules={[{ required: true, message: "Please select a topic" }]}
+                extra={
+                  selectedSubject && !topicsLoading && topics.length === 0
+                    ? "This subject has no topics. Add a topic first, or use a sprint test for multi-topic practice."
+                    : undefined
+                }
               >
                 <Select
                   placeholder={
@@ -521,7 +527,6 @@ export default function MockTestsPage() {
                   options={topics}
                   disabled={!selectedSubject || topicsLoading || topics.length === 0}
                   loading={topicsLoading}
-                  allowClear
                 />
               </Form.Item>
             </div>

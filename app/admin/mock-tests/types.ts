@@ -98,7 +98,9 @@ export interface CreateTopicWiseDraftPayload {
   exam: string;
   totalQuestions: number;
   durationInMinutes: number;
+  /** Required on the sampled path; inferred from questionIds on the hand-picked path. */
   subject?: string;
+  /** Required on the sampled path; inferred from questionIds on the hand-picked path. */
   topic?: string;
   difficultyDistribution?: TopicWiseDifficultyDistribution;
   questionIds?: string[];
