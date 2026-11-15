@@ -111,7 +111,7 @@ describe("MockTestDetailPage", () => {
     expect(screen.getByText("UPSC")).toBeInTheDocument();
     expect(screen.getByText("Easy: 3")).toBeInTheDocument();
     expect(screen.getByText("Questions (1)")).toBeInTheDocument();
-    expect(screen.getAllByRole("columnheader", { name: "Topic" }).length).toBeGreaterThan(1);
+    expect(screen.getAllByRole("columnheader", { name: "Chapter" }).length).toBeGreaterThan(1);
     expect(screen.getAllByText("Parliament").length).toBeGreaterThan(1);
     expect(screen.getByText(/Who is the speaker/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /expand row/i }));

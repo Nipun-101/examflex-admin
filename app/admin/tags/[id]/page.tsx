@@ -13,6 +13,7 @@ import {
 } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
 import { setFormValue } from "@/app/lib/form-store";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 const { Title } = Typography;
 
@@ -156,14 +157,15 @@ export default function EditTagPage(props: { params: Promise<{ id: string }> }) 
             </Form.Item>
 
             <Form.Item
-              label="Topic"
+              // UI: Chapter — backend field: topic
+              label={ChapterUi.singular}
               name="topic"
-              rules={[{ required: true, message: "Please select a topic" }]}
+              rules={[{ required: true, message: ChapterUi.selectRequired }]}
             >
               <Select
                 placeholder={
                   selectedSubject
-                    ? "Select topic"
+                    ? ChapterUi.selectPlaceholder
                     : "Please select a subject first"
                 }
                 size="large"

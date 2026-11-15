@@ -6,6 +6,7 @@ import { Select } from "@/app/components/SearchableSelect";
 import { ImportOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { catalogApi, ezPrepApiClient } from "@/app/services/ezprep-api";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { EzPrepApiError } from "@/app/services/ezprep-api/types";
 import {
   BulkUpload,
@@ -227,7 +228,7 @@ export default function BulkUploadPage() {
           }))
         );
       } catch {
-        message.error("Failed to fetch topics");
+        message.error(ChapterUi.failedFetch);
         setFilteredTopics([]);
       }
     };
@@ -447,7 +448,7 @@ export default function BulkUploadPage() {
         subjectMap.get(record.subjectId) ?? record.subjectId ?? "-",
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       key: "topic",
       width: "13%",
       ellipsis: true,
@@ -539,7 +540,7 @@ export default function BulkUploadPage() {
             }))}
           />
           <Select
-            placeholder="Filter by topic"
+            placeholder={ChapterUi.filterPlaceholder}
             allowClear
             disabled={!selectedSubject}
             style={{ width: 200 }}

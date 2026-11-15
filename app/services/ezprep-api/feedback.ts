@@ -5,7 +5,7 @@ export const FEEDBACK_RATING_FIELDS = [
   { key: "userInterface", label: "User interface" },
   { key: "questions", label: "Questions" },
   { key: "fullMockTests", label: "Full mock tests" },
-  { key: "topicWisePractice", label: "Topic-wise practice" },
+  { key: "topicWisePractice", label: "Chapter-wise practice" },
   { key: "easeOfUse", label: "Ease of use" },
 ] as const;
 

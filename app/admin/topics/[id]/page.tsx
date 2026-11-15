@@ -5,6 +5,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { catalogApi, formatEzPrepError } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 const { Title } = Typography;
 
@@ -24,7 +25,7 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
           description: data.description,
         });
       } catch (error) {
-        message.error(formatEzPrepError(error, "Failed to fetch topic"));
+        message.error(formatEzPrepError(error, ChapterUi.failedFetchOne));
       } finally {
         setInitialLoading(false);
       }
@@ -40,10 +41,10 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
     setLoading(true);
     try {
       await catalogApi.updateTopic(params.id, values);
-      message.success("Topic updated successfully");
+      message.success(ChapterUi.updatedSuccess);
       router.push("/admin/topics");
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to update topic"));
+      message.error(formatEzPrepError(error, ChapterUi.failedUpdate));
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
     <EditPageShell loading={initialLoading}>
     <div className="space-y-6">
       <Card
-        title={<Title level={4} className="mb-0">Edit Topic</Title>}
+        title={<Title level={4} className="mb-0">{ChapterUi.editTitle}</Title>}
         className="w-full shadow-sm"
       >
         <Form
@@ -64,16 +65,16 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Form.Item
-              label="Topic Name"
+              label={ChapterUi.nameLabel}
               name="name"
-              rules={[{ required: true, message: "Please enter topic name" }]}
+              rules={[{ required: true, message: ChapterUi.enterNameRequired }]}
             >
-              <Input placeholder="Enter topic name" size="large" />
+              <Input placeholder={ChapterUi.enterName} size="large" />
             </Form.Item>
 
             <Form.Item label="Description" name="description">
               <Input.TextArea
-                placeholder="Enter topic description"
+                placeholder={ChapterUi.enterDescription}
                 size="large"
                 autoSize={{ minRows: 2, maxRows: 6 }}
               />
@@ -88,7 +89,7 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
               className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
-              Update Topic
+              {ChapterUi.updateButton}
             </Button>
             <Button
               className="ml-2"

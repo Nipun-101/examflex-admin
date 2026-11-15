@@ -251,7 +251,7 @@ describe("TagsPage", { timeout: 15000 }, () => {
       target: { value: "Mid" },
     });
     await chooseSelectOption("Select subject", "Mathematics");
-    await chooseSelectOption("Select topic", "Algebra");
+    await chooseSelectOption("Select chapter", "Algebra");
     fireEvent.click(screen.getByRole("button", { name: /create tag/i }));
 
     await waitFor(() =>
@@ -295,7 +295,7 @@ describe("TagsPage", { timeout: 15000 }, () => {
 
     expect(await screen.findByText("Please enter tag name")).toBeInTheDocument();
     expect(screen.getByText("Please select a subject")).toBeInTheDocument();
-    expect(screen.getByText("Please select a topic")).toBeInTheDocument();
+    expect(screen.getByText("Please select a chapter")).toBeInTheDocument();
     expect(createTag).not.toHaveBeenCalled();
   });
 
@@ -313,7 +313,7 @@ describe("TagsPage", { timeout: 15000 }, () => {
       target: { value: "Medium" },
     });
     await chooseSelectOption("Select subject", "Mathematics");
-    await chooseSelectOption("Select topic", "Algebra");
+    await chooseSelectOption("Select chapter", "Algebra");
     fireEvent.click(screen.getByRole("button", { name: /create tag/i }));
 
     await waitFor(() => expect(message.error).toHaveBeenCalled());
@@ -409,6 +409,6 @@ describe("TagsPage", { timeout: 15000 }, () => {
     await findEmpty();
     await chooseSelectOption("Select subject", "English");
 
-    expect(await screen.findByText("Select topic")).toBeInTheDocument();
+    expect(await screen.findByText("Select chapter")).toBeInTheDocument();
   });
 });

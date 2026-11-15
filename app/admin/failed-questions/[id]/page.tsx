@@ -39,6 +39,7 @@ import {
   toImageMetadata,
 } from "../form";
 import { EditPageShell } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 export default function FixFailedQuestionPage(props: {
   params: Promise<{ id: string }>;
@@ -86,7 +87,7 @@ export default function FixFailedQuestionPage(props: {
           .filter((topic) => topic.value)
       );
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to fetch topics"));
+      message.error(formatEzPrepError(error, ChapterUi.failedFetch));
       setTopics([]);
     } finally {
       setTopicsLoading(false);
@@ -538,15 +539,16 @@ export default function FixFailedQuestionPage(props: {
             </Form.Item>
 
             <Form.Item
-              label="Topic"
+              // UI: Chapter — backend field: topic
+              label={ChapterUi.singular}
               name="topic"
               dependencies={["subject"]}
-              rules={[{ required: true, message: "Please select a topic" }]}
+              rules={[{ required: true, message: ChapterUi.selectRequired }]}
             >
               <Select
                 placeholder={
                   selectedSubject
-                    ? "Select topic"
+                    ? ChapterUi.selectPlaceholder
                     : "Please select a subject first"
                 }
                 options={topics}
@@ -563,7 +565,7 @@ export default function FixFailedQuestionPage(props: {
                 placeholder={
                   selectedSubject && selectedTopic
                     ? "Select tags"
-                    : "Please select subject and topic first"
+                    : ChapterUi.selectSubjectAndTopicFirst
                 }
                 options={tags}
                 disabled={!selectedSubject || !selectedTopic}

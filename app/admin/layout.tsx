@@ -26,6 +26,7 @@ import {
   MessageOutlined,
 } from "@ant-design/icons";
 import Link from "next/link";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { fetchAdminSession } from "@/lib/fetch-admin-session";
@@ -253,9 +254,10 @@ export default function AdminLayout({
       label: <Link href="/admin/failed-questions">Failed Questions</Link>,
     },
     {
+      // UI: Chapter Wise Tests — backend: TOPIC_WISE / /admin/mock-tests drafts
       key: "/admin/mock-tests",
       icon: <ExperimentOutlined />,
-      label: <Link href="/admin/mock-tests">Topic Wise Tests</Link>,
+      label: <Link href="/admin/mock-tests">{ChapterUi.navPapers}</Link>,
     },
     {
       key: "/admin/full-mock-tests",
@@ -293,9 +295,10 @@ export default function AdminLayout({
       label: <Link href="/admin/subjects">Subjects</Link>,
     },
     {
+      // UI: Chapters — backend Topic catalog `/v1/topics` (route still /admin/topics)
       key: "/admin/topics",
       icon: <TagOutlined />,
-      label: <Link href="/admin/topics">Topics</Link>,
+      label: <Link href="/admin/topics">{ChapterUi.navCatalog}</Link>,
     },
     {
       key: "/admin/tags",

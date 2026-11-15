@@ -38,6 +38,7 @@ import {
   sprintSelectionHint,
   type SelectedSprintQuestion,
 } from "./sprint-selection";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { topicWiseSelectionIssue } from "./topic-wise-selection";
 
 function parsePositiveInt(value: string | null, fallback: number) {
@@ -129,7 +130,7 @@ function QuestionsPageContent() {
         }))
       );
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to fetch topics"));
+      message.error(formatEzPrepError(error, ChapterUi.failedFetch));
       setTopics([]);
     }
   };
@@ -271,7 +272,7 @@ function QuestionsPageContent() {
     },
     questionTagsColumn(),
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       key: "topic",
       render: (record: Question) => (
         <>
@@ -372,7 +373,7 @@ function QuestionsPageContent() {
             }))}
           />
           <Select
-            placeholder="Filter by topic"
+            placeholder={ChapterUi.filterPlaceholder}
             allowClear
             disabled={!selectedSubject}
             className="questions-list-filter shrink-0"
@@ -406,7 +407,7 @@ function QuestionsPageContent() {
               <Tooltip
                 title={
                   topicIssue ||
-                  `${selectedCount} questions selected. You can create a topic-wise test.`
+                  ChapterUi.canCreateFromSelection(selectedCount)
                 }
               >
                 <span className="inline-block">
@@ -419,7 +420,7 @@ function QuestionsPageContent() {
                     }
                     onClick={() => setTopicModalOpen(true)}
                   >
-                    + Topic Test
+                    {ChapterUi.topicTestButton}
                   </Button>
                 </span>
               </Tooltip>

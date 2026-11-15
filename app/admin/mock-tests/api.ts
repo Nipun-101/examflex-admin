@@ -15,6 +15,7 @@ import type {
 
 export { formatEzPrepError } from "@/app/services/ezprep-api";
 
+/** Backend: topic-wise drafts (`/v1/mock-tests/drafts` → `paperType: TOPIC_WISE`). UI: Chapter-wise — `@/app/lib/chapter-ui`. */
 const BASE = "/v1/mock-tests/drafts";
 
 export const topicWiseDraftsApi = {

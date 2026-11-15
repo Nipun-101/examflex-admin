@@ -30,6 +30,7 @@ import {
 } from "@/app/admin/full-mock-tests/questionTableExpand";
 import { loadTopicNamesForQuestions } from "@/app/admin/full-mock-tests/topic-names";
 import type { SafeQuestion } from "@/app/admin/full-mock-tests/types";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { formatEzPrepError, topicWiseDraftsApi } from "../../api";
 import type {
   PublishTopicWiseDraftPayload,
@@ -332,7 +333,7 @@ export default function TopicWiseDraftPage(props: {
         record.questionText?.en?.text?.slice(0, 100) || "Question",
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topicId?: string) =>
@@ -392,7 +393,7 @@ export default function TopicWiseDraftPage(props: {
             Back to Mock Tests
           </Button>
           <h1 className="text-2xl font-bold">
-            {settings.title || "Topic-wise draft"}
+            {settings.title || ChapterUi.draftFallbackTitle}
           </h1>
           <Tag color="blue">{draft.status}</Tag>
         </div>
@@ -401,8 +402,8 @@ export default function TopicWiseDraftPage(props: {
           <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
             <Descriptions.Item label="Exam">{draft.examName}</Descriptions.Item>
             <Descriptions.Item label="Subject">{draft.subjectName}</Descriptions.Item>
-            <Descriptions.Item label="Topic">
-              {draft.topicName || draft.topicId || "Missing topic"}
+            <Descriptions.Item label={ChapterUi.singular}>
+              {draft.topicName || draft.topicId || ChapterUi.missingOnDraft}
             </Descriptions.Item>
             <Descriptions.Item label="Duration">
               {settings.durationInMinutes} mins
@@ -436,8 +437,8 @@ export default function TopicWiseDraftPage(props: {
           <Alert
             type="error"
             showIcon
-            message="This draft has no topic"
-            description="Topic-wise tests require a topic. Discard this draft and create a new one with a topic selected. Use a sprint test for questions from multiple topics."
+            message={ChapterUi.noTopicOnDraft}
+            description={ChapterUi.noTopicOnDraftHint}
             action={
               <Button danger onClick={handleDiscard}>
                 Discard draft
@@ -467,7 +468,7 @@ export default function TopicWiseDraftPage(props: {
         destroyOnHidden
       >
         <p className="text-gray-500 mb-4">
-          Replacement must stay on this topic and subject.
+          {ChapterUi.replacementMustMatch}
         </p>
         <Space wrap className="mb-4">
           <Input.Search
@@ -479,7 +480,7 @@ export default function TopicWiseDraftPage(props: {
               setReplacePagination((prev) => ({ ...prev, current: 1 }));
             }}
           />
-          <Tag color="purple">{draft.topicName || "Topic locked"}</Tag>
+          <Tag color="purple">{draft.topicName || ChapterUi.locked}</Tag>
         </Space>
         <Table
           size="small"
@@ -510,7 +511,7 @@ export default function TopicWiseDraftPage(props: {
                 record.snippet || record.questionText?.en?.text || record._id,
             },
             {
-              title: "Topic",
+              title: ChapterUi.singular,
               dataIndex: "topic",
               key: "topic",
               render: (topicId?: string) =>

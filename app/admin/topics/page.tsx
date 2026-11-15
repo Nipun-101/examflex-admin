@@ -11,6 +11,7 @@ import {
   formatEzPrepError,
   type Topic,
 } from "@/app/services/ezprep-api";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 const { Title } = Typography;
 
@@ -32,7 +33,7 @@ export default function TopicsPage() {
 
   const columns = [
     {
-      title: "Topic Name",
+      title: ChapterUi.nameLabel,
       dataIndex: "name",
       key: "name",
     },
@@ -73,7 +74,7 @@ export default function TopicsPage() {
       const data = await catalogApi.listTopics();
       setTopics(data.data || []);
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to fetch topics"));
+      message.error(formatEzPrepError(error, ChapterUi.failedFetch));
     } finally {
       setTableLoading(false);
     }
@@ -90,11 +91,11 @@ export default function TopicsPage() {
     setLoading(true);
     try {
       await catalogApi.createTopic(values);
-      message.success("Topic created successfully");
+      message.success(ChapterUi.createdSuccess);
       form.resetFields();
       fetchTopics();
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to create topic"));
+      message.error(formatEzPrepError(error, ChapterUi.failedCreate));
     } finally {
       setLoading(false);
     }
@@ -102,17 +103,16 @@ export default function TopicsPage() {
 
   const handleDelete = async (id: string) => {
     showConfirmModal({
-      title: "Delete Topic",
-      content:
-        "Are you sure you want to delete this topic? This action cannot be undone.",
+      title: ChapterUi.deleteTitle,
+      content: ChapterUi.deleteConfirm,
       onConfirm: async () => {
         setTableLoading(true);
         try {
           await catalogApi.deleteTopic(id);
-          message.success("Topic deleted successfully");
+          message.success(ChapterUi.deletedSuccess);
           fetchTopics();
         } catch (error) {
-          message.error(formatEzPrepError(error, "Failed to delete topic"));
+          message.error(formatEzPrepError(error, ChapterUi.failedDelete));
         } finally {
           setTableLoading(false);
         }
@@ -123,7 +123,7 @@ export default function TopicsPage() {
   return (
     <div className="space-y-6">
       <Card
-        title={<Title level={4} className="mb-0">Add New Topic</Title>}
+        title={<Title level={4} className="mb-0">{ChapterUi.addNewTitle}</Title>}
         className="w-full shadow-sm"
       >
         <Form
@@ -134,16 +134,16 @@ export default function TopicsPage() {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Form.Item
-              label="Topic Name"
+              label={ChapterUi.nameLabel}
               name="name"
-              rules={[{ required: true, message: "Please enter topic name" }]}
+              rules={[{ required: true, message: ChapterUi.enterNameRequired }]}
             >
-              <Input placeholder="Enter topic name" size="large" />
+              <Input placeholder={ChapterUi.enterName} size="large" />
             </Form.Item>
 
             <Form.Item label="Description" name="description">
               <Input.TextArea
-                placeholder="Enter topic description"
+                placeholder={ChapterUi.enterDescription}
                 size="large"
                 autoSize={{ minRows: 2, maxRows: 6 }}
               />
@@ -159,14 +159,14 @@ export default function TopicsPage() {
               className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
-              Create Topic
+              {ChapterUi.createButton}
             </Button>
           </Form.Item>
         </Form>
       </Card>
 
       <Card
-        title={<Title level={4} className="mb-0">Topics List</Title>}
+        title={<Title level={4} className="mb-0">{ChapterUi.listTitle}</Title>}
         className="shadow-sm"
       >
         <Table
@@ -181,7 +181,7 @@ export default function TopicsPage() {
             total: topics.length,
             position: ["bottomCenter"],
             showSizeChanger: true,
-            showTotal: (total) => `Total ${total} topics`,
+            showTotal: ChapterUi.paginationTotal,
             onChange: (page, pageSize) => {
               setPagination({
                 current: page,

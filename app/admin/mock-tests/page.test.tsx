@@ -201,7 +201,7 @@ describe("MockTestsPage", () => {
     await waitUntilEnabled("Subject");
     await chooseOption("Subject", "Polity");
     await waitFor(() => expect(getSubject).toHaveBeenCalledWith("sub-1"));
-    await chooseOption("Topic", "Parliament");
+    await chooseOption("Chapter", "Parliament");
 
     expect(screen.getByText(/Total: 10 \/ 10/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /create draft/i }));
@@ -252,25 +252,25 @@ describe("MockTestsPage", () => {
     }));
 
     render(<MockTestsPage />);
-    expect(await screen.findByText("Create New Topic Wise Test")).toBeInTheDocument();
+    expect(await screen.findByText("Create New Chapter Wise Test")).toBeInTheDocument();
     expect(selectIn("Subject").className).toContain("ant-select-disabled");
-    expect(selectIn("Topic").className).toContain("ant-select-disabled");
+    expect(selectIn("Chapter").className).toContain("ant-select-disabled");
 
     await chooseOption("Exam", "UPSC");
     await waitUntilEnabled("Subject");
     await chooseOption("Subject", "Polity");
     expect(screen.queryByText("History")).not.toBeInTheDocument();
-    await waitUntilEnabled("Topic");
-    await chooseOption("Topic", "Parliament");
+    await waitUntilEnabled("Chapter");
+    await chooseOption("Chapter", "Parliament");
     expect(getSubject).toHaveBeenCalledWith("sub-1");
 
     await chooseOption("Exam", "SSC");
     await waitUntilEnabled("Subject");
-    expect(selectIn("Topic").className).toContain("ant-select-disabled");
+    expect(selectIn("Chapter").className).toContain("ant-select-disabled");
     await chooseOption("Subject", "History");
     expect(screen.queryByText("Polity")).not.toBeInTheDocument();
-    await waitUntilEnabled("Topic");
-    await chooseOption("Topic", "Ancient");
+    await waitUntilEnabled("Chapter");
+    await chooseOption("Chapter", "Ancient");
     expect(getSubject).toHaveBeenCalledWith("sub-2");
   });
 
@@ -287,7 +287,7 @@ describe("MockTestsPage", () => {
     await waitUntilEnabled("Subject");
     await chooseOption("Subject", "Polity");
     await waitFor(() => expect(getSubject).toHaveBeenCalledWith("sub-1"));
-    await chooseOption("Topic", "Parliament");
+    await chooseOption("Chapter", "Parliament");
     fireEvent.click(screen.getByRole("switch", { name: "Requires entitlement" }));
     fireEvent.click(screen.getByRole("button", { name: /create draft/i }));
 
@@ -318,8 +318,8 @@ describe("MockTestsPage", () => {
     await chooseOption("Exam", "UPSC");
     await waitUntilEnabled("Subject");
     await chooseOption("Subject", "Polity");
-    await waitUntilEnabled("Topic");
-    await chooseOption("Topic", "Parliament");
+    await waitUntilEnabled("Chapter");
+    await chooseOption("Chapter", "Parliament");
     fireEvent.click(screen.getByRole("button", { name: /create draft/i }));
     await waitFor(() => expect(message.error).toHaveBeenCalled());
   });
@@ -332,14 +332,14 @@ describe("MockTestsPage", () => {
     await waitUntilEnabled("Subject");
     await chooseOption("Subject", "Polity");
     fireEvent.click(screen.getByRole("button", { name: /create draft/i }));
-    expect(await screen.findByText("Please select a topic")).toBeInTheDocument();
+    expect(await screen.findByText("Please select a chapter")).toBeInTheDocument();
     expect(createDraft).not.toHaveBeenCalled();
   });
 
   it("filters published tests by exam, then that exam's subjects and topics", async () => {
     await renderReady();
     const subjectFilter = screen.getByRole("combobox", { name: "Filter by subject" });
-    const topicFilter = screen.getByRole("combobox", { name: "Filter by topic" });
+    const topicFilter = screen.getByRole("combobox", { name: "Filter by chapter" });
     expect(subjectFilter).toBeDisabled();
     expect(topicFilter).toBeDisabled();
 
@@ -361,15 +361,15 @@ describe("MockTestsPage", () => {
     await waitFor(() =>
       expect(screen.getByRole("combobox", { name: "Filter by subject" })).toBeEnabled()
     );
-    expect(screen.getByRole("combobox", { name: "Filter by topic" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Filter by chapter" })).toBeDisabled();
 
     await chooseDropdownOption("Filter by subject", "Polity");
     await waitFor(() => expect(getSubject).toHaveBeenCalledWith("sub-1"));
     await waitFor(() =>
-      expect(screen.getByRole("combobox", { name: "Filter by topic" })).toBeEnabled()
+      expect(screen.getByRole("combobox", { name: "Filter by chapter" })).toBeEnabled()
     );
 
-    await chooseDropdownOption("Filter by topic", "Parliament");
+    await chooseDropdownOption("Filter by chapter", "Parliament");
 
     await waitFor(() => {
       expect(list).toHaveBeenLastCalledWith(

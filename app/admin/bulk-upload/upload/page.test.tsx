@@ -143,7 +143,7 @@ describe("BulkUploadFormPage", () => {
     // until the collapse motion finishes. textContent still includes it.
     await waitFor(() => {
       expect(document.body).toHaveTextContent("Please select a subject");
-      expect(document.body).toHaveTextContent("Please select a topic");
+      expect(document.body).toHaveTextContent("Please select a chapter");
       expect(document.body).toHaveTextContent("Please select at least one exam");
       expect(document.body).toHaveTextContent("Please upload a PDF file");
     });
@@ -168,7 +168,7 @@ describe("BulkUploadFormPage", () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     await chooseOption("Subject", "Polity");
-    await chooseOption("Topic", "Parliament");
+    await chooseOption("Chapter", "Parliament");
     await waitFor(() => expect(listAllTags).toHaveBeenCalled());
     await chooseOption("Associated Exams", "UPSC");
 
@@ -193,7 +193,7 @@ describe("BulkUploadFormPage", () => {
       target: { files: [file] },
     });
     await chooseOption("Subject", "Polity");
-    await chooseOption("Topic", "Parliament");
+    await chooseOption("Chapter", "Parliament");
     await waitFor(() => expect(listAllTags).toHaveBeenCalled());
     await chooseOption("Associated Exams", "UPSC");
     await chooseOption("Prompt Enhancers", "Shared passage (multiple questions)");
@@ -213,7 +213,7 @@ describe("BulkUploadFormPage", () => {
       target: { files: [file] },
     });
     await chooseOption("Subject", "Polity");
-    await chooseOption("Topic", "Parliament");
+    await chooseOption("Chapter", "Parliament");
     await waitFor(() => expect(listAllTags).toHaveBeenCalled());
     await chooseOption("Tags (optional)", "GK");
     await chooseOption("Associated Exams", "UPSC");
@@ -243,7 +243,7 @@ describe("BulkUploadFormPage", () => {
       target: { files: [file] },
     });
     await chooseOption("Subject", "Polity");
-    await chooseOption("Topic", "Parliament");
+    await chooseOption("Chapter", "Parliament");
     await chooseOption("Associated Exams", "UPSC");
     fireEvent.click(uploadSubmitButton());
 

@@ -216,7 +216,7 @@ describe("SubjectsPage", { timeout: 15000 }, () => {
     fireEvent.change(screen.getByPlaceholderText("Enter subject description"), {
       target: { value: "Language" },
     });
-    await chooseSelectOption("Select topics", "Algebra");
+    await chooseSelectOption("Select chapters", "Algebra");
     fireEvent.click(screen.getByRole("button", { name: /create subject/i }));
 
     await waitFor(() =>

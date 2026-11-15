@@ -23,6 +23,7 @@ import { showConfirmModal } from "@/components/ConfirmModal";
 import { catalogApi } from "@/app/services/ezprep-api";
 import { formatEzPrepError, sprintTestsApi } from "../../api";
 import { PageLoader } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
@@ -336,7 +337,7 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
         record.questionText?.en?.text?.slice(0, 100) || "Question",
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topicId?: string) =>
@@ -493,7 +494,7 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
         <p className="text-gray-500 mb-4">
           {replaceAllowCrossSubject
             ? "Choose another subject below. This slot still belongs to the current section."
-            : "Replacement must be the same subject. Topic may differ. Marks and position stay with this slot."}
+            : ChapterUi.sprintReplaceTopicMayDiffer}
         </p>
         <Form layout="vertical" className="mb-0">
           <Form.Item
@@ -552,7 +553,7 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
           ) : null}
           <Select
             allowClear
-            placeholder="Topic"
+            placeholder={ChapterUi.singular}
             className="min-w-[180px]"
             options={replaceTopics}
             value={replaceTopicId}
@@ -603,7 +604,7 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
                 record.snippet || record.questionText?.en?.text || record._id,
             },
             {
-              title: "Topic",
+              title: ChapterUi.singular,
               dataIndex: "topic",
               key: "topic",
               render: (topicId?: string) =>

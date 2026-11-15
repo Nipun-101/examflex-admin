@@ -150,7 +150,7 @@ describe("TopicWiseDraftPage", () => {
       "position"
     );
     expect(
-      within(dialog).getByText("Replacement must stay on this topic and subject.")
+      within(dialog).getByText("Replacement must stay on this chapter and subject.")
     ).toBeInTheDocument();
     expect(within(dialog).queryByText("easy")).not.toBeInTheDocument();
     expect(

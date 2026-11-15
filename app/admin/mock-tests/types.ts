@@ -1,3 +1,8 @@
+/**
+ * Topic-wise (TOPIC_WISE) draft shapes from ez-prep-api.
+ * UI product language: "Chapter" / "Chapter-wise" — see `@/app/lib/chapter-ui`.
+ * Wire fields stay `topic` / `topicId` (backend Topic entity).
+ */
 export interface TopicWiseDifficultyDistribution {
   easy: number;
   medium: number;
