@@ -4,6 +4,14 @@ Staff-only admin console for ExamFlex. Manage the question bank, catalog, mock p
 
 The UI talks to the **examflex-api** NestJS backend through a same-origin proxy (`/api/ezprep`). Admin sessions are JWT cookies verified with a shared `JWT_SECRET`.
 
+## Origin & naming
+
+ExamFlex Admin is a **standalone fork** of the EzPrep admin stack, built on top of that codebase for the ExamFlex deployment. EzPrep remains a separate product; this repo is not shared with it at runtime.
+
+**New code, docs, and identifiers should use ExamFlex / `examflex` naming.** Do not introduce new `EzPrep` / `ezprep` / `EZPREP` names.
+
+Legacy `ezprep` strings (for example `app/services/ezprep-api`, `/api/ezprep`, `EZPREP_API_*`, `ezprep_admin_session`) are intentional historical leftovers. Prefer matching nearby legacy names only when extending an existing contract; otherwise use ExamFlex. A wholesale rename is out of scope unless explicitly planned.
+
 ## Stack
 
 - **Next.js** 16 (App Router) + **React** 19 + **TypeScript**

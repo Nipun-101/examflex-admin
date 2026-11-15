@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { catalogApi, ezPrepApiClient } from "@/app/services/ezprep-api";
 import { setFormValue, setFormValues } from "@/app/lib/form-store";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { EditPageShell } from "@/app/components/PageLoader";
 import { EzPrepApiError } from "@/app/services/ezprep-api/types";
 import {
@@ -248,11 +249,12 @@ export default function BulkUploadFormPage() {
 
           <Form.Item
             name="topicId"
-            label="Topic"
-            rules={[{ required: true, message: "Please select a topic" }]}
+            // UI: Chapter — backend field: topicId
+            label={ChapterUi.singular}
+            rules={[{ required: true, message: ChapterUi.selectRequired }]}
           >
             <Select
-              placeholder="Select topic"
+              placeholder={ChapterUi.selectPlaceholder}
               disabled={!selectedSubject}
               options={topics.map((t) => ({ value: t._id, label: t.name }))}
             />

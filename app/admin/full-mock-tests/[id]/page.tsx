@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { formatEzPrepError, fullMockApi } from "../api";
 import { loadTopicNamesForQuestions } from "../topic-names";
 import { PageLoader } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { QuestionPreview } from "../QuestionPreview";
 import {
@@ -125,7 +126,7 @@ export default function PublishedFullMockPage(props: {
       ),
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topicId?: string) =>

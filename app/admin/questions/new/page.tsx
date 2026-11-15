@@ -9,6 +9,7 @@ import { ImageUpload } from '@/app/components/ImageUpload';
 import { PasteHint, PasteToImage } from '@/app/components/PasteToImage';
 import { EditPageShell } from "@/app/components/PageLoader";
 import { setFormValue, setFormValues } from "@/app/lib/form-store";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { catalogApi, formatEzPrepError, questionsApi, refId, type QuestionPayload } from "@/app/services/ezprep-api";
 
 export default function CreateQuestionPage() {
@@ -45,7 +46,7 @@ export default function CreateQuestionPage() {
           .filter((topic) => topic.value)
       );
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to fetch topics"));
+      message.error(formatEzPrepError(error, ChapterUi.failedFetch));
       setTopics([]);
     } finally {
       setTopicsLoading(false);
@@ -383,15 +384,15 @@ export default function CreateQuestionPage() {
               />
             </Form.Item>
 
-            {/* Topic */}
+            {/* UI: Chapter — backend field: topic */}
             <Form.Item
-              label="Topic"
+              label={ChapterUi.singular}
               name="topic"
               dependencies={['subject']}
-              rules={[{ required: true, message: "Please select a topic" }]}
+              rules={[{ required: true, message: ChapterUi.selectRequired }]}
             >
               <Select
-                placeholder={selectedSubject ? "Select topic" : "Please select a subject first"}
+                placeholder={selectedSubject ? ChapterUi.selectPlaceholder : "Please select a subject first"}
                 options={topics}
                 disabled={!selectedSubject}
                 loading={topicsLoading}
@@ -404,7 +405,7 @@ export default function CreateQuestionPage() {
             <Form.Item label="Tags (optional)" name="tagIds">
               <Select
                 mode="multiple"
-                placeholder={selectedSubject && selectedTopic ? "Select tags" : "Please select subject and topic first"}
+                placeholder={selectedSubject && selectedTopic ? "Select tags" : ChapterUi.selectSubjectAndTopicFirst}
                 options={tags}
                 disabled={!selectedSubject || !selectedTopic}
                 loading={tagsLoading}

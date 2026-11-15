@@ -129,8 +129,8 @@ describe("quantityLabel", () => {
     expect(quantityLabel(1, "full mock attended", "full mocks attended")).toBe(
       "1 full mock attended"
     );
-    expect(quantityLabel(4, "topic test attempted", "topic tests attempted")).toBe(
-      "4 topic tests attempted"
+    expect(quantityLabel(4, "chapter test attempted", "chapter tests attempted")).toBe(
+      "4 chapter tests attempted"
     );
     expect(quantityLabel(-3, "finished", "finished")).toBe("0 finished");
     expect(quantityLabel(Number.NaN, "in progress", "in progress")).toBe(

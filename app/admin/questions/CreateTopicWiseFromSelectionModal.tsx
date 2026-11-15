@@ -18,6 +18,7 @@ import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import { formatEzPrepError, topicWiseDraftsApi } from "@/app/admin/mock-tests/api";
 import { SPRINT_SIZE_OPTIONS } from "@/app/admin/sprint-tests/types";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import {
   sharedExamIds,
   type SelectedSprintQuestion,
@@ -76,7 +77,7 @@ export function CreateTopicWiseFromSelectionModal({
   const sharedIds = sharedExamIds(questions);
   const examOptions = exams.filter((exam) => sharedIds.includes(exam.id));
   const subjectName = questions[0]?.subjectName || "Subject";
-  const topicName = questions[0]?.topicName || "Topic";
+  const topicName = questions[0]?.topicName || ChapterUi.singular;
   const requiredReady =
     Boolean(examId) &&
     durationInMinutes != null &&
@@ -111,20 +112,20 @@ export function CreateTopicWiseFromSelectionModal({
         totalQuestions: questions.length,
         questionIds: questions.map((question) => question.id),
       });
-      message.success(response.message || "Topic-wise draft created");
+      message.success(response.message || ChapterUi.draftCreated);
       form.resetFields();
       setExpandedId(null);
       onCreated();
       router.push(`/admin/mock-tests/drafts/${response.data.id}`);
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to create topic-wise draft"));
+      message.error(formatEzPrepError(error, ChapterUi.failedCreateDraft));
       setCreating(false);
     }
   };
 
   return (
     <Modal
-      title={`Create topic-wise test (${questions.length} questions)`}
+      title={ChapterUi.createFromSelectionTitle(questions.length)}
       open={open}
       onCancel={closeAndReset}
       footer={null}
@@ -141,7 +142,7 @@ export function CreateTopicWiseFromSelectionModal({
           showIcon
           className="mb-4"
           message="These questions do not share an exam tag"
-          description="Every question on a topic-wise test must be tagged to the same exam. Change the selection, then try again."
+          description={ChapterUi.sameExamRequired}
         />
       ) : null}
       <div className="mb-4 max-h-64 overflow-auto rounded border border-neutral-200">

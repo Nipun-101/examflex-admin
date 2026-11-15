@@ -11,6 +11,7 @@ import {
   type MockTestQuestion,
 } from "@/app/services/ezprep-api";
 import { PageLoader } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import {
@@ -60,7 +61,7 @@ export default function MockTestDetailPage(props: {
       ),
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       key: "topic",
       render: (record: MockTestQuestion) =>
         refName(record?.topic) ? (
@@ -109,7 +110,7 @@ export default function MockTestDetailPage(props: {
             <Descriptions.Item label="Subject">
               <Tag color="blue">{refName(mockTest.subject) || 'N/A'}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Topic" span="filled">
+            <Descriptions.Item label={ChapterUi.singular} span="filled">
               {refName(mockTest.topic) ? <Tag color="purple">{refName(mockTest.topic)}</Tag> : 'Not set'}
             </Descriptions.Item>
             <Descriptions.Item label="Difficulty Distribution" span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>

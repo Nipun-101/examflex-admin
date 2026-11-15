@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Button,
   Card,
   Descriptions,
@@ -15,11 +16,9 @@ import {
   Tag,
   message,
 } from "antd";
-import { Select } from "@/app/components/SearchableSelect";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
-import { catalogApi } from "@/app/services/ezprep-api";
 import { PageLoader } from "@/app/components/PageLoader";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
@@ -31,6 +30,7 @@ import {
 } from "@/app/admin/full-mock-tests/questionTableExpand";
 import { loadTopicNamesForQuestions } from "@/app/admin/full-mock-tests/topic-names";
 import type { SafeQuestion } from "@/app/admin/full-mock-tests/types";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { formatEzPrepError, topicWiseDraftsApi } from "../../api";
 import type {
   PublishTopicWiseDraftPayload,
@@ -159,11 +159,7 @@ export default function TopicWiseDraftPage(props: {
     pageSize: 10,
     total: 0,
   });
-  const [replaceTopics, setReplaceTopics] = useState<
-    { value: string; label: string }[]
-  >([]);
   const [replaceSearch, setReplaceSearch] = useState("");
-  const [replaceTopicId, setReplaceTopicId] = useState<string | undefined>();
   const [replaceResults, setReplaceResults] = useState<TopicWiseSearchQuestion[]>(
     []
   );
@@ -216,7 +212,6 @@ export default function TopicWiseDraftPage(props: {
       const response = await topicWiseDraftsApi.searchQuestions({
         draftId: params.id,
         search: replaceSearch.trim() || undefined,
-        topicId: draft.topicId ? undefined : replaceTopicId,
         page: replacePagination.current,
         limit: replacePagination.pageSize,
       });
@@ -237,7 +232,6 @@ export default function TopicWiseDraftPage(props: {
     replacePagination.pageSize,
     replaceSearch,
     replaceSlot,
-    replaceTopicId,
   ]);
 
   useEffect(() => {
@@ -246,35 +240,14 @@ export default function TopicWiseDraftPage(props: {
     }
   }, [replaceSlot, searchReplacementQuestions]);
 
-  const openReplace = async (
+  const openReplace = (
     subject: TopicWiseDraftSubjectBlock,
     question: TopicWiseQuestionItem
   ) => {
     setReplaceSlot({ subject, question });
     setReplaceSearch("");
-    setReplaceTopicId(undefined);
     setReplaceResults([]);
     setReplacePagination((prev) => ({ ...prev, current: 1, total: 0 }));
-    if (draft?.topicId) {
-      setReplaceTopics([]);
-      return;
-    }
-    try {
-      const { data } = await catalogApi.getSubject(subject.subjectId);
-      setReplaceTopics(
-        (data.topics || []).map((topic) => ({
-          value: topic.id,
-          label: topic.name,
-        }))
-      );
-      setTopicNameById((prev) => {
-        const next = new Map(prev);
-        (data.topics || []).forEach((topic) => next.set(topic.id, topic.name));
-        return next;
-      });
-    } catch {
-      setReplaceTopics([]);
-    }
   };
 
   const handleReplace = async (questionId: string) => {
@@ -360,7 +333,7 @@ export default function TopicWiseDraftPage(props: {
         record.questionText?.en?.text?.slice(0, 100) || "Question",
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topicId?: string) =>
@@ -420,7 +393,7 @@ export default function TopicWiseDraftPage(props: {
             Back to Mock Tests
           </Button>
           <h1 className="text-2xl font-bold">
-            {settings.title || "Topic-wise draft"}
+            {settings.title || ChapterUi.draftFallbackTitle}
           </h1>
           <Tag color="blue">{draft.status}</Tag>
         </div>
@@ -429,8 +402,8 @@ export default function TopicWiseDraftPage(props: {
           <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
             <Descriptions.Item label="Exam">{draft.examName}</Descriptions.Item>
             <Descriptions.Item label="Subject">{draft.subjectName}</Descriptions.Item>
-            <Descriptions.Item label="Topic">
-              {draft.topicName || "Whole subject"}
+            <Descriptions.Item label={ChapterUi.singular}>
+              {draft.topicName || draft.topicId || ChapterUi.missingOnDraft}
             </Descriptions.Item>
             <Descriptions.Item label="Duration">
               {settings.durationInMinutes} mins
@@ -460,7 +433,21 @@ export default function TopicWiseDraftPage(props: {
           </Card>
         ))}
 
-        {editable ? (
+        {editable && !draft.topicId ? (
+          <Alert
+            type="error"
+            showIcon
+            message={ChapterUi.noTopicOnDraft}
+            description={ChapterUi.noTopicOnDraftHint}
+            action={
+              <Button danger onClick={handleDiscard}>
+                Discard draft
+              </Button>
+            }
+          />
+        ) : null}
+
+        {editable && draft.topicId ? (
           <PublishDraftForm
             settings={settings}
             publishing={publishing}
@@ -481,9 +468,7 @@ export default function TopicWiseDraftPage(props: {
         destroyOnHidden
       >
         <p className="text-gray-500 mb-4">
-          {draft.topicId
-            ? "Replacement must stay on this topic and subject."
-            : "Replacement must stay on this subject. Topic may differ."}
+          {ChapterUi.replacementMustMatch}
         </p>
         <Space wrap className="mb-4">
           <Input.Search
@@ -495,21 +480,7 @@ export default function TopicWiseDraftPage(props: {
               setReplacePagination((prev) => ({ ...prev, current: 1 }));
             }}
           />
-          {draft.topicId ? (
-            <Tag color="purple">{draft.topicName || "Topic locked"}</Tag>
-          ) : (
-            <Select
-              allowClear
-              placeholder="Topic"
-              className="min-w-[180px]"
-              options={replaceTopics}
-              value={replaceTopicId}
-              onChange={(value) => {
-                setReplaceTopicId(value);
-                setReplacePagination((prev) => ({ ...prev, current: 1 }));
-              }}
-            />
-          )}
+          <Tag color="purple">{draft.topicName || ChapterUi.locked}</Tag>
         </Space>
         <Table
           size="small"
@@ -540,7 +511,7 @@ export default function TopicWiseDraftPage(props: {
                 record.snippet || record.questionText?.en?.text || record._id,
             },
             {
-              title: "Topic",
+              title: ChapterUi.singular,
               dataIndex: "topic",
               key: "topic",
               render: (topicId?: string) =>

@@ -16,6 +16,7 @@ import {
   type Subject,
   type Tag,
 } from "@/app/services/ezprep-api";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 const { Title } = Typography;
 
@@ -74,7 +75,7 @@ export default function TagsPage() {
       render: (subject: Tag["subject"]) => subjectName(subject),
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topic: Tag["topic"]) => topicName(topic),
@@ -252,14 +253,15 @@ export default function TagsPage() {
             </Form.Item>
 
             <Form.Item
-              label="Topic"
+              // UI: Chapter — backend field: topic
+              label={ChapterUi.singular}
               name="topic"
-              rules={[{ required: true, message: "Please select a topic" }]}
+              rules={[{ required: true, message: ChapterUi.selectRequired }]}
             >
               <Select
                 placeholder={
                   selectedSubject
-                    ? "Select topic"
+                    ? ChapterUi.selectPlaceholder
                     : "Please select a subject first"
                 }
                 size="large"

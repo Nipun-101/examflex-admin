@@ -260,7 +260,7 @@ describe("UserDetailPage", () => {
 
     const topic = screen.getByTestId("topic-attempts");
     expect(
-      within(topic).getByText(/Score on each of the last 5 finished topic tests/i)
+      within(topic).getByText(/Score on each of the last 5 finished chapter tests/i)
     ).toBeInTheDocument();
     expect(within(topic).getByText("Polity set")).toBeInTheDocument();
     expect(within(topic).getByText("42 / 100")).toBeInTheDocument();
@@ -298,9 +298,9 @@ describe("UserDetailPage", () => {
 
     expect(await screen.findByText("Anita Sharma")).toBeInTheDocument();
     expect(screen.getByText("No finished tests yet.")).toBeInTheDocument();
-    expect(screen.getByText("No finished topic tests yet.")).toBeInTheDocument();
+    expect(screen.getByText("No finished chapter tests yet.")).toBeInTheDocument();
     expect(screen.getByText("No finished full mocks yet.")).toBeInTheDocument();
-    expect(screen.getByText("This learner has not finished a topic test.")).toBeInTheDocument();
+    expect(screen.getByText("This learner has not finished a chapter test.")).toBeInTheDocument();
     expect(screen.getByText("This learner has not finished a full mock.")).toBeInTheDocument();
     expect(screen.queryByTestId("finished-attempt")).not.toBeInTheDocument();
   });

@@ -42,12 +42,12 @@ describe("UserCard", () => {
     expect(screen.getByText("UPSC")).toBeInTheDocument();
     expect(screen.getByText("Bengaluru, KA, IN")).toBeInTheDocument();
     expect(screen.getByText("Full mocks")).toBeInTheDocument();
-    expect(screen.getByText("Topic tests")).toBeInTheDocument();
+    expect(screen.getByText("Chapter tests")).toBeInTheDocument();
     expect(
       screen.getByLabelText(/4 full mocks attended, 3 finished, 1 in progress/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/2 topic tests attempted, 1 finished, 1 in progress/i)
+      screen.getByLabelText(/2 chapter tests attempted, 1 finished, 1 in progress/i)
     ).toBeInTheDocument();
     expect(screen.getByText("4 finished · 2 in progress")).toBeInTheDocument();
     expect(screen.getByText(/Joined/)).toBeInTheDocument();
@@ -127,7 +127,7 @@ describe("UserCard", () => {
       screen.getByLabelText(/1 full mock attended, 1 finished, 0 in progress/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/0 topic tests attempted/i)
+      screen.getByLabelText(/0 chapter tests attempted/i)
     ).toBeInTheDocument();
   });
 

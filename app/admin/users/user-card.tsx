@@ -9,6 +9,7 @@ import {
   ReadOutlined,
 } from "@ant-design/icons";
 import type { AttemptStatusCounts, AppUser } from "@/app/services/ezprep-api/users";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { accessPresentation, badgeTierLabel, BADGE_TIER_TOOLTIP, tierStyle } from "./constants";
 import {
   attendedTotal,
@@ -180,11 +181,8 @@ export function UserCard({ user }: { user: AppUser }) {
             accent={access.accent}
           />
           <ActivityTile
-            title="Topic tests"
-            attendedNoun={{
-              singular: "topic test attempted",
-              plural: "topic tests attempted",
-            }}
+            title={ChapterUi.userSectionTitle}
+            attendedNoun={ChapterUi.userNounAttempted}
             counts={activity.topicWise}
             accent={access.accent}
           />

@@ -111,7 +111,7 @@ describe("AdminDashboardPage", () => {
     expect(screen.getByText("Catalog")).toBeInTheDocument();
     expect(screen.getByText("Exams")).toBeInTheDocument();
     expect(screen.getByText("Subjects")).toBeInTheDocument();
-    expect(screen.getByText("Topics")).toBeInTheDocument();
+    expect(screen.getByText("Chapters")).toBeInTheDocument();
     expect(screen.getByText("Tags")).toBeInTheDocument();
   });
 
@@ -317,7 +317,7 @@ describe("AdminDashboardPage", () => {
     expect(screen.getByText("Yes")).toBeInTheDocument();
     fireEvent.click(document.querySelector(".ant-modal-close")!);
 
-    await openCard("Topics");
+    await openCard("Chapters");
     expect(await screen.findByText("Parliament")).toBeInTheDocument();
     fireEvent.click(document.querySelector(".ant-modal-close")!);
 

@@ -110,8 +110,8 @@ describe("recent attempt captions and summaries", () => {
 
   it("summarises marks, totals, and recent form", () => {
     expect(
-      performanceSummary(emptyPaper, { singular: "topic test", plural: "topic tests" })
-    ).toBe("No finished topic tests yet.");
+      performanceSummary(emptyPaper, { singular: "chapter test", plural: "chapter tests" })
+    ).toBe("No finished chapter tests yet.");
     expect(
       performanceSummary(
         {
@@ -122,10 +122,10 @@ describe("recent attempt captions and summaries", () => {
           percentage: 40,
           trend: "insufficient",
         },
-        { singular: "topic test", plural: "topic tests" }
+        { singular: "chapter test", plural: "chapter tests" }
       )
     ).toBe(
-      "1 finished topic test. 40% across 40 / 100. Not enough scored tests to judge recent form."
+      "1 finished chapter test. 40% across 40 / 100. Not enough scored tests to judge recent form."
     );
     expect(
       performanceSummary(

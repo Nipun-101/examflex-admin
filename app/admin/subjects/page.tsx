@@ -13,6 +13,7 @@ import {
   type NamedRef,
   type Subject,
 } from "@/app/services/ezprep-api";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 const { Title } = Typography;
 
@@ -51,7 +52,7 @@ export default function SubjectsPage() {
       responsive: ["sm", "md", "lg", "xl", "xxl"] as Breakpoint[],
     },
     {
-      title: "Topics",
+      title: ChapterUi.plural,
       dataIndex: "topics",
       key: "topics",
       render: (topics: NamedRef[]) =>
@@ -104,7 +105,7 @@ export default function SubjectsPage() {
         }))
       );
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to fetch topics"));
+      message.error(formatEzPrepError(error, ChapterUi.failedFetch));
     }
   };
 
@@ -180,10 +181,10 @@ export default function SubjectsPage() {
               />
             </Form.Item>
 
-            <Form.Item label="Topics" name="topics">
+            <Form.Item label={ChapterUi.plural} name="topics">
               <Select
                 mode="multiple"
-                placeholder="Select topics"
+                placeholder={ChapterUi.selectPluralPlaceholder}
                 size="large"
                 options={topicOptions}
                 optionFilterProp="label"

@@ -30,7 +30,6 @@ vi.mock("./api", () => ({
     listDrafts: vi.fn(),
     listPublished: vi.fn(),
     discardDraft: vi.fn(),
-    deletePublished: vi.fn(),
   },
 }));
 
@@ -128,7 +127,7 @@ describe("SprintTestsPage", () => {
 
     render(<SprintTestsPage />);
     expect(screen.queryByText("Subject")).not.toBeInTheDocument();
-    expect(screen.queryByText("Topic")).not.toBeInTheDocument();
+    expect(screen.queryByText("Chapter")).not.toBeInTheDocument();
     expect(await screen.findByText("Morning sprint")).toBeInTheDocument();
     expect(screen.getByText("Published sprint")).toBeInTheDocument();
 

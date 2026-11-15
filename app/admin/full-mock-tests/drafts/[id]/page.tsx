@@ -24,6 +24,7 @@ import { catalogApi } from "@/app/services/ezprep-api";
 import { formatEzPrepError, fullMockApi } from "../../api";
 import { loadTopicNamesForQuestions } from "../../topic-names";
 import { PageLoader } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { QuestionPreview } from "../../QuestionPreview";
@@ -373,7 +374,7 @@ export default function FullMockDraftPage(props: {
       ),
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topicId?: string) =>
@@ -440,7 +441,7 @@ export default function FullMockDraftPage(props: {
         record.snippet || <QuestionPreview question={record} snippetOnly />,
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topicId?: string) =>
@@ -683,7 +684,7 @@ export default function FullMockDraftPage(props: {
         <p className="text-gray-500 mb-4">
           {replaceAllowCrossSubject
             ? "Choose another subject below. This slot still belongs to the current section."
-            : "Replacement must be the same subject. Topic may differ. Marks and position stay with this slot."}
+            : ChapterUi.sprintReplaceTopicMayDiffer}
         </p>
         <Form layout="vertical" className="mb-0">
           <Form.Item
@@ -741,7 +742,7 @@ export default function FullMockDraftPage(props: {
           ) : null}
           <Select
             allowClear
-            placeholder="Topic"
+            placeholder={ChapterUi.singular}
             className="min-w-[180px]"
             options={replaceTopics}
             value={replaceTopicId}

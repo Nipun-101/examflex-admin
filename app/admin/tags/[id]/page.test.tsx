@@ -198,7 +198,7 @@ describe("EditTagPage", { timeout: 15000 }, () => {
     renderPage();
     await screen.findByDisplayValue("Easy", {}, { timeout: 10000 });
     await chooseSelectOption("Mathematics", "English");
-    await chooseSelectOption("Select topic", "Grammar");
+    await chooseSelectOption("Select chapter", "Grammar");
     fireEvent.click(screen.getByRole("button", { name: /update tag/i }));
 
     await waitFor(() =>

@@ -21,6 +21,7 @@ import {
   type AdminDashboardSummary,
 } from "@/app/services/ezprep-api";
 import { PageLoader } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 type MetricKey =
   | "users"
@@ -81,7 +82,7 @@ const USAGE_CARDS: DashboardCard[] = [
     key: "mock-tests",
     label: "Mock tests",
     countKey: "mockTests",
-    description: "Topic-wise papers grouped for practice by exam.",
+    description: ChapterUi.dashboardPapersDescription,
     icon: <ExperimentOutlined />,
     accent: "#13c2c2",
     tint: "linear-gradient(180deg, #e6fffb 0%, #ffffff 72%)",
@@ -134,7 +135,7 @@ const CATALOG_CARDS: DashboardCard[] = [
     key: "subjects",
     label: "Subjects",
     countKey: "subjects",
-    description: "Subject catalog with how many topics sit under each.",
+    description: ChapterUi.subjectsWithChaptersDescription,
     icon: <BookOutlined />,
     accent: "#08979c",
     tint: "linear-gradient(180deg, #e6fffb 0%, #ffffff 72%)",
@@ -142,9 +143,9 @@ const CATALOG_CARDS: DashboardCard[] = [
   },
   {
     key: "topics",
-    label: "Topics",
+    label: ChapterUi.plural,
     countKey: "topics",
-    description: "Topic inventory grouped under their parent subjects.",
+    description: ChapterUi.dashboardCatalogDescription,
     icon: <TagOutlined />,
     accent: "#eb2f96",
     tint: "linear-gradient(180deg, #fff0f6 0%, #ffffff 72%)",
@@ -154,7 +155,7 @@ const CATALOG_CARDS: DashboardCard[] = [
     key: "tags",
     label: "Tags",
     countKey: "tags",
-    description: "Question tags used to label items by subject and topic.",
+    description: ChapterUi.tagsBySubjectAndChapter,
     icon: <TagsOutlined />,
     accent: "#d48806",
     tint: "linear-gradient(180deg, #fffbe6 0%, #ffffff 72%)",
@@ -239,7 +240,7 @@ function DetailTables({ metric, data }: { metric: MetricKey; data: unknown }) {
           }
           columns={[
             { title: "Subject", dataIndex: "subjectName", key: "subjectName" },
-            { title: "Topic", dataIndex: "topicName", key: "topicName" },
+            { title: ChapterUi.singular, dataIndex: "topicName", key: "topicName" },
             { title: "Count", dataIndex: "count", key: "count", width: 100 },
           ]}
         />
@@ -366,7 +367,7 @@ function DetailTables({ metric, data }: { metric: MetricKey; data: unknown }) {
         }
         columns={[
           { title: "Subject", dataIndex: "name", key: "name" },
-          { title: "Topics", dataIndex: "topicCount", key: "topicCount" },
+          { title: ChapterUi.plural, dataIndex: "topicCount", key: "topicCount" },
           {
             title: "Active",
             dataIndex: "isActive",
@@ -392,7 +393,7 @@ function DetailTables({ metric, data }: { metric: MetricKey; data: unknown }) {
           }>) || []
         }
         columns={[
-          { title: "Topic", dataIndex: "name", key: "name" },
+          { title: ChapterUi.singular, dataIndex: "name", key: "name" },
           { title: "Subject", dataIndex: "subjectName", key: "subjectName" },
         ]}
       />
@@ -415,7 +416,7 @@ function DetailTables({ metric, data }: { metric: MetricKey; data: unknown }) {
       columns={[
         { title: "Tag", dataIndex: "name", key: "name" },
         { title: "Subject", dataIndex: "subjectName", key: "subjectName" },
-        { title: "Topic", dataIndex: "topicName", key: "topicName" },
+        { title: ChapterUi.singular, dataIndex: "topicName", key: "topicName" },
       ]}
     />
   );

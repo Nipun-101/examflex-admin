@@ -1,6 +1,7 @@
 import { Avatar, Tag, Tooltip } from "antd";
 import type { AppUserDetail, FinishedAttempt, PaperPerformance } from "@/app/services/ezprep-api/users";
 import { accessPresentation, badgeTierLabel, BADGE_TIER_TOOLTIP, tierStyle } from "../constants";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import {
   attemptContext,
   attemptStatusLabel,
@@ -382,9 +383,9 @@ export function UserDetailView({ detail }: { detail: AppUserDetail }) {
                   {activity.fullExam.finished} finished · {activity.fullExam.open} in progress
                 </p>
               </div>
-              <div className="rounded-xl bg-neutral-50 px-3 py-2.5" aria-label="Topic test activity">
+              <div className="rounded-xl bg-neutral-50 px-3 py-2.5" aria-label={ChapterUi.userActivityLabel}>
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-                  Topic tests
+                  {ChapterUi.userSectionTitle}
                 </div>
                 <p className="mb-0 mt-1 text-sm text-neutral-700">
                   {quantityLabel(
@@ -432,14 +433,14 @@ export function UserDetailView({ detail }: { detail: AppUserDetail }) {
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-3">
           <div className="space-y-4">
             <PerformanceCard
-              title="Topic tests"
-              noun={{ singular: "topic test", plural: "topic tests" }}
+              title={ChapterUi.userSectionTitle}
+              noun={ChapterUi.userNoun}
               performance={analysis.topicWise}
             />
             <AttemptSection
-              title="Each topic test"
-              description="Score on each of the last 5 finished topic tests, newest first."
-              emptyLabel="This learner has not finished a topic test."
+              title={ChapterUi.userEachTitle}
+              description={ChapterUi.userEachDescription}
+              emptyLabel={ChapterUi.userEmptyFinished}
               attempts={detail.recentTopicWiseAttempts}
               finishedCount={analysis.topicWise.finishedCount}
               testId="topic-attempts"

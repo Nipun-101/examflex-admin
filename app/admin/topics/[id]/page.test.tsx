@@ -97,7 +97,7 @@ describe("EditTopicPage", { timeout: 15000 }, () => {
 
     expect(await screen.findByDisplayValue("Algebra")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Intro algebra")).toBeInTheDocument();
-    expect(screen.getByText("Edit Topic")).toBeInTheDocument();
+    expect(screen.getByText("Edit Chapter")).toBeInTheDocument();
     expect(getTopic).toHaveBeenCalledWith("id-1");
   });
 
@@ -107,7 +107,7 @@ describe("EditTopicPage", { timeout: 15000 }, () => {
     renderPage();
 
     await waitFor(() => expect(message.error).toHaveBeenCalled());
-    expect(screen.getByText("Edit Topic")).toBeInTheDocument();
+    expect(screen.getByText("Edit Chapter")).toBeInTheDocument();
   });
 
   it("submits updated values and navigates back", async () => {
@@ -123,7 +123,7 @@ describe("EditTopicPage", { timeout: 15000 }, () => {
     fireEvent.change(screen.getByDisplayValue("Intro algebra"), {
       target: { value: "Shapes" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /update topic/i }));
+    fireEvent.click(screen.getByRole("button", { name: /update chapter/i }));
 
     await waitFor(() =>
       expect(updateTopic).toHaveBeenCalledWith("id-1", {
@@ -131,7 +131,7 @@ describe("EditTopicPage", { timeout: 15000 }, () => {
         description: "Shapes",
       })
     );
-    expect(message.success).toHaveBeenCalledWith("Topic updated successfully");
+    expect(message.success).toHaveBeenCalledWith("Chapter updated successfully");
     expect(push).toHaveBeenCalledWith("/admin/topics");
   });
 
@@ -141,7 +141,7 @@ describe("EditTopicPage", { timeout: 15000 }, () => {
 
     renderPage();
     await screen.findByDisplayValue("Algebra");
-    fireEvent.click(screen.getByRole("button", { name: /update topic/i }));
+    fireEvent.click(screen.getByRole("button", { name: /update chapter/i }));
 
     await waitFor(() => expect(message.error).toHaveBeenCalled());
     expect(push).not.toHaveBeenCalled();
@@ -154,9 +154,9 @@ describe("EditTopicPage", { timeout: 15000 }, () => {
     fireEvent.change(await screen.findByDisplayValue("Algebra"), {
       target: { value: "" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /update topic/i }));
+    fireEvent.click(screen.getByRole("button", { name: /update chapter/i }));
 
-    expect(await screen.findByText("Please enter topic name")).toBeInTheDocument();
+    expect(await screen.findByText("Please enter chapter name")).toBeInTheDocument();
     expect(updateTopic).not.toHaveBeenCalled();
   });
 

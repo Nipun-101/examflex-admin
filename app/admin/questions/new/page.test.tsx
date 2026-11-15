@@ -158,7 +158,7 @@ describe("CreateQuestionPage", () => {
     await chooseOption("Correct Answer", "Option A");
     await chooseOption("Subject", "History");
     await waitFor(() => expect(getSubject).toHaveBeenCalledWith("sub-1"));
-    await chooseOption("Topic", "Ancient");
+    await chooseOption("Chapter", "Ancient");
     await waitFor(() => expect(listAllTags).toHaveBeenCalled());
     await chooseOption("Difficulty Level", "Easy");
 
@@ -210,7 +210,7 @@ describe("CreateQuestionPage", () => {
     await chooseOption("Correct Answer", "Option A");
     await chooseOption("Subject", "History");
     await waitFor(() => expect(getSubject).toHaveBeenCalledWith("sub-1"));
-    await chooseOption("Topic", "Ancient");
+    await chooseOption("Chapter", "Ancient");
     await waitFor(() => expect(listAllTags).toHaveBeenCalled());
     await chooseOption("Tags (optional)", "GK");
     await chooseOption("Tags (optional)", "Scales");
@@ -234,7 +234,7 @@ describe("CreateQuestionPage", () => {
     await chooseOption("Correct Answer", "Option A");
     await chooseOption("Subject", "History");
     await waitFor(() => expect(getSubject).toHaveBeenCalled());
-    await chooseOption("Topic", "Ancient");
+    await chooseOption("Chapter", "Ancient");
     await chooseOption("Difficulty Level", "Easy");
 
     fireEvent.click(screen.getByRole("button", { name: /add question/i }));
@@ -283,7 +283,7 @@ describe("CreateQuestionPage", () => {
     await chooseOption("Correct Answer", "Option A");
     await chooseOption("Subject", "History");
     await waitFor(() => expect(getSubject).toHaveBeenCalled());
-    await chooseOption("Topic", "Ancient");
+    await chooseOption("Chapter", "Ancient");
     await chooseOption("Difficulty Level", "Easy");
     fireEvent.click(screen.getByRole("button", { name: /add question/i }));
 

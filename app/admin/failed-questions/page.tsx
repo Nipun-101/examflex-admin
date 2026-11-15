@@ -6,6 +6,7 @@ import { Select } from "@/app/components/SearchableSelect";
 import Link from "next/link";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import { catalogApi, ezPrepApiClient } from "@/app/services/ezprep-api";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { EzPrepApiError } from "@/app/services/ezprep-api/types";
 import {
   DeleteFailedQuestionResponse,
@@ -183,7 +184,7 @@ export default function FailedQuestionsPage() {
           }))
         );
       } catch {
-        message.error("Failed to fetch topics");
+        message.error(ChapterUi.failedFetch);
         setFilteredTopics([]);
       }
     };
@@ -293,7 +294,7 @@ export default function FailedQuestionsPage() {
       },
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       key: "topic",
       render: (_: unknown, record: FailedQuestion) => {
         const topicId = (record.question || record.questionDraft)?.topic;
@@ -365,7 +366,7 @@ export default function FailedQuestionsPage() {
             }))}
           />
           <Select
-            placeholder="Filter by topic"
+            placeholder={ChapterUi.filterPlaceholder}
             allowClear
             disabled={!selectedSubject}
             style={{ width: 200 }}

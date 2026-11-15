@@ -6,6 +6,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { catalogApi, formatEzPrepError } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 
 const { Title } = Typography;
 
@@ -96,10 +97,10 @@ export default function EditSubjectPage(props: {
               />
             </Form.Item>
 
-            <Form.Item label="Topics" name="topics">
+            <Form.Item label={ChapterUi.plural} name="topics">
               <Select
                 mode="multiple"
-                placeholder="Select topics"
+                placeholder={ChapterUi.selectPluralPlaceholder}
                 size="large"
                 options={topicOptions}
                 optionFilterProp="label"

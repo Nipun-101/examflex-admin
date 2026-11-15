@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { catalogApi, formatEzPrepError, mockTestsApi, refId, type Exam } from "@/app/services/ezprep-api";
 import { setFormValue } from "@/app/lib/form-store";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
+import { ChapterUi } from "@/app/lib/chapter-ui";
 import { topicWiseDraftsApi } from "./api";
 import type { TopicWiseDraftListItem } from "./types";
 
@@ -123,7 +124,7 @@ export default function MockTestsPage() {
       ),
     },
     {
-      title: "Topic",
+      title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
       render: (topic: any) => (
@@ -145,23 +146,13 @@ export default function MockTestsPage() {
       title: "Actions",
       key: "actions",
       render: (record: any) => (
-        <Space>
-          <Button 
-            type="link" 
-            size="small"
-            onClick={() => router.push(`/admin/mock-tests/${record.id}`)}
-          >
-            View
-          </Button>
-          <Button 
-            type="link" 
-            size="small" 
-            danger 
-            onClick={() => handleDelete(record.id)}
-          >
-            Delete
-          </Button>
-        </Space>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => router.push(`/admin/mock-tests/${record.id}`)}
+        >
+          View
+        </Button>
       ),
     },
   ];
@@ -244,7 +235,7 @@ export default function MockTestsPage() {
         }))
       );
     } catch (error) {
-      message.error(formatEzPrepError(error, 'Failed to fetch topics'));
+      message.error(formatEzPrepError(error, ChapterUi.failedFetch));
     } finally {
       setTopicsLoading(false);
     }
@@ -330,7 +321,7 @@ export default function MockTestsPage() {
       .catch((error) => {
         if (requestId !== listTopicsRequest.current) return;
         setListTopics([]);
-        message.error(formatEzPrepError(error, "Failed to fetch topics"));
+        message.error(formatEzPrepError(error, ChapterUi.failedFetch));
       })
       .finally(() => {
         if (requestId === listTopicsRequest.current) {
@@ -364,10 +355,10 @@ export default function MockTestsPage() {
         difficultyDistribution: difficulty,
       };
       const response = await topicWiseDraftsApi.createDraft(payload);
-      message.success(response.message || "Topic-wise draft created");
+      message.success(response.message || ChapterUi.draftCreated);
       router.push(`/admin/mock-tests/drafts/${response.data.id}`);
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to create mock test"));
+      message.error(formatEzPrepError(error, ChapterUi.failedCreateDraft));
       setLoading(false);
     }
   };
@@ -392,31 +383,12 @@ export default function MockTestsPage() {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    showConfirmModal({
-      title: 'Delete Mock Test',
-      content: 'Are you sure you want to delete this mock test? This action cannot be undone.',
-      onConfirm: async () => {
-        setTableLoading(true);
-        try {
-          await mockTestsApi.delete(id);
-          message.success('Mock test deleted successfully');
-          fetchMockTests();
-        } catch (error) {
-          message.error(formatEzPrepError(error, 'Failed to delete mock test'));
-        } finally {
-          setTableLoading(false);
-        }
-      }
-    });
-  };
-
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <Title level={2}>Topic Wise Tests Management</Title>
+        <Title level={2}>{ChapterUi.managementTitle}</Title>
         
-        <Card title="Create New Topic Wise Test">
+        <Card title={ChapterUi.createCardTitle}>
           <Form
             form={form}
             layout="vertical"
@@ -505,23 +477,29 @@ export default function MockTestsPage() {
               </Form.Item>
 
               <Form.Item
-                label="Topic"
+                // UI: Chapter — backend field: topic / TOPIC_WISE
+                label={ChapterUi.singular}
                 name="topic"
+                rules={[{ required: true, message: ChapterUi.selectRequired }]}
+                extra={
+                  selectedSubject && !topicsLoading && topics.length === 0
+                    ? ChapterUi.subjectHasNoTopics
+                    : undefined
+                }
               >
                 <Select
                   placeholder={
                     !selectedSubject
                       ? "Select a subject first"
                       : topicsLoading
-                        ? "Loading topics"
+                        ? ChapterUi.loading
                         : topics.length > 0
-                          ? "Select topic"
-                          : "No topics for this subject"
+                          ? ChapterUi.selectPlaceholder
+                          : ChapterUi.noneForSubject
                   }
                   options={topics}
                   disabled={!selectedSubject || topicsLoading || topics.length === 0}
                   loading={topicsLoading}
-                  allowClear
                 />
               </Form.Item>
             </div>
@@ -711,7 +689,7 @@ export default function MockTestsPage() {
                 ),
               },
               {
-                title: "Topic",
+                title: ChapterUi.singular,
                 dataIndex: "topicName",
                 key: "topicName",
                 width: "16%",
@@ -808,12 +786,12 @@ export default function MockTestsPage() {
                 !listSubjectId
                   ? "Select a subject first"
                   : listTopicsLoading
-                    ? "Loading topics"
+                    ? ChapterUi.loading
                     : listTopics.length > 0
-                      ? "Filter by topic"
-                      : "No topics for this subject"
+                      ? ChapterUi.filterPlaceholder
+                      : ChapterUi.noneForSubject
               }
-              aria-label="Filter by topic"
+              aria-label={ChapterUi.filterPlaceholder}
               style={{ width: 240 }}
               options={listTopics}
               value={listTopicId}

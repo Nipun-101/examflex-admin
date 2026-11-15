@@ -1,0 +1,13 @@
+---
+description: ExamFlex fork provenance and naming for new code
+alwaysApply: true
+---
+
+# ExamFlex naming
+
+This repo is a **standalone fork** of EzPrep admin, maintained for ExamFlex. EzPrep is a separate product.
+
+- Use **ExamFlex / `examflex`** in all new code, docs, comments, error copy, and identifiers.
+- Do **not** introduce new `EzPrep`, `ezprep`, or `EZPREP` names.
+- Legacy `ezprep` paths and contracts (e.g. `app/services/ezprep-api`, `/api/ezprep`, `EZPREP_API_*`, `ezprep_admin_session`) may remain. Match them only when extending that existing contract.
+- Do not run a wholesale EzPrep→ExamFlex rename unless the user explicitly asks for it.

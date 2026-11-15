@@ -32,11 +32,11 @@ describe("topic-wise selection", () => {
     const mixedTopic = ten.map((item, index) =>
       index === 0 ? question(item.id, "sub-1", "top-2") : item
     );
-    expect(topicWiseSelectionIssue(mixedTopic)).toContain("same topic");
+    expect(topicWiseSelectionIssue(mixedTopic)).toContain("same chapter");
 
     const missingTopic = ten.map((item, index) =>
       index === 0 ? { ...item, topicId: undefined } : item
     );
-    expect(topicWiseSelectionIssue(missingTopic)).toContain("same topic");
+    expect(topicWiseSelectionIssue(missingTopic)).toContain("same chapter");
   });
 });

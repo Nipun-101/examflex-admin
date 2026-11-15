@@ -111,9 +111,9 @@ describe("TopicsPage", { timeout: 15000 }, () => {
     await findRow("Algebra");
     expect(screen.getAllByText("Geometry").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Intro algebra").length).toBeGreaterThan(0);
-    expect(screen.getByText("Add New Topic")).toBeInTheDocument();
-    expect(screen.getByText("Topics List")).toBeInTheDocument();
-    expect(screen.getByText("Total 2 topics")).toBeInTheDocument();
+    expect(screen.getByText("Add New Chapter")).toBeInTheDocument();
+    expect(screen.getByText("Chapters List")).toBeInTheDocument();
+    expect(screen.getByText("Total 2 chapters")).toBeInTheDocument();
     expect(listTopics).toHaveBeenCalled();
   });
 
@@ -160,13 +160,13 @@ describe("TopicsPage", { timeout: 15000 }, () => {
     render(<TopicsPage />);
     await findEmpty();
 
-    fireEvent.change(screen.getByPlaceholderText("Enter topic name"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter chapter name"), {
       target: { value: "Geometry" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Enter topic description"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter chapter description"), {
       target: { value: "Shapes" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /create topic/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create chapter/i }));
 
     await waitFor(() =>
       expect(createTopic).toHaveBeenCalledWith({
@@ -174,9 +174,9 @@ describe("TopicsPage", { timeout: 15000 }, () => {
         description: "Shapes",
       })
     );
-    expect(message.success).toHaveBeenCalledWith("Topic created successfully");
+    expect(message.success).toHaveBeenCalledWith("Chapter created successfully");
     await findRow("Geometry");
-    expect(screen.getByPlaceholderText("Enter topic name")).toHaveValue("");
+    expect(screen.getByPlaceholderText("Enter chapter name")).toHaveValue("");
   });
 
   it("shows a validation error when the name is missing", async () => {
@@ -185,9 +185,9 @@ describe("TopicsPage", { timeout: 15000 }, () => {
     render(<TopicsPage />);
     await findEmpty();
 
-    fireEvent.click(screen.getByRole("button", { name: /create topic/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create chapter/i }));
 
-    expect(await screen.findByText("Please enter topic name")).toBeInTheDocument();
+    expect(await screen.findByText("Please enter chapter name")).toBeInTheDocument();
     expect(createTopic).not.toHaveBeenCalled();
   });
 
@@ -198,10 +198,10 @@ describe("TopicsPage", { timeout: 15000 }, () => {
     render(<TopicsPage />);
     await findEmpty();
 
-    fireEvent.change(screen.getByPlaceholderText("Enter topic name"), {
+    fireEvent.change(screen.getByPlaceholderText("Enter chapter name"), {
       target: { value: "Geometry" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /create topic/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create chapter/i }));
 
     await waitFor(() => expect(message.error).toHaveBeenCalled());
     expect(message.success).not.toHaveBeenCalled();
@@ -233,7 +233,7 @@ describe("TopicsPage", { timeout: 15000 }, () => {
 
     expect(showConfirmModal).toHaveBeenCalled();
     await waitFor(() => expect(deleteTopic).toHaveBeenCalledWith("t1"));
-    expect(message.success).toHaveBeenCalledWith("Topic deleted successfully");
+    expect(message.success).toHaveBeenCalledWith("Chapter deleted successfully");
     expect(await findEmpty()).toBeInTheDocument();
   });
 
