@@ -3,6 +3,7 @@ export * from "./types";
 export * from "./envelope";
 export * from "./catalog";
 export * from "./questions";
+export * from "./equations";
 export * from "./mock-tests";
 export * from "./files";
 export * from "./current-affairs";
