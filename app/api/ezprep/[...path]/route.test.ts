@@ -106,6 +106,22 @@ describe("EzPrep proxy route", () => {
     expect(response.status).toBe(404);
   });
 
+  it("forwards equation-book paths", async () => {
+    const response = await GET(
+      makeRequest("http://localhost:3001/api/ezprep/v1/equation-book?page=1", {
+        cookies: { ezprep_admin_session: "tok" },
+      }),
+      ctx(["v1", "equation-book"])
+    );
+    expect(response.status).toBe(200);
+    expect(requestWithStatus).toHaveBeenCalledWith("/v1/equation-book", {
+      method: "GET",
+      body: undefined,
+      searchParams: { page: "1" },
+      headers: { Authorization: "Bearer tok" },
+    });
+  });
+
   it("forwards GET search params and the session bearer token", async () => {
     const response = await GET(
       makeRequest("http://localhost/api/ezprep/v1/exams?page=2", {

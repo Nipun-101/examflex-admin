@@ -12,6 +12,7 @@ const ALLOWED_V1_ROOTS = new Set([
   "topics",
   "tags",
   "questions",
+  "equation-book",
   "mock-tests",
   "full-mock-tests",
   "sprint-tests",

@@ -244,6 +244,11 @@ export default function AdminLayout({
       label: <Link href="/admin/questions">Questions</Link>,
     },
     {
+      key: "/admin/equations",
+      icon: <FormOutlined />,
+      label: <Link href="/admin/equations">Equations</Link>,
+    },
+    {
       key: "/admin/bulk-upload",
       icon: <UploadOutlined />,
       label: <Link href="/admin/bulk-upload">Bulk Upload</Link>,
@@ -378,6 +383,8 @@ export default function AdminLayout({
                 ? "/admin/feedback"
                 : pathname.startsWith("/admin/questions")
                 ? "/admin/questions"
+                : pathname.startsWith("/admin/equations")
+                ? "/admin/equations"
                 : pathname.startsWith("/admin/bulk-upload")
               ? "/admin/bulk-upload"
               : pathname.startsWith("/admin/failed-questions")
