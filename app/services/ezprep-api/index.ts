@@ -7,6 +7,8 @@ export * from "./equations";
 export * from "./mock-tests";
 export * from "./files";
 export * from "./current-affairs";
+export * from "./recommendations";
+
 export * from "./admin-dashboard";
 export * from "./users";
 export * from "./instance-config";
