@@ -24,6 +24,7 @@ import {
   AlertOutlined,
   AccountBookOutlined,
   MessageOutlined,
+  RiseOutlined,
 } from "@ant-design/icons";
 import Link from "next/link";
 import { ChapterUi } from "@/app/lib/chapter-ui";
@@ -280,6 +281,11 @@ export default function AdminLayout({
       label: <Link href="/admin/current-affairs">Current Affairs</Link>,
     },
     {
+      key: "/admin/recommendations",
+      icon: <RiseOutlined />,
+      label: <Link href="/admin/recommendations">Recommendations</Link>,
+    },
+    {
       key: "/admin/categories",
       icon: <AppstoreOutlined />,
       label: <Link href="/admin/categories">Categories</Link>,
@@ -397,6 +403,8 @@ export default function AdminLayout({
                     ? "/admin/sprint-tests"
                     : pathname.startsWith("/admin/current-affairs")
                     ? "/admin/current-affairs"
+                    : pathname.startsWith("/admin/recommendations")
+                      ? "/admin/recommendations"
                     : pathname,
           ]}
           items={menuItems}

@@ -19,6 +19,7 @@ const ALLOWED_V1_ROOTS = new Set([
   "imports",
   "files",
   "current-affairs",
+  "recommendations",
   "admin",
   "instance-config",
 ]);
