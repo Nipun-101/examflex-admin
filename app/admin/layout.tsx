@@ -24,6 +24,7 @@ import {
   AlertOutlined,
   AccountBookOutlined,
   MessageOutlined,
+  CustomerServiceOutlined,
   RiseOutlined,
 } from "@ant-design/icons";
 import Link from "next/link";
@@ -240,6 +241,11 @@ export default function AdminLayout({
       label: <Link href="/admin/feedback">Feedback</Link>,
     },
     {
+      key: "/admin/counseling",
+      icon: <CustomerServiceOutlined />,
+      label: <Link href="/admin/counseling">Counseling</Link>,
+    },
+    {
       key: "/admin/questions",
       icon: <QuestionCircleOutlined />,
       label: <Link href="/admin/questions">Questions</Link>,
@@ -387,6 +393,8 @@ export default function AdminLayout({
                 ? "/admin/commerce-health"
                 : pathname.startsWith("/admin/feedback")
                 ? "/admin/feedback"
+                : pathname.startsWith("/admin/counseling")
+                ? "/admin/counseling"
                 : pathname.startsWith("/admin/questions")
                 ? "/admin/questions"
                 : pathname.startsWith("/admin/equations")
