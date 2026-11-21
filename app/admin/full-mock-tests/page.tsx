@@ -14,15 +14,26 @@ import {
   message,
 } from "antd";
 import { Select } from "@/app/components/SearchableSelect";
-import { PlusOutlined } from "@ant-design/icons";
+import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { Breakpoint } from "antd/es/_util/responsiveObserver";
 import { useRouter } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
-import { formatEzPrepError, fullMockApi } from "./api";
+import {
+  describeGenerateDraftError,
+  formatEzPrepError,
+  fullMockApi,
+  type GenerateDraftError,
+} from "./api";
+import { ExamGeneratePanel } from "./ExamGeneratePanel";
+import {
+  questionPreviewOnRow,
+  stopQuestionRowToggle,
+} from "./questionTableExpand";
 import type {
   DraftListItem,
   FullMockExamListItem,
   FullMockTestListItem,
+  SubjectDifficultySplit,
 } from "./types";
 
 const { Title } = Typography;
@@ -40,6 +51,12 @@ export default function FullMockTestsPage() {
   const [exams, setExams] = useState<FullMockExamListItem[]>([]);
   const [examLoading, setExamLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  /** Only one exam row shows its generate panel at a time. */
+  const [expandedExamId, setExpandedExamId] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<{
+    examId: string;
+    error: GenerateDraftError;
+  } | null>(null);
   const [examSearch, setExamSearch] = useState("");
   const [examPagination, setExamPagination] = useState({
     current: 1,
@@ -175,16 +192,28 @@ export default function FullMockTestsPage() {
     }
   };
 
-  const handleGenerate = async (examId: string) => {
+  const handleGenerate = async (
+    examId: string,
+    distribution?: SubjectDifficultySplit[]
+  ) => {
     setGeneratingId(examId);
+    setGenerateError(null);
     try {
-      const response = await fullMockApi.createDraft(examId);
+      const response = await fullMockApi.createDraft(examId, distribution);
       message.success(response.message || "Draft generated");
       router.push(`/admin/full-mock-tests/drafts/${response.data.id}`);
     } catch (error) {
-      message.error(formatEzPrepError(error, "Failed to generate draft"));
+      const described = describeGenerateDraftError(error);
+      setGenerateError({ examId, error: described });
+      message.error(described.summary);
       setGeneratingId(null);
     }
+  };
+
+  /** Open this exam's panel (closing any other); toggling the open row closes it. */
+  const toggleExamRow = (examId: string) => {
+    if (generatingId) return;
+    setExpandedExamId((current) => (current === examId ? null : examId));
   };
 
   const handleDiscardDraft = (draft: DraftListItem) => {
@@ -266,19 +295,25 @@ export default function FullMockTestsPage() {
     {
       title: "Actions",
       key: "actions",
-      render: (record: FullMockExamListItem) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          className={primaryButtonClass}
-          loading={generatingId === record.id}
-          disabled={!!generatingId}
-          onClick={() => handleGenerate(record.id)}
-        >
-          Generate
-        </Button>
-      ),
+      render: (record: FullMockExamListItem) => {
+        const open = expandedExamId === record.id;
+        return (
+          <Button
+            type="primary"
+            size="small"
+            icon={open ? <UpOutlined /> : <DownOutlined />}
+            className={primaryButtonClass}
+            disabled={!!generatingId}
+            aria-expanded={open}
+            onClick={(event) => {
+              stopQuestionRowToggle(event);
+              toggleExamRow(record.id);
+            }}
+          >
+            Configure
+          </Button>
+        );
+      },
     },
   ];
 
@@ -436,8 +471,9 @@ export default function FullMockTestsPage() {
 
         <Card title="Generate from Exam">
           <p className="text-gray-500 mb-4">
-            Pick an exam blueprint. The server samples a full paper to match
-            subject quotas, marks, and timers. You review and optionally replace
+            Pick an exam blueprint and set the easy / medium / hard mix for each
+            subject. The server samples a full paper to match subject quotas,
+            your difficulty mix, marks, and timers. You review and optionally replace
             questions, then publish. Leaving review keeps the draft so you can
             continue later. Nothing is written to published mock tests until
             publish.
@@ -457,6 +493,29 @@ export default function FullMockTestsPage() {
             rowKey="id"
             loading={examLoading}
             scroll={{ x: true }}
+            onRow={() => questionPreviewOnRow()}
+            expandable={{
+              expandedRowRender: (record) => (
+                <ExamGeneratePanel
+                  key={record.id}
+                  exam={record}
+                  generating={generatingId === record.id}
+                  disabled={!!generatingId}
+                  error={
+                    generateError?.examId === record.id
+                      ? generateError.error
+                      : null
+                  }
+                  onGenerate={(distribution) =>
+                    void handleGenerate(record.id, distribution)
+                  }
+                />
+              ),
+              expandedRowKeys: expandedExamId ? [expandedExamId] : [],
+              onExpand: (_expanded, record) => toggleExamRow(record.id),
+              expandRowByClick: true,
+              showExpandColumn: false,
+            }}
             pagination={{
               current: examPagination.current,
               pageSize: examPagination.pageSize,
