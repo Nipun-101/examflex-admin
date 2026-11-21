@@ -28,6 +28,13 @@ import { ChapterUi } from "@/app/lib/chapter-ui";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { QuestionPreview } from "../../QuestionPreview";
+import { TopicTag } from "../../TopicTag";
+import { CourseCutoffFields } from "../../CourseCutoffFields";
+import {
+  buildPublishCutoffs,
+  resolveTotalMarks,
+  type CourseCutoffValues,
+} from "../../course-cutoffs";
 import { stopQuestionRowToggle } from "../../questionTableExpand";
 import type {
   DraftQuestionItem,
@@ -38,6 +45,11 @@ import type {
 } from "../../types";
 
 const { TextArea } = Input;
+
+/** Publish form: same as the payload, but cut-offs are keyed by course id. */
+type PublishFormValues = Omit<PublishDraftPayload, "courseCutoffs"> & {
+  courseCutoffs?: CourseCutoffValues;
+};
 const primaryButtonClass = "bg-blue-600 hover:bg-blue-700";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -64,7 +76,7 @@ export default function FullMockDraftPage(props: {
 }) {
   const params = use(props.params);
   const router = useRouter();
-  const [form] = Form.useForm<PublishDraftPayload>();
+  const [form] = Form.useForm<PublishFormValues>();
   const [draft, setDraft] = useState<DraftResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
@@ -295,7 +307,7 @@ export default function FullMockDraftPage(props: {
     }
   };
 
-  const handlePublish = async (values: PublishDraftPayload) => {
+  const handlePublish = async (values: PublishFormValues) => {
     if (publishInFlight.current) {
       return;
     }
@@ -315,6 +327,10 @@ export default function FullMockDraftPage(props: {
       }
       if (values.passingScore != null) {
         payload.passingScore = values.passingScore;
+      }
+      const courseCutoffs = buildPublishCutoffs(values.courseCutoffs);
+      if (courseCutoffs.length > 0) {
+        payload.courseCutoffs = courseCutoffs;
       }
       const response = await fullMockApi.publishDraft(params.id, payload);
       message.success(response.message || "Full mock published");
@@ -379,7 +395,7 @@ export default function FullMockDraftPage(props: {
       key: "topic",
       render: (topicId?: string) =>
         topicId ? (
-          <Tag color="purple">{topicNameById.get(topicId) || topicId}</Tag>
+          <TopicTag name={topicNameById.get(topicId) || topicId} />
         ) : (
           "-"
         ),
@@ -395,7 +411,7 @@ export default function FullMockDraftPage(props: {
           "-"
         ),
     },
-    questionTagsColumn(),
+    questionTagsColumn({ truncate: true }),
     {
       title: "Marks",
       key: "marks",
@@ -615,6 +631,19 @@ export default function FullMockDraftPage(props: {
                   <Switch />
                 </Form.Item>
               ) : null}
+              <Form.Item
+                label="Course cut-offs (optional)"
+                name="courseCutoffs"
+                extra="Marks a student needs for each course on this paper. Set them based on how hard this paper is; you can also add or change them later from the published mock."
+              >
+                <CourseCutoffFields
+                  examId={draft?.examId}
+                  totalMarks={resolveTotalMarks(
+                    snapshot?.totalMarks,
+                    draft?.subjects
+                  )}
+                />
+              </Form.Item>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Form.Item
                   label="Allow Retake"

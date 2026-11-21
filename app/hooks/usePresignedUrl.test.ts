@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { filesApi } from "@/app/services/ezprep-api";
-import { usePresignedUrl } from "./usePresignedUrl";
+import { EzPrepApiError, filesApi } from "@/app/services/ezprep-api";
+import { isSignableImage, usePresignedUrl } from "./usePresignedUrl";
 
 vi.mock("@/app/services/ezprep-api", async () => {
   const actual = await vi.importActual<typeof import("@/app/services/ezprep-api")>(
@@ -127,4 +127,82 @@ describe("usePresignedUrl", () => {
 
     expect(signedUrl).toHaveBeenCalled();
   });
+
+  describe("images that cannot be signed", () => {
+    beforeEach(() => {
+      vi.mocked(console.error).mockClear();
+    });
+
+    it("does not ask the API to sign an import placeholder bucket", async () => {
+      const { result } = renderHook(() =>
+        usePresignedUrl({ key: "question-imports/u/a.png", bucket: "mathpix-import-pending" })
+      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.url).toBeNull();
+      expect(signedUrl).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it("does not ask the API to sign externally hosted images", async () => {
+      const { result } = renderHook(() =>
+        usePresignedUrl({ key: "a.png", bucket: "media", region: "external" })
+      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.url).toBeNull();
+      expect(signedUrl).not.toHaveBeenCalled();
+    });
+
+    it("recognises signable and unsignable metadata", () => {
+      expect(isSignableImage({ key: "a.png", bucket: "media" })).toBe(true);
+      expect(isSignableImage({ key: "a.png", bucket: "media", region: "ap-south-1" })).toBe(true);
+      expect(isSignableImage({ key: "", bucket: "media" })).toBe(false);
+      expect(isSignableImage({ key: "a.png", bucket: "" })).toBe(false);
+      expect(isSignableImage({ key: "a.png", bucket: "mathpix-import-pending" })).toBe(false);
+      expect(isSignableImage({ key: "a.png", bucket: "media", region: "external" })).toBe(false);
+      expect(isSignableImage(null)).toBe(false);
+      expect(isSignableImage(undefined)).toBe(false);
+    });
+  });
+
+  describe("when the API refuses to sign", () => {
+    beforeEach(() => {
+      vi.mocked(console.error).mockClear();
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(console.warn).mockClear();
+    });
+
+    it.each([
+      [400, "Bucket is not allowed"],
+      [404, "Object not found"],
+    ])("warns (not errors) on a clean %s refusal and shows no image", async (status, message) => {
+      signedUrl.mockRejectedValue(
+        new EzPrepApiError(message, status, "/v1/files/signed-url", {})
+      );
+      const { result } = renderHook(() =>
+        usePresignedUrl({ key: "admin-images/a.png", bucket: "other-bucket" })
+      );
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.url).toBeNull();
+      expect(console.error).not.toHaveBeenCalled();
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining(`${message}): other-bucket/admin-images/a.png`)
+      );
+    });
+
+    it.each([401, 403, 500, 502])(
+      "still reports a %s as an error (not an expected refusal)",
+      async (status) => {
+        signedUrl.mockRejectedValue(
+          new EzPrepApiError("boom", status, "/v1/files/signed-url", {})
+        );
+        const { result } = renderHook(() =>
+          usePresignedUrl({ key: "a.png", bucket: "media" })
+        );
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect(console.error).toHaveBeenCalled();
+        expect(console.warn).not.toHaveBeenCalled();
+      }
+    );
+  });
 });
+

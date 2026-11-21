@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { filesApi } from "@/app/services/ezprep-api";
+import { EzPrepApiError, filesApi } from "@/app/services/ezprep-api";
 
 interface S3ObjectMetadata {
   key: string;
@@ -8,6 +8,30 @@ interface S3ObjectMetadata {
   contentType?: string;
   size?: number;
   lastModified?: string | Date;
+}
+
+/**
+ * Imported images that were never uploaded to S3 keep a placeholder bucket and
+ * an `external` region (their picture lives at the source URL). The API refuses
+ * to sign those, so we do not ask.
+ */
+const PLACEHOLDER_BUCKETS = new Set(["mathpix-import-pending"]);
+
+export function isSignableImage(
+  metadata: Pick<S3ObjectMetadata, "key" | "bucket" | "region"> | null | undefined
+): boolean {
+  if (!metadata?.key || !metadata.bucket) return false;
+  if (PLACEHOLDER_BUCKETS.has(metadata.bucket)) return false;
+  if (metadata.region === "external") return false;
+  return true;
+}
+
+/** The API said "no" cleanly (bad bucket / key, or no such object). */
+function isExpectedRefusal(error: unknown): error is EzPrepApiError {
+  return (
+    error instanceof EzPrepApiError &&
+    (error.status === 400 || error.status === 404)
+  );
 }
 
 export function usePresignedUrl(metadata: S3ObjectMetadata | null) {
@@ -21,7 +45,7 @@ export function usePresignedUrl(metadata: S3ObjectMetadata | null) {
     let refreshTimeout: NodeJS.Timeout;
 
     const refreshUrl = async () => {
-      if (!metadata?.key || !metadata.bucket) {
+      if (!metadata || !isSignableImage(metadata)) {
         if (mounted) {
           setUrl(null);
           setUrlKey(null);
@@ -42,7 +66,15 @@ export function usePresignedUrl(metadata: S3ObjectMetadata | null) {
           refreshTimeout = setTimeout(refreshUrl, 45 * 60 * 1000);
         }
       } catch (error) {
-        console.error("Error refreshing signed URL:", error);
+        if (isExpectedRefusal(error)) {
+          // Nothing the page can do about it, so no error overlay; keep the
+          // detail so the bad record is easy to find.
+          console.warn(
+            `Image preview unavailable (${error.message}): ${metadata.bucket}/${metadata.key}`
+          );
+        } else {
+          console.error("Error refreshing signed URL:", error);
+        }
       } finally {
         if (mounted) {
           setLoading(false);

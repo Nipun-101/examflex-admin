@@ -21,7 +21,9 @@ export interface RecommendationOffering {
   title: string;
   subtitle?: string;
   description?: string;
-  minPercent: number;
+  /** @deprecated Legacy value; pathways now use per-mock cut-off marks. */
+  minPercent?: number;
+  /** @deprecated Legacy value; pathways now use per-mock cut-off marks. */
   comfortPercent?: number;
   sortOrder: number;
   isActive: boolean;
@@ -36,7 +38,9 @@ export interface RecommendationOfferingPayload {
   title: string;
   subtitle?: string;
   description?: string;
-  minPercent: number;
+  /** @deprecated Not sent by the admin UI; cut-offs are set per full mock. */
+  minPercent?: number;
+  /** @deprecated Not sent by the admin UI; cut-offs are set per full mock. */
   comfortPercent?: number | null;
   sortOrder?: number;
   isActive?: boolean;

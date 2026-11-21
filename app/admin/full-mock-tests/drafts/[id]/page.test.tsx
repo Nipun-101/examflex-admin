@@ -105,12 +105,52 @@ function jsonResponse(data: unknown, ok = true) {
 
 let currentDraft: DraftResponse = reviewDraft;
 let fetchMock: ReturnType<typeof vi.fn>;
+let coursesFail = false;
+const courses = [
+  {
+    id: "off-mbbs",
+    title: "MBBS",
+    exam: { id: "ex-1", name: "UPSC Prelims" },
+    kind: "COURSE",
+    sortOrder: 0,
+    isActive: true,
+  },
+  {
+    id: "off-bds",
+    title: "BDS",
+    exam: { id: "ex-1", name: "UPSC Prelims" },
+    kind: "COURSE",
+    sortOrder: 1,
+    isActive: true,
+  },
+];
+
+function publishBody() {
+  const call = fetchMock.mock.calls.find((c) => {
+    const init = c[1] as RequestInit | undefined;
+    return (
+      String(c[0]).includes("/publish") &&
+      (init?.method || "").toUpperCase() === "POST"
+    );
+  });
+  expect(call).toBeTruthy();
+  return JSON.parse(String((call![1] as RequestInit).body));
+}
 
 function installFetchMock() {
   fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const method = (init?.method || "GET").toUpperCase();
 
+    if (method === "GET" && url.includes("/recommendations")) {
+      return coursesFail
+        ? jsonResponse({ message: "courses down" }, false)
+        : jsonResponse({
+            message: "ok",
+            data: courses,
+            pagination: { total: 2, page: 1, limit: 100, totalPages: 1 },
+          });
+    }
     if (method === "GET" && url.includes("/full-mock-tests/questions")) {
       const topic = url.includes("allowCrossSubject=true") ? "top-gs" : "top-1";
       return jsonResponse({
@@ -193,6 +233,7 @@ async function renderReady(draft: DraftResponse = reviewDraft) {
 describe("FullMockDraftPage", () => {
   beforeEach(() => {
     currentDraft = reviewDraft;
+    coursesFail = false;
     router.push.mockReset();
     installFetchMock();
     vi.spyOn(message, "error").mockImplementation(
@@ -264,6 +305,59 @@ describe("FullMockDraftPage", () => {
     expect(screen.getByText("Replaced")).toBeInTheDocument();
     expect(screen.getByText("Publish Full Mock")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalled();
+  });
+
+  it("keeps long chapter names inside the row and shows the full name on hover", async () => {
+    const longName = "Electrostatics, Current Electricity and Magnetic Effects";
+    currentDraft = {
+      ...reviewDraft,
+      subjects: reviewDraft.subjects.map((subject) => ({
+        ...subject,
+        questions: subject.questions.map((q) => ({ ...q, topic: "top-long" })),
+      })),
+    };
+    fetchMock.mockImplementation(
+      ((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/full-mock-tests/drafts/")) {
+          return Promise.resolve(
+            jsonResponse({ message: "ok", data: currentDraft })
+          );
+        }
+        if (url.includes("/topics/")) {
+          return Promise.resolve(
+            jsonResponse({ message: "ok", data: { id: "top-long", name: longName } })
+          );
+        }
+        if (url.includes("/recommendations")) {
+          return Promise.resolve(
+            jsonResponse({ message: "ok", data: [], pagination: {} })
+          );
+        }
+        if (url.includes("/subjects/")) {
+          return Promise.resolve(
+            jsonResponse({
+              message: "ok",
+              data: {
+                id: "sub-1",
+                name: "Polity",
+                topics: [{ id: "top-long", name: longName }],
+              },
+            })
+          );
+        }
+        return Promise.resolve(jsonResponse({ message: "unmocked" }, false));
+      }) as never
+    );
+    renderDraftPage();
+
+    const chips = await screen.findAllByText(longName);
+    expect(chips[0]).toHaveClass("truncate", "max-w-[10rem]");
+    // Replace stays reachable in every row
+    expect(screen.getAllByRole("button", { name: "Replace" })).toHaveLength(2);
+
+    fireEvent.mouseEnter(chips[0]);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(longName);
   });
 
   it("renders all question previews expanded by default without expand controls", async () => {
@@ -353,6 +447,66 @@ describe("FullMockDraftPage", () => {
     );
     const body = JSON.parse(String((publishCall?.[1] as RequestInit | undefined)?.body));
     expect(body.accessMode).toBe("ENTITLED");
+  });
+
+  describe("course cut-offs on publish", () => {
+    it("lists the exam's courses as optional inputs out of the paper total", async () => {
+      await renderReady();
+      expect(await screen.findByLabelText("MBBS cut-off")).toBeInTheDocument();
+      expect(screen.getByLabelText("BDS cut-off")).toBeInTheDocument();
+      expect(screen.getByText("Course cut-offs (optional)")).toBeInTheDocument();
+      expect(screen.getAllByText("/ 4")).toHaveLength(2); // snapshot.totalMarks
+      expect(
+        fetchMock.mock.calls.some((c) =>
+          /recommendations\?.*examId=ex-1/.test(String(c[0]))
+        )
+      ).toBe(true);
+    });
+
+    it("sends only the cut-offs the admin filled in", async () => {
+      await renderReady();
+      fireEvent.change(await screen.findByLabelText("MBBS cut-off"), {
+        target: { value: "3.5" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /publish full mock/i }));
+      await waitFor(() =>
+        expect(router.push).toHaveBeenCalledWith("/admin/full-mock-tests/fm-9")
+      );
+      expect(publishBody().courseCutoffs).toEqual([
+        { offeringId: "off-mbbs", cutoffMarks: 3.5 },
+      ]);
+    });
+
+    it("omits courseCutoffs entirely when none are entered", async () => {
+      await renderReady();
+      await screen.findByLabelText("MBBS cut-off");
+      fireEvent.click(screen.getByRole("button", { name: /publish full mock/i }));
+      await waitFor(() =>
+        expect(router.push).toHaveBeenCalledWith("/admin/full-mock-tests/fm-9")
+      );
+      expect(publishBody()).not.toHaveProperty("courseCutoffs");
+    });
+
+    it("drops a cut-off the admin typed and then cleared", async () => {
+      await renderReady();
+      const input = await screen.findByLabelText("BDS cut-off");
+      fireEvent.change(input, { target: { value: "2" } });
+      fireEvent.change(input, { target: { value: "" } });
+      fireEvent.click(screen.getByRole("button", { name: /publish full mock/i }));
+      await waitFor(() => expect(router.push).toHaveBeenCalled());
+      expect(publishBody()).not.toHaveProperty("courseCutoffs");
+    });
+
+    it("can still publish when the course list fails to load", async () => {
+      coursesFail = true;
+      await renderReady();
+      expect(await screen.findByRole("button", { name: "Retry" })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /publish full mock/i }));
+      await waitFor(() =>
+        expect(router.push).toHaveBeenCalledWith("/admin/full-mock-tests/fm-9")
+      );
+      expect(publishBody()).not.toHaveProperty("courseCutoffs");
+    });
   });
 
   it("discards the draft after confirm", async () => {

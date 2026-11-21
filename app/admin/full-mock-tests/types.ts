@@ -116,6 +116,18 @@ export interface SearchQuestionItem extends SafeQuestion {
   snippet?: string;
 }
 
+/** One stored cut-off: absolute marks on the paper's own scale. */
+export interface CourseCutoffEntry {
+  offeringId: string;
+  cutoffMarks: number;
+}
+
+/** One edit on a published paper. `null` removes the course's cut-off. */
+export interface CourseCutoffUpdate {
+  offeringId: string;
+  cutoffMarks: number | null;
+}
+
 export interface PublishDraftPayload {
   title?: string;
   description?: string;
@@ -125,6 +137,8 @@ export interface PublishDraftPayload {
   showResultsImmediately?: boolean;
   passingScore?: number;
   accessMode?: "FREE" | "ENTITLED";
+  /** Optional per-course cut-offs in absolute marks. */
+  courseCutoffs?: CourseCutoffEntry[];
 }
 
 export interface PublishDraftResult {
@@ -171,4 +185,6 @@ export interface FullMockTestListItem {
   updatedAt: string;
   /** Admin-only: safe questions grouped by subject (published detail). */
   subjects?: DraftSubjectBlock[];
+  /** Admin-only: stored per-course cut-off marks. */
+  courseCutoffs?: CourseCutoffEntry[];
 }

@@ -9,6 +9,7 @@ import {
   formatEzPrepError,
   type Subject,
 } from "@/app/services/ezprep-api";
+import { toPlainImageMetadata } from "@/app/components/ImageUpload";
 import { EditPageShell } from "@/app/components/PageLoader";
 import {
   EquationForm,
@@ -68,11 +69,14 @@ export default function CreateEquationPage() {
   const handleSubmit = async (values: EquationFormValues) => {
     setLoading(true);
     try {
+      const { image, ...rest } = values;
+      const imageMetadata = toPlainImageMetadata(image);
       await equationsApi.create({
-        ...values,
+        ...rest,
         bulletPoints: (values.bulletPoints || []).filter((item) =>
           Boolean(item?.trim())
         ),
+        ...(imageMetadata ? { image: imageMetadata } : {}),
       });
       message.success("Equation created successfully");
       form.resetFields();

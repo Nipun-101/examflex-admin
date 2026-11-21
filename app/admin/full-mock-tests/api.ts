@@ -5,6 +5,7 @@ import type {
   ApiMessageResponse,
 } from "@/app/services/ezprep-api";
 import type {
+  CourseCutoffUpdate,
   DraftResponse,
   DraftListItem,
   FullMockExamListItem,
@@ -111,6 +112,17 @@ export const fullMockApi = {
   getPublished(id: string) {
     return ezPrepApiClient.get<ApiItemResponse<FullMockTestListItem>>(
       `${BASE}/${id}`
+    );
+  },
+
+  /**
+   * Set or clear per-course cut-off marks on a published paper. The API
+   * writes only `courseCutoffs`; nothing else on the paper can change here.
+   */
+  updateCourseCutoffs(id: string, courseCutoffs: CourseCutoffUpdate[]) {
+    return ezPrepApiClient.patch<ApiItemResponse<FullMockTestListItem>>(
+      `${BASE}/${id}/course-cutoffs`,
+      { courseCutoffs }
     );
   },
 };
