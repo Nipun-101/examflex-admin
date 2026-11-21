@@ -16,12 +16,26 @@ export interface Equation {
   longDescription?: string;
   mnemonic?: string;
   bulletPoints: string[];
+  /** Signed URL for the optional picture; absent when there is none. */
+  imageUrl?: string | null;
+  /** Stored metadata for the optional picture (admin responses). */
+  image?: EquationImage;
   subject: NamedRef | string;
   topic: NamedRef | string;
   exams: Array<NamedRef | string>;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** Stored image metadata (admins only; students get `imageUrl`). */
+export interface EquationImage {
+  key: string;
+  bucket: string;
+  region?: string;
+  contentType?: string;
+  size?: number;
+  lastModified?: string;
 }
 
 export type EquationPayload = {
@@ -34,6 +48,8 @@ export type EquationPayload = {
   subject: string;
   topic: string;
   exams: string[];
+  /** Optional picture. On update: `null` removes it, omitted leaves it as is. */
+  image?: EquationImage | null;
 };
 
 export const equationsApi = {

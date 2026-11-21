@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Button, Card, Form, Input, Space, Typography } from "antd";
 import type { FormInstance } from "antd/es/form";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { ImageUpload, type PlainImageMetadata } from "@/app/components/ImageUpload";
 import { Select } from "@/app/components/SearchableSelect";
 import { MathpixContent } from "@/app/admin/full-mock-tests/MathpixContent";
 import { ChapterUi } from "@/app/lib/chapter-ui";
@@ -19,6 +21,8 @@ export type EquationFormValues = {
   longDescription?: string;
   mnemonic?: string;
   bulletPoints?: string[];
+  /** Optional picture; cleared (undefined) when the admin removes it. */
+  image?: PlainImageMetadata;
   subject: string;
   topic: string;
   exams: string[];
@@ -60,7 +64,8 @@ export function EquationForm({
   const watchedValues = Form.useWatch([], form) as
     | Partial<EquationFormValues>
     | undefined;
-  const canSubmit = isEquationFormReady(watchedValues);
+  const [imageUploading, setImageUploading] = useState(false);
+  const canSubmit = isEquationFormReady(watchedValues) && !imageUploading;
 
   return (
     <Card
@@ -143,8 +148,8 @@ export function EquationForm({
             {(fields, { add, remove }) => (
               <div className="md:col-span-2 space-y-3">
                 <Text strong>Bullet points (optional)</Text>
-                {fields.map((field) => (
-                  <Space key={field.key} align="start" className="w-full">
+                {fields.map(({ key, ...field }) => (
+                  <Space key={key} align="start" className="w-full">
                     <Form.Item
                       {...field}
                       className="mb-0 flex-1"
@@ -190,6 +195,17 @@ export function EquationForm({
               </div>
             )}
           </Form.List>
+
+          <div className="md:col-span-2">
+            <ImageUpload
+              name={["image"]}
+              label="Equation image (optional)"
+              onUploadingChange={setImageUploading}
+            />
+            <Text type="secondary" className="text-xs">
+              JPG or PNG. Shown on the card once the student flips it.
+            </Text>
+          </div>
 
           <Form.Item
             label="Subject"

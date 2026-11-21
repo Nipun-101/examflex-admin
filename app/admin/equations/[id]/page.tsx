@@ -1,7 +1,7 @@
 "use client";
 
 import { Form, message } from "antd";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   catalogApi,
@@ -10,6 +10,7 @@ import {
   refId,
   type Subject,
 } from "@/app/services/ezprep-api";
+import { toPlainImageMetadata } from "@/app/components/ImageUpload";
 import { EditPageShell } from "@/app/components/PageLoader";
 import {
   EquationForm,
@@ -33,6 +34,8 @@ export default function EditEquationPage(props: {
   >([]);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const router = useRouter();
+  // Whether the saved equation had a picture, so a removal can be sent as null.
+  const hadImage = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -73,6 +76,9 @@ export default function EditEquationPage(props: {
           );
         }
 
+        const savedImage = toPlainImageMetadata(data.image);
+        hadImage.current = Boolean(savedImage);
+
         form.setFieldsValue({
           title: data.title,
           shortDescription: data.shortDescription,
@@ -80,6 +86,7 @@ export default function EditEquationPage(props: {
           longDescription: data.longDescription,
           mnemonic: data.mnemonic,
           bulletPoints: data.bulletPoints || [],
+          image: savedImage,
           subject: subjectId || undefined,
           topic: topicId || undefined,
           exams: examIds,
@@ -108,12 +115,21 @@ export default function EditEquationPage(props: {
   const handleSubmit = async (values: EquationFormValues) => {
     setLoading(true);
     try {
+      const { image, ...rest } = values;
+      const imageMetadata = toPlainImageMetadata(image);
       await equationsApi.update(params.id, {
-        ...values,
+        ...rest,
         bulletPoints: (values.bulletPoints || []).filter((item) =>
           Boolean(item?.trim())
         ),
+        // new / kept picture -> send it; removed picture -> null; never had one -> omit
+        ...(imageMetadata
+          ? { image: imageMetadata }
+          : hadImage.current
+            ? { image: null }
+            : {}),
       });
+      hadImage.current = Boolean(imageMetadata);
       message.success("Equation updated successfully");
       router.push(equationsListHref(searchParams));
     } catch (error) {
