@@ -14,6 +14,21 @@ export type DraftStatus =
 export type ExamMode = "Mixed" | "Session-wise";
 export type DifficultyLevel = "easy" | "medium" | "hard";
 
+/** One exam subject row: its id and how many questions the paper needs from it. */
+export interface FullMockExamSubject {
+  subjectId: string;
+  name: string;
+  numberOfQuestions: number;
+}
+
+/** Admin-chosen easy/medium/hard split for one exam subject. */
+export interface SubjectDifficultySplit {
+  subjectId: string;
+  easy: number;
+  medium: number;
+  hard: number;
+}
+
 export interface FullMockExamListItem {
   id: string;
   examName: string;
@@ -23,6 +38,8 @@ export interface FullMockExamListItem {
   category?: string;
   examGroup?: string;
   subjects: string[];
+  /** Subject ids + quotas, same order as `subjects`. */
+  subjectDetails?: FullMockExamSubject[];
   mode: ExamMode;
 }
 
