@@ -72,4 +72,28 @@ describe("fullMockApi", () => {
     });
     expect(get).toHaveBeenCalledWith("/v1/full-mock-tests/m1");
   });
+
+  it("updates course cut-offs with a PATCH that carries only the cut-offs", async () => {
+    await fullMockApi.updateCourseCutoffs("m1", [
+      { offeringId: "o1", cutoffMarks: 620 },
+      { offeringId: "o2", cutoffMarks: null },
+    ]);
+    expect(patch).toHaveBeenCalledWith("/v1/full-mock-tests/m1/course-cutoffs", {
+      courseCutoffs: [
+        { offeringId: "o1", cutoffMarks: 620 },
+        { offeringId: "o2", cutoffMarks: null },
+      ],
+    });
+  });
+
+  it("publishes with optional course cut-offs in the payload", async () => {
+    await fullMockApi.publishDraft("d1", {
+      title: "Paper 1",
+      courseCutoffs: [{ offeringId: "o1", cutoffMarks: 620 }],
+    });
+    expect(post).toHaveBeenCalledWith("/v1/full-mock-tests/drafts/d1/publish", {
+      title: "Paper 1",
+      courseCutoffs: [{ offeringId: "o1", cutoffMarks: 620 }],
+    });
+  });
 });

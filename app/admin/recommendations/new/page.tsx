@@ -44,11 +44,6 @@ export default function CreateRecommendationPage() {
         title: values.title,
         subtitle: values.subtitle,
         description: values.description,
-        minPercent: values.minPercent,
-        comfortPercent:
-          values.comfortPercent === undefined || values.comfortPercent === null
-            ? undefined
-            : values.comfortPercent,
         sortOrder: values.sortOrder,
       });
       message.success("Course pathway created");

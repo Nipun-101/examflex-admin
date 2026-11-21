@@ -1,4 +1,4 @@
-import { Tag } from "antd";
+import { Tag, Tooltip } from "antd";
 
 const TAG_COLORS = [
   "magenta",
@@ -40,7 +40,14 @@ export function questionTagLabels(tags?: unknown): string[] {
   return labels;
 }
 
-export function QuestionTags({ tags }: { tags?: unknown }) {
+export function QuestionTags({
+  tags,
+  truncate = false,
+}: {
+  tags?: unknown;
+  /** Clip long names with an ellipsis (full name on hover). Off by default. */
+  truncate?: boolean;
+}) {
   const labels = questionTagLabels(tags);
   if (labels.length === 0) {
     return <Tag>No Tags</Tag>;
@@ -48,20 +55,33 @@ export function QuestionTags({ tags }: { tags?: unknown }) {
 
   return (
     <span className="inline-flex flex-wrap gap-1">
-      {labels.map((label) => (
-        <Tag key={label} color={questionTagColor(label)}>
-          {label}
-        </Tag>
-      ))}
+      {labels.map((label) =>
+        truncate ? (
+          <Tooltip key={label} title={label}>
+            <Tag
+              color={questionTagColor(label)}
+              className="max-w-[10rem] truncate align-bottom"
+            >
+              {label}
+            </Tag>
+          </Tooltip>
+        ) : (
+          <Tag key={label} color={questionTagColor(label)}>
+            {label}
+          </Tag>
+        )
+      )}
     </span>
   );
 }
 
-export function questionTagsColumn() {
+export function questionTagsColumn(options: { truncate?: boolean } = {}) {
   return {
     title: "Tags",
     dataIndex: "tags",
     key: "tags",
-    render: (tags?: unknown) => <QuestionTags tags={tags} />,
+    render: (tags?: unknown) => (
+      <QuestionTags tags={tags} truncate={options.truncate} />
+    ),
   };
 }

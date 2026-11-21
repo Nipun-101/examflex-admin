@@ -44,6 +44,34 @@ describe("recommendationsApi", () => {
     );
   });
 
+  it("creates a course without any percent thresholds", async () => {
+    vi.mocked(ezPrepApiClient.post).mockResolvedValue({ data: { id: "1" } });
+    await recommendationsApi.create({
+      exam: "e1",
+      kind: "COURSE",
+      title: "MBBS",
+      subtitle: undefined,
+      sortOrder: 2,
+    });
+    const body = vi.mocked(ezPrepApiClient.post).mock.calls[0][1] as Record<
+      string,
+      unknown
+    >;
+    expect(body).toEqual({ exam: "e1", kind: "COURSE", title: "MBBS", sortOrder: 2 });
+    expect(body).not.toHaveProperty("minPercent");
+    expect(body).not.toHaveProperty("comfortPercent");
+  });
+
+  it("updates without touching legacy thresholds when they are not sent", async () => {
+    vi.mocked(ezPrepApiClient.patch).mockResolvedValue({ data: { id: "1" } });
+    await recommendationsApi.update("1", { title: "BDS", minPercent: undefined });
+    const body = vi.mocked(ezPrepApiClient.patch).mock.calls[0][1] as Record<
+      string,
+      unknown
+    >;
+    expect(body).toEqual({ title: "BDS" });
+  });
+
   it("gets and deletes by id", async () => {
     vi.mocked(ezPrepApiClient.get).mockResolvedValue({ data: { id: "1" } });
     vi.mocked(ezPrepApiClient.delete).mockResolvedValue({ data: { id: "1" } });
