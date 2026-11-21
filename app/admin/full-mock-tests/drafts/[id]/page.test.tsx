@@ -384,12 +384,19 @@ describe("FullMockDraftPage", () => {
     });
     expect(publishCall).toBeTruthy();
     expect(JSON.parse(String((publishCall![1] as RequestInit).body))).toMatchObject({
-      keepSubjectOrder: false,
+      keepSubjectOrder: true,
       accessMode: "FREE",
     });
   });
 
-  it("sends keepSubjectOrder when the mixed-paper switch is on", async () => {
+  it("has keep subject order on by default", async () => {
+    await renderReady();
+    const field = screen.getByText("Keep subject order").closest(".ant-form-item");
+    expect(field).toBeTruthy();
+    expect(within(field as HTMLElement).getByRole("switch")).toBeChecked();
+  });
+
+  it("sends keepSubjectOrder false when the admin turns the switch off", async () => {
     await renderReady();
     const field = screen.getByText("Keep subject order").closest(".ant-form-item");
     expect(field).toBeTruthy();
@@ -406,7 +413,7 @@ describe("FullMockDraftPage", () => {
       );
     });
     expect(JSON.parse(String((publishCall![1] as RequestInit).body))).toMatchObject(
-      { keepSubjectOrder: true }
+      { keepSubjectOrder: false }
     );
   });
 

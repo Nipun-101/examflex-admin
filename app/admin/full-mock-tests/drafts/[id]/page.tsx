@@ -121,7 +121,7 @@ export default function FullMockDraftPage(props: {
         title: response.data.examSnapshot.name,
         allowRetake: true,
         shuffleOptions: false,
-        keepSubjectOrder: false,
+        keepSubjectOrder: true,
         showResultsImmediately: true,
       });
     } catch (error) {
@@ -604,7 +604,7 @@ export default function FullMockDraftPage(props: {
               initialValues={{
                 allowRetake: true,
                 shuffleOptions: false,
-                keepSubjectOrder: false,
+                keepSubjectOrder: true,
                 showResultsImmediately: true,
                 accessMode: "FREE",
               }}
