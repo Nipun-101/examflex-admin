@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, Form, Input, Space, Typography } from "antd";
+import { Button, Card, Form, Input, InputNumber, Space, Typography } from "antd";
 import type { FormInstance } from "antd/es/form";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { ImageUpload, type PlainImageMetadata } from "@/app/components/ImageUpload";
@@ -26,6 +26,8 @@ export type EquationFormValues = {
   subject: string;
   topic: string;
   exams: string[];
+  /** Higher numbers appear first for students. Defaults to 0. */
+  sortOrder?: number;
 };
 
 export type SubjectOption = {
@@ -81,7 +83,7 @@ export function EquationForm({
         layout="vertical"
         onFinish={onSubmit}
         className="max-w-4xl"
-        initialValues={{ bulletPoints: [] }}
+        initialValues={{ bulletPoints: [], sortOrder: 0 }}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Form.Item
@@ -234,6 +236,22 @@ export function EquationForm({
               disabled={!selectedSubject}
               options={topics}
             />
+          </Form.Item>
+
+          <Form.Item
+            label="Sort order"
+            name="sortOrder"
+            extra="Higher numbers appear first (2 before 1 before 0). Leave at 0 for no priority."
+            rules={[
+              {
+                type: "integer",
+                min: 0,
+                max: 1000,
+                message: "Enter a whole number between 0 and 1000",
+              },
+            ]}
+          >
+            <InputNumber min={0} max={1000} precision={0} size="large" className="w-full" />
           </Form.Item>
 
           <Form.Item

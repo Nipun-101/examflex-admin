@@ -237,6 +237,11 @@ function EquationsPageContent() {
       ),
     },
     {
+      title: "Sort order",
+      key: "sortOrder",
+      render: (record: Equation) => record.sortOrder ?? 0,
+    },
+    {
       title: "Actions",
       key: "actions",
       render: (_: unknown, record: Equation) => (

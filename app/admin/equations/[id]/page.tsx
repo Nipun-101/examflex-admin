@@ -90,6 +90,7 @@ export default function EditEquationPage(props: {
           subject: subjectId || undefined,
           topic: topicId || undefined,
           exams: examIds,
+          sortOrder: data.sortOrder ?? 0,
         });
       } catch (error) {
         message.error(formatEzPrepError(error, "Failed to fetch equation"));
