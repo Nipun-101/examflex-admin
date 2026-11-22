@@ -23,6 +23,8 @@ export interface Equation {
   subject: NamedRef | string;
   topic: NamedRef | string;
   exams: Array<NamedRef | string>;
+  /** Display priority; higher numbers are listed first. */
+  sortOrder?: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -48,6 +50,8 @@ export type EquationPayload = {
   subject: string;
   topic: string;
   exams: string[];
+  /** Higher numbers appear first in the list. Defaults to 0 on the API. */
+  sortOrder?: number;
   /** Optional picture. On update: `null` removes it, omitted leaves it as is. */
   image?: EquationImage | null;
 };
