@@ -20,6 +20,7 @@ export interface MockTestQuestion {
     ml?: { text?: string | null; imageUrl?: string | null };
   };
   optionType?: string;
+  correctAnswer?: string;
   options?: Array<{
     id?: string;
     type?: string;

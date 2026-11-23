@@ -47,6 +47,7 @@ export interface TopicWiseQuestionItem {
   marksPerQuestion: number;
   negativeMarking: number;
   replacedFrom?: string;
+  correctAnswer?: string;
 }
 
 export interface TopicWiseDraftSubjectBlock {

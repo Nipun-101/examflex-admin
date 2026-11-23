@@ -169,6 +169,7 @@ export default function MockTestDetailPage(props: {
                       ml: record.questionText?.ml || { text: null },
                     },
                     optionType: record.optionType,
+                    correctAnswer: record.correctAnswer,
                     options: record.options || [],
                   } as SafeQuestion}
                 />
