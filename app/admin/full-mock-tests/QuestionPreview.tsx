@@ -52,9 +52,11 @@ function PreviewImage({
 function OptionRow({
   option,
   index,
+  isCorrect = false,
 }: {
   option: SafeQuestionOption;
   index: number;
+  isCorrect?: boolean;
 }) {
   const optionText = option.en || option.ml || "";
   const hasImage =
@@ -62,7 +64,11 @@ function OptionRow({
     Boolean(option.imageUrl || signableImage(option.image));
 
   return (
-    <div className="flex items-center gap-2 text-sm leading-normal">
+    <div
+      className={`flex items-center gap-2 text-sm leading-normal${
+        isCorrect ? " font-semibold text-green-600" : ""
+      }`}
+    >
       <span className="font-medium shrink-0">
         <OptionLabel index={index} />.
       </span>
@@ -79,6 +85,7 @@ function OptionRow({
       ) : (
         <span>-</span>
       )}
+      {isCorrect ? <span className="shrink-0">✓ Correct</span> : null}
     </div>
   );
 }
@@ -124,7 +131,14 @@ export function QuestionPreview({
       {question.options?.length ? (
         <div className="space-y-1 pl-1">
           {question.options.map((option, index) => (
-            <OptionRow key={option.id || index} option={option} index={index} />
+            <OptionRow
+              key={option.id || index}
+              option={option}
+              index={index}
+              isCorrect={Boolean(
+                question.correctAnswer && option.id === question.correctAnswer
+              )}
+            />
           ))}
         </div>
       ) : null}

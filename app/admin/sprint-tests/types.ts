@@ -34,6 +34,7 @@ export interface SprintQuestionItem {
   marksPerQuestion: number;
   negativeMarking: number;
   replacedFrom?: string;
+  correctAnswer?: string;
 }
 
 export interface SprintDraftSubjectBlock {

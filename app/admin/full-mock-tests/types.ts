@@ -72,6 +72,8 @@ export interface SafeQuestion {
   };
   optionType?: string;
   options: SafeQuestionOption[];
+  /** Correct option id; only present on admin published views. */
+  correctAnswer?: string;
   subject?: string;
   topic?: string;
   difficultyLevel?: DifficultyLevel | string;
