@@ -41,6 +41,12 @@ vi.mock("@/app/hooks/usePresignedUrl", () => ({
   }),
 }));
 
+vi.mock("./CitationsCard", () => ({
+  CitationsCard: ({ questionId }: { questionId: string }) => (
+    <div data-testid="citations-card">{questionId}</div>
+  ),
+}));
+
 vi.mock("@/app/services/ezprep-api", async () => {
   const actual = await vi.importActual<typeof import("@/app/services/ezprep-api")>(
     "@/app/services/ezprep-api"

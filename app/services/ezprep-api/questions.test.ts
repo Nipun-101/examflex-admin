@@ -6,6 +6,7 @@ vi.mock("./browser-client", () => ({
   ezPrepApiClient: {
     get: vi.fn(),
     post: vi.fn(),
+    put: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn(),
   },
@@ -14,6 +15,7 @@ vi.mock("./browser-client", () => ({
 const get = vi.mocked(ezPrepApiClient.get);
 const post = vi.mocked(ezPrepApiClient.post);
 const patch = vi.mocked(ezPrepApiClient.patch);
+const put = vi.mocked(ezPrepApiClient.put);
 const del = vi.mocked(ezPrepApiClient.delete);
 
 const payload = {
@@ -27,6 +29,7 @@ beforeEach(() => {
   get.mockReset().mockResolvedValue({ message: "ok", data: [] });
   post.mockReset().mockResolvedValue({ message: "ok", data: {} });
   patch.mockReset().mockResolvedValue({ message: "ok", data: {} });
+  put.mockReset().mockResolvedValue({ message: "ok", data: {} });
   del.mockReset().mockResolvedValue({ message: "ok" });
 });
 
@@ -55,5 +58,25 @@ describe("questionsApi", () => {
   it("deletes by id", async () => {
     await questionsApi.delete("q1");
     expect(del).toHaveBeenCalledWith("/v1/questions/q1");
+  });
+
+  it("gets, searches, saves and refreshes citations", async () => {
+    await questionsApi.getCitations("q1");
+    await questionsApi.searchCitations("q1", { limit: 5, q: "" });
+    await questionsApi.searchCitations("q1");
+    await questionsApi.saveCitations("q1", ["c2", "c1"]);
+    await questionsApi.refreshCitations("q1");
+
+    expect(get).toHaveBeenCalledWith("/v1/questions/q1/citations");
+    expect(get).toHaveBeenCalledWith("/v1/questions/q1/citations/search", {
+      searchParams: { limit: 5 },
+    });
+    expect(get).toHaveBeenCalledWith("/v1/questions/q1/citations/search", {
+      searchParams: {},
+    });
+    expect(put).toHaveBeenCalledWith("/v1/questions/q1/citations", {
+      chunkIds: ["c2", "c1"],
+    });
+    expect(post).toHaveBeenCalledWith("/v1/questions/q1/citations/refresh");
   });
 });

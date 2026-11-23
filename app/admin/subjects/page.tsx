@@ -14,6 +14,7 @@ import {
   type Subject,
 } from "@/app/services/ezprep-api";
 import { ChapterUi } from "@/app/lib/chapter-ui";
+import { useVectorSubjects, VECTOR_SUBJECT_HELP } from "./useVectorSubjects";
 
 const { Title } = Typography;
 
@@ -33,6 +34,8 @@ export default function SubjectsPage() {
   });
   const router = useRouter();
   const [topicOptions, setTopicOptions] = useState<TopicOption[]>([]);
+  const { options: vectorSubjectOptions, labelFor: vectorSubjectLabel } =
+    useVectorSubjects();
 
   const pagedSubjects = useMemo(() => {
     const start = (pagination.current - 1) * pagination.pageSize;
@@ -57,6 +60,13 @@ export default function SubjectsPage() {
       key: "topics",
       render: (topics: NamedRef[]) =>
         topics?.map((topic) => topic.name).filter(Boolean).join(", ") || "-",
+    },
+    {
+      title: "NCERT",
+      dataIndex: "vectorSubjectKey",
+      key: "vectorSubjectKey",
+      responsive: ["md", "lg", "xl", "xxl"] as Breakpoint[],
+      render: (key?: string | null) => vectorSubjectLabel(key) ?? "-",
     },
     {
       title: "Actions",
@@ -118,6 +128,7 @@ export default function SubjectsPage() {
     name: string;
     description?: string;
     topics?: string[];
+    vectorSubjectKey?: string;
   }) => {
     setLoading(true);
     try {
@@ -187,6 +198,20 @@ export default function SubjectsPage() {
                 placeholder={ChapterUi.selectPluralPlaceholder}
                 size="large"
                 options={topicOptions}
+                optionFilterProp="label"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="NCERT vector subject"
+              name="vectorSubjectKey"
+              tooltip={VECTOR_SUBJECT_HELP}
+            >
+              <Select
+                allowClear
+                placeholder="Not mapped"
+                size="large"
+                options={vectorSubjectOptions}
                 optionFilterProp="label"
               />
             </Form.Item>

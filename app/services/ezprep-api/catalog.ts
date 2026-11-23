@@ -86,9 +86,17 @@ export interface Subject {
   name: string;
   description?: string;
   topics: NamedRef[];
+  /** NCERT vector subject key (e.g. "physics"); questions in mapped subjects get citations. */
+  vectorSubjectKey?: string | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface VectorSubject {
+  key: string;
+  label: string;
+  vectorSubjectId: string;
 }
 
 export interface Tag {
@@ -315,10 +323,18 @@ export const catalogApi = {
     return ezPrepApiClient.get<ApiItemResponse<Subject>>(`/v1/subjects/${id}`);
   },
 
+  /** NCERT vector subjects a subject can map to. */
+  listVectorSubjects() {
+    return ezPrepApiClient.get<ApiItemResponse<VectorSubject[]>>(
+      "/v1/subjects/vector-subjects"
+    );
+  },
+
   createSubject(body: {
     name: string;
     description?: string;
     topics?: string[];
+    vectorSubjectKey?: string | null;
   }) {
     return ezPrepApiClient.post<ApiItemResponse<Subject>>(
       "/v1/subjects",
@@ -333,6 +349,8 @@ export const catalogApi = {
       description?: string;
       topics?: string[];
       isActive?: boolean;
+      /** Send null to remove the mapping; undefined leaves it unchanged. */
+      vectorSubjectKey?: string | null;
     }
   ) {
     return ezPrepApiClient.patch<ApiItemResponse<Subject>>(

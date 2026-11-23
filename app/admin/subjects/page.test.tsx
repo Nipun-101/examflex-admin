@@ -21,6 +21,10 @@ vi.mock("@/app/services/ezprep-api", async () => {
       listTopics: vi.fn(),
       createSubject: vi.fn(),
       deleteSubject: vi.fn(),
+      listVectorSubjects: vi.fn().mockResolvedValue({
+        message: "ok",
+        data: [{ key: "physics", label: "Physics", vectorSubjectId: "p" }],
+      }),
     },
   };
 });

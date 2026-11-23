@@ -7,6 +7,12 @@ export interface InstanceConfig {
   name: string;
   logoUrl: string | null;
   faviconUrl: string | null;
+  /** Effective NCERT citation settings (stored values, else API defaults). */
+  vectorSearch?: {
+    collectionName: string;
+    subjects: { key: string; label: string; vectorSubjectId: string }[];
+    isDefault: boolean;
+  };
   createdAt: string;
   updatedAt: string;
 }
