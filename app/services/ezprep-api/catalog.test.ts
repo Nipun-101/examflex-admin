@@ -173,6 +173,21 @@ describe("catalogApi subjects, topics, and tags", () => {
     expect(del).toHaveBeenCalledWith("/v1/subjects/s1");
   });
 
+  it("lists vector subjects and sends a null mapping to clear it", async () => {
+    await catalogApi.listVectorSubjects();
+    await catalogApi.createSubject({ name: "Botany", vectorSubjectKey: "biology" });
+    await catalogApi.updateSubject("s1", { vectorSubjectKey: null });
+
+    expect(get).toHaveBeenCalledWith("/v1/subjects/vector-subjects");
+    expect(post).toHaveBeenCalledWith("/v1/subjects", {
+      name: "Botany",
+      vectorSubjectKey: "biology",
+    });
+    expect(patch).toHaveBeenCalledWith("/v1/subjects/s1", {
+      vectorSubjectKey: null,
+    });
+  });
+
   it("covers topic CRUD", async () => {
     await catalogApi.listTopics();
     await catalogApi.getTopic("t1");

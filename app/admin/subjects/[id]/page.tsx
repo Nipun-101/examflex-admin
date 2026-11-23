@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { catalogApi, formatEzPrepError } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
+import { useVectorSubjects, VECTOR_SUBJECT_HELP } from "../useVectorSubjects";
 
 const { Title } = Typography;
 
@@ -21,6 +22,7 @@ export default function EditSubjectPage(props: {
   const [topicOptions, setTopicOptions] = useState<
     { value: string; label: string }[]
   >([]);
+  const { options: vectorSubjectOptions } = useVectorSubjects();
 
   const fetchData = async () => {
     try {
@@ -38,6 +40,7 @@ export default function EditSubjectPage(props: {
         name: subjectRes.data.name,
         description: subjectRes.data.description,
         topics: subjectRes.data.topics?.map((topic) => topic.id) || [],
+        vectorSubjectKey: subjectRes.data.vectorSubjectKey ?? undefined,
       });
     } catch (error) {
       message.error(formatEzPrepError(error, "Failed to fetch subject"));
@@ -54,10 +57,15 @@ export default function EditSubjectPage(props: {
     name: string;
     description?: string;
     topics?: string[];
+    vectorSubjectKey?: string;
   }) => {
     setLoading(true);
     try {
-      await catalogApi.updateSubject(params.id, values);
+      // A cleared select is undefined; send null so the API removes the mapping.
+      await catalogApi.updateSubject(params.id, {
+        ...values,
+        vectorSubjectKey: values.vectorSubjectKey ?? null,
+      });
       message.success("Subject updated successfully");
       router.push("/admin/subjects");
     } catch (error) {
@@ -103,6 +111,20 @@ export default function EditSubjectPage(props: {
                 placeholder={ChapterUi.selectPluralPlaceholder}
                 size="large"
                 options={topicOptions}
+                optionFilterProp="label"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="NCERT vector subject"
+              name="vectorSubjectKey"
+              tooltip={VECTOR_SUBJECT_HELP}
+            >
+              <Select
+                allowClear
+                placeholder="Not mapped"
+                size="large"
+                options={vectorSubjectOptions}
                 optionFilterProp="label"
               />
             </Form.Item>

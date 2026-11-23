@@ -20,6 +20,7 @@ vi.mock("@/app/services/ezprep-api", async () => {
       listTopics: vi.fn(),
       getSubject: vi.fn(),
       updateSubject: vi.fn(),
+      listVectorSubjects: vi.fn(),
     },
   };
 });
@@ -52,6 +53,7 @@ import { catalogApi } from "@/app/services/ezprep-api";
 const listTopics = vi.mocked(catalogApi.listTopics);
 const getSubject = vi.mocked(catalogApi.getSubject);
 const updateSubject = vi.mocked(catalogApi.updateSubject);
+const listVectorSubjects = vi.mocked(catalogApi.listVectorSubjects);
 
 function makeTopic(overrides: Partial<Topic> = {}): Topic {
   return {
@@ -96,6 +98,13 @@ describe("EditSubjectPage", { timeout: 15000 }, () => {
     updateSubject.mockReset();
     push.mockReset();
     listTopics.mockResolvedValue({ message: "ok", data: [makeTopic()] });
+    listVectorSubjects.mockReset().mockResolvedValue({
+      message: "ok",
+      data: [
+        { key: "biology", label: "Biology", vectorSubjectId: "b" },
+        { key: "physics", label: "Physics", vectorSubjectId: "p" },
+      ],
+    });
     vi.spyOn(message, "error").mockImplementation(
       (() => undefined) as unknown as typeof message.error
     );
@@ -159,10 +168,43 @@ describe("EditSubjectPage", { timeout: 15000 }, () => {
         name: "English",
         description: "Quant",
         topics: ["top-1"],
+        vectorSubjectKey: null,
       })
     );
     expect(message.success).toHaveBeenCalledWith("Subject updated successfully");
     expect(push).toHaveBeenCalledWith("/admin/subjects");
+  });
+
+  it("keeps an existing NCERT mapping when saving", async () => {
+    getSubject.mockResolvedValue({
+      message: "ok",
+      data: makeSubject({ vectorSubjectKey: "biology" }),
+    });
+    updateSubject.mockResolvedValue({ message: "ok", data: makeSubject() });
+
+    renderPage();
+    await screen.findByDisplayValue("Mathematics", {}, { timeout: 10000 });
+    expect(await screen.findByText("Biology")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /update subject/i }));
+
+    await waitFor(() =>
+      expect(updateSubject).toHaveBeenCalledWith(
+        "id-1",
+        expect.objectContaining({ vectorSubjectKey: "biology" })
+      )
+    );
+  });
+
+  it("still loads when vector subjects fail to load", async () => {
+    listVectorSubjects.mockRejectedValue(new Error("down"));
+    getSubject.mockResolvedValue({ message: "ok", data: makeSubject() });
+
+    renderPage();
+
+    expect(
+      await screen.findByDisplayValue("Mathematics", {}, { timeout: 10000 })
+    ).toBeInTheDocument();
+    expect(message.error).not.toHaveBeenCalled();
   });
 
   it("surfaces update errors without navigating", async () => {

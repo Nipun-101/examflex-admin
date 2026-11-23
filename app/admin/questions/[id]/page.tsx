@@ -14,6 +14,7 @@ import { EditPageShell } from "@/app/components/PageLoader";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import type { SafeQuestion } from "@/app/admin/full-mock-tests/types";
 import { questionsListHref } from "../questions-list-href";
+import { CitationsCard } from "./CitationsCard";
 
 interface Option {
   id: string;
@@ -708,6 +709,8 @@ export default function EditQuestionPage(props: {
             </Form.Item>
           </Form>
         </Card>
+
+        <CitationsCard questionId={params.id} />
       </div>
     </div>
     </EditPageShell>
