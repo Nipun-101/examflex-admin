@@ -46,8 +46,6 @@ export default function EditRecommendationPage() {
           title: offering.title,
           subtitle: offering.subtitle,
           description: offering.description,
-          minPercent: offering.minPercent,
-          comfortPercent: offering.comfortPercent,
           sortOrder: offering.sortOrder,
           isActive: offering.isActive,
         });
@@ -75,11 +73,6 @@ export default function EditRecommendationPage() {
         title: values.title,
         subtitle: values.subtitle,
         description: values.description,
-        minPercent: values.minPercent,
-        comfortPercent:
-          values.comfortPercent === undefined
-            ? undefined
-            : values.comfortPercent,
         sortOrder: values.sortOrder,
         isActive: values.isActive,
       });

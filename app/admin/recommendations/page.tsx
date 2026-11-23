@@ -123,19 +123,6 @@ function RecommendationsPageContent() {
       render: (record: RecommendationOffering) => record.exam?.name ?? "—",
     },
     {
-      title: "Min %",
-      dataIndex: "minPercent",
-      key: "minPercent",
-      width: 88,
-    },
-    {
-      title: "Comfort %",
-      key: "comfortPercent",
-      width: 110,
-      render: (record: RecommendationOffering) =>
-        record.comfortPercent ?? "default",
-    },
-    {
       title: "Status",
       key: "isActive",
       width: 100,
@@ -183,8 +170,9 @@ function RecommendationsPageContent() {
           Recommendations
         </h1>
         <p className="text-sm text-gray-500">
-          Course pathways per exam (e.g. MBBS under NEET). College targets can
-          be added later under the same module.
+          Course pathways per exam (e.g. MBBS under NEET). Cut-off marks for
+          each course are entered on every full mock. College targets can be
+          added later under the same module.
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Form, Input, InputNumber, Switch } from "antd";
+import { Alert, Button, Form, Input, InputNumber, Switch } from "antd";
 import type { FormInstance } from "antd/es/form";
 import { Select } from "@/app/components/SearchableSelect";
 
@@ -9,8 +9,6 @@ export type OfferingFormValues = {
   title: string;
   subtitle?: string;
   description?: string;
-  minPercent: number;
-  comfortPercent?: number | null;
   sortOrder?: number;
   isActive?: boolean;
 };
@@ -24,18 +22,13 @@ type OfferingFormProps = {
   onSubmit: (values: OfferingFormValues) => void | Promise<void>;
   showActiveToggle?: boolean;
   examDisabled?: boolean;
-  /** When true, disable submit until exam, title, and minPercent are set. */
+  /** When true, disable submit until exam and a valid title are set. */
   requireCompleteFields?: boolean;
 };
 
 function hasRequiredFields(values: Partial<OfferingFormValues>): boolean {
   const title = values.title?.trim() ?? "";
-  return (
-    Boolean(values.exam) &&
-    title.length >= 2 &&
-    typeof values.minPercent === "number" &&
-    Number.isFinite(values.minPercent)
-  );
+  return Boolean(values.exam) && title.length >= 2;
 }
 
 export function OfferingForm({
@@ -63,8 +56,16 @@ export function OfferingForm({
         form={form}
         layout="vertical"
         onFinish={onSubmit}
-        initialValues={{ minPercent: 70, isActive: true }}
+        initialValues={{ isActive: true }}
       >
+        <Alert
+          type="info"
+          showIcon
+          className="!mb-4"
+          message="Cut-offs are set on each full mock"
+          description="Enter the cut-off marks for this course when you publish a full mock (or later from the published mock's page). Students are compared against those marks, so the number can reflect how hard each paper was."
+        />
+
         <Form.Item
           name="exam"
           label="Exam"
@@ -97,27 +98,6 @@ export function OfferingForm({
         <Form.Item name="description" label="Description">
           <Input.TextArea rows={3} maxLength={1000} showCount />
         </Form.Item>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Form.Item
-            name="minPercent"
-            label="Minimum score %"
-            rules={[
-              { required: true, message: "Minimum percent is required" },
-            ]}
-            extra="Students are compared using average % of their last full mocks."
-          >
-            <InputNumber min={0} max={100} className="w-full" />
-          </Form.Item>
-
-          <Form.Item
-            name="comfortPercent"
-            label="Comfort score % (optional)"
-            extra="Defaults to minimum + 10 if left empty."
-          >
-            <InputNumber min={0} max={100} className="w-full" />
-          </Form.Item>
-        </div>
 
         <Form.Item name="sortOrder" label="Sort order">
           <InputNumber min={0} className="w-full" placeholder="Auto if empty" />

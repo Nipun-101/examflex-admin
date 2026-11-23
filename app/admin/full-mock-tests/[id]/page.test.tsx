@@ -1,13 +1,23 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { message } from "antd";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import PublishedFullMockPage from "./page";
 import type { FullMockTestListItem } from "../types";
 
-const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+const { push, router } = vi.hoisted(() => {
+  const push = vi.fn();
+  // Stable reference, like the real Next router (the page's load effect depends on it).
+  return { push, router: { push } };
+});
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
+  useRouter: () => router,
 }));
 
 vi.mock("@/app/services/ezprep-api", async () => {
@@ -16,6 +26,22 @@ vi.mock("@/app/services/ezprep-api", async () => {
   >("@/app/services/ezprep-api");
   return {
     ...actual,
+    recommendationsApi: {
+      list: vi.fn(async () => ({
+        message: "ok",
+        data: [
+          {
+            id: "off-m",
+            title: "MBBS",
+            exam: { id: "ex-1", name: "UPSC Prelims" },
+            kind: "COURSE",
+            sortOrder: 0,
+            isActive: true,
+          },
+        ],
+        pagination: {},
+      })),
+    },
     catalogApi: {
       ...actual.catalogApi,
       getSubject: vi.fn(async (id: string) => {
@@ -61,6 +87,7 @@ vi.mock("../api", async () => {
       replaceQuestion: vi.fn(),
       publishDraft: vi.fn(),
       discardDraft: vi.fn(),
+      updateCourseCutoffs: vi.fn(),
     },
   };
 });
@@ -68,6 +95,7 @@ vi.mock("../api", async () => {
 import { fullMockApi } from "../api";
 
 const getPublished = vi.mocked(fullMockApi.getPublished);
+const updateCourseCutoffs = vi.mocked(fullMockApi.updateCourseCutoffs);
 
 function paramsPromise(id = "id-1") {
   const value = { id };
@@ -163,6 +191,44 @@ describe("PublishedFullMockPage", () => {
     vi.mocked(message.error).mockClear();
   });
 
+  it("shows the course cut-offs card and saves edits without touching the rest of the page", async () => {
+    getPublished.mockResolvedValue({
+      message: "ok",
+      data: {
+        ...testItem,
+        courseCutoffs: [{ offeringId: "off-m", cutoffMarks: 150 }],
+      },
+    });
+    updateCourseCutoffs.mockResolvedValue({
+      message: "Course cut-offs updated successfully",
+      data: {
+        ...testItem,
+        subjects: undefined,
+        courseCutoffs: [{ offeringId: "off-m", cutoffMarks: 180 }],
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Course cut-offs")).toBeInTheDocument();
+    expect(await screen.findByText("150 / 200")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit cut-offs" }));
+    fireEvent.change(await screen.findByLabelText("MBBS cut-off"), {
+      target: { value: "180" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save cut-offs" }));
+
+    await waitFor(() =>
+      expect(updateCourseCutoffs).toHaveBeenCalledWith("id-1", [
+        { offeringId: "off-m", cutoffMarks: 180 },
+      ])
+    );
+    // the saved value is shown, and the questions loaded for the page are still there
+    expect(await screen.findByText("180 / 200")).toBeInTheDocument();
+    expect(screen.getByText("Who elects the President?")).toBeInTheDocument();
+    expect(screen.getByText("Subjects (2)")).toBeInTheDocument();
+  });
+
   it("shows a loader while fetching", async () => {
     getPublished.mockReturnValue(new Promise(() => {}));
     renderPage();
@@ -197,9 +263,13 @@ describe("PublishedFullMockPage", () => {
     expect(expandButton).toBeTruthy();
     fireEvent.click(expandButton!);
 
-    await waitFor(() =>
-      expect(screen.getByText("Parliament")).toBeInTheDocument()
-    );
+    await waitFor(() => {
+      const expanded = document.querySelector(
+        ".ant-table-expanded-row"
+      ) as HTMLElement | null;
+      expect(expanded).toBeTruthy();
+      expect(within(expanded!).getByText("Parliament")).toBeInTheDocument();
+    });
   });
 
   it("expands a question when the row body is clicked", async () => {
@@ -209,9 +279,50 @@ describe("PublishedFullMockPage", () => {
 
     fireEvent.click(screen.getByText("Who elects the President?"));
 
-    await waitFor(() =>
-      expect(screen.getByText("Parliament")).toBeInTheDocument()
-    );
+    await waitFor(() => {
+      const expanded = document.querySelector(
+        ".ant-table-expanded-row"
+      ) as HTMLElement | null;
+      expect(expanded).toBeTruthy();
+      expect(within(expanded!).getByText("Parliament")).toBeInTheDocument();
+    });
+  });
+
+  it("clips long chapter and tag names inside the row, with the full text on hover", async () => {
+    const longTopic = "Electrostatics, Current Electricity and Magnetic Effects";
+    const longTag = "Previous year question from a very long named source";
+    getPublished.mockResolvedValue({
+      message: "ok",
+      data: {
+        ...testItem,
+        subjects: testItem.subjects!.map((subject) => ({
+          ...subject,
+          questions: subject.questions.map((q) => ({
+            ...q,
+            topic: "top-long",
+            tags: [longTag],
+          })),
+        })),
+      },
+    });
+    const { catalogApi } = await import("@/app/services/ezprep-api");
+    vi.mocked(catalogApi.getSubject).mockResolvedValueOnce({
+      message: "ok",
+      data: {
+        id: "sub-1",
+        name: "Polity",
+        topics: [{ id: "top-long", name: longTopic }],
+      },
+    } as never);
+    renderPage();
+
+    const topicChip = (await screen.findAllByText(longTopic))[0];
+    expect(topicChip).toHaveClass("truncate", "max-w-[10rem]");
+    const tagChip = await screen.findByText(longTag);
+    expect(tagChip).toHaveClass("truncate", "max-w-[10rem]");
+
+    fireEvent.mouseEnter(topicChip);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(longTopic);
   });
 
   it("falls back when optional fields are missing", async () => {

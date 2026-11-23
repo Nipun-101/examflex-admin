@@ -10,6 +10,8 @@ import { PageLoader } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 import { questionTagsColumn } from "@/app/components/QuestionTags";
 import { QuestionPreview } from "../QuestionPreview";
+import { CourseCutoffsCard } from "../CourseCutoffsCard";
+import { TopicTag } from "../TopicTag";
 import {
   questionPreviewExpandable,
   questionPreviewOnRow,
@@ -131,7 +133,7 @@ export default function PublishedFullMockPage(props: {
       key: "topic",
       render: (topicId?: string) =>
         topicId ? (
-          <Tag color="purple">{topicNameById.get(topicId) || topicId}</Tag>
+          <TopicTag name={topicNameById.get(topicId) || topicId} />
         ) : (
           "-"
         ),
@@ -147,7 +149,7 @@ export default function PublishedFullMockPage(props: {
           "-"
         ),
     },
-    questionTagsColumn(),
+    questionTagsColumn({ truncate: true }),
     {
       title: "Marks",
       key: "marks",
@@ -251,6 +253,15 @@ export default function PublishedFullMockPage(props: {
             </Descriptions.Item>
           </Descriptions>
         </Card>
+
+        <CourseCutoffsCard
+          test={test}
+          onSaved={(courseCutoffs) =>
+            setTest((previous) =>
+              previous ? { ...previous, courseCutoffs } : previous
+            )
+          }
+        />
 
         <Card title={`Subjects (${test.subjectConfig?.length || 0})`}>
           <Table
