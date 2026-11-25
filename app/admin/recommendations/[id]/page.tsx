@@ -102,7 +102,7 @@ export default function EditRecommendationPage() {
         />
         <button
           type="button"
-          className="text-sm text-blue-600 underline"
+          className="text-sm text-console-green underline hover:text-console-ink-hover"
           onClick={() => router.push("/admin/recommendations")}
         >
           Back to recommendations

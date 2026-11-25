@@ -160,8 +160,8 @@ export function PasteToImage({
           variant === "zone" &&
             cn(
               "rounded-md border border-dashed border-neutral-300 bg-neutral-50/90",
-              "transition-colors hover:border-blue-400 hover:bg-blue-50/40",
-              "focus-within:border-solid focus-within:border-blue-500 focus-within:bg-blue-50/50",
+              "transition-colors hover:border-console-green/50 hover:bg-[#F2F6E7]/60",
+              "focus-within:border-solid focus-within:border-console-green focus-within:bg-[#F2F6E7]/70",
               "[&_.ant-form-item]:mb-2",
               pasted && "border-solid border-green-500 bg-green-50/70"
             ),

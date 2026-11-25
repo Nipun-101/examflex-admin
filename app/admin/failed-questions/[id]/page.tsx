@@ -617,7 +617,6 @@ export default function FixFailedQuestionPage(props: {
                   htmlType="submit"
                   loading={loading}
                   disabled={deleting || !canFix}
-                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Fix
                 </Button>

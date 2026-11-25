@@ -146,7 +146,7 @@ export default function EditCurrentAffairPage(props: {
                 type="primary"
                 htmlType="submit"
                 size="large"
-                className="w-full sm:w-auto min-h-11 bg-blue-600 hover:bg-blue-700"
+                className="w-full sm:w-auto min-h-11"
                 loading={loading || imageUploading}
                 disabled={imageUploading}
               >

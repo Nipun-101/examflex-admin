@@ -50,8 +50,6 @@ const { TextArea } = Input;
 type PublishFormValues = Omit<PublishDraftPayload, "courseCutoffs"> & {
   courseCutoffs?: CourseCutoffValues;
 };
-const primaryButtonClass = "bg-blue-600 hover:bg-blue-700";
-
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "green",
   medium: "orange",
@@ -673,7 +671,6 @@ export default function FullMockDraftPage(props: {
                   type="primary"
                   htmlType="submit"
                   loading={publishing}
-                  className={primaryButtonClass}
                 >
                   Publish Full Mock
                 </Button>
@@ -687,7 +684,6 @@ export default function FullMockDraftPage(props: {
           <Card>
             <Button
               type="primary"
-              className={primaryButtonClass}
               onClick={() =>
                 router.push(
                   `/admin/full-mock-tests/${draft.publishedMockTestId}`

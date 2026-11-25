@@ -103,7 +103,7 @@ export function CourseCutoffFields({
         description={
           <span>
             Add courses under{" "}
-            <Link href="/admin/recommendations" className="text-blue-600 underline">
+            <Link href="/admin/recommendations" className="text-console-green underline hover:text-console-ink-hover">
               Recommendations
             </Link>{" "}
             to enter cut-offs for them here.

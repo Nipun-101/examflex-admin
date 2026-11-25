@@ -86,7 +86,6 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
               type="primary"
               htmlType="submit"
               size="large"
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               {ChapterUi.updateButton}

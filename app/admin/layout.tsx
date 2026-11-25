@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Loader2, Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { Portal as TooltipPortal } from "@radix-ui/react-tooltip";
 import {
   Tooltip,
   TooltipContent,
@@ -127,22 +128,30 @@ function NavLink({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        sideOffset={12}
-        // Tooltips only matter for the desktop rail; the mobile drawer shows labels.
-        className="hidden items-center gap-2 rounded-lg border-0 bg-console-ink px-3 py-1.5 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(23,59,48,0.5)] lg:flex"
-      >
-        {item.label}
-        {showFailedBadge ? (
-          <span className="rounded-full bg-console-danger px-1.5 text-[11px] font-bold leading-[18px]">
-            {failedLabel}
-          </span>
-        ) : null}
-        {showHealthDot ? (
-          <span className="text-[12px] font-medium text-red-300">Degraded</span>
-        ) : null}
-      </TooltipContent>
+      {/*
+        Portal to <body>: the sidebar has a CSS transform (slide-in) and clips overflow, which
+        would otherwise trap the tooltip inside the 76px rail where it can't be seen.
+      */}
+      <TooltipPortal>
+        <TooltipContent
+          side="right"
+          sideOffset={12}
+          // Tooltips only matter for the desktop rail; the mobile drawer shows labels.
+          className="z-[60] hidden items-center gap-2 rounded-lg border-0 bg-console-ink px-3 py-1.5 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(23,59,48,0.5)] lg:flex"
+        >
+          {item.label}
+          {showFailedBadge ? (
+            <span className="rounded-full bg-console-danger px-1.5 text-[11px] font-bold leading-[18px]">
+              {failedLabel}
+            </span>
+          ) : null}
+          {showHealthDot ? (
+            <span className="text-[12px] font-medium text-red-300">
+              Degraded
+            </span>
+          ) : null}
+        </TooltipContent>
+      </TooltipPortal>
     </Tooltip>
   );
 }
@@ -454,17 +463,19 @@ export default function AdminLayout({
                   />
                 ) : null}
                 <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
-                  {group.items.filter((item) => !item.hidden).map((item) => (
-                    <li key={item.href}>
-                      <NavLink
-                        item={item}
-                        active={activeItem?.href === item.href}
-                        failedCount={failedCount}
-                        healthDegraded={healthDegraded}
-                        railCollapsed={railCollapsed}
-                      />
-                    </li>
-                  ))}
+                  {group.items
+                    .filter((item) => !item.hidden)
+                    .map((item) => (
+                      <li key={item.href}>
+                        <NavLink
+                          item={item}
+                          active={activeItem?.href === item.href}
+                          failedCount={failedCount}
+                          healthDegraded={healthDegraded}
+                          railCollapsed={railCollapsed}
+                        />
+                      </li>
+                    ))}
                 </ul>
               </div>
             ))}

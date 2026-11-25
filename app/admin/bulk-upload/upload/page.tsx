@@ -307,7 +307,6 @@ export default function BulkUploadFormPage() {
               htmlType="submit"
               loading={submitting || lookupsLoading}
               disabled={lookupsLoading}
-              className="bg-blue-600 hover:bg-blue-700"
             >
               Upload
             </Button>

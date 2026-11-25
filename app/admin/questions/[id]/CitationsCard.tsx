@@ -458,7 +458,6 @@ export function CitationsCard({ questionId }: { questionId: string }) {
           <Text>matches</Text>
           <Button
             type="primary"
-            className="bg-blue-600 hover:bg-blue-700"
             icon={<SearchOutlined />}
             loading={searching}
             onClick={runSearch}
@@ -496,7 +495,6 @@ export function CitationsCard({ questionId }: { questionId: string }) {
               </Text>
               <Button
                 type="primary"
-                className="bg-blue-600 hover:bg-blue-700"
                 loading={saving}
                 disabled={unchanged}
                 onClick={save}

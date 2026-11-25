@@ -702,7 +702,6 @@ export default function EditQuestionPage(props: {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="bg-blue-600 hover:bg-blue-700"
               >
                 Update Question
               </Button>

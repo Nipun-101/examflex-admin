@@ -79,7 +79,6 @@ export function CourseCutoffsCard({ test, onSaved }: CourseCutoffsCardProps) {
               type="primary"
               loading={saving}
               onClick={() => void save()}
-              className="bg-blue-600 hover:bg-blue-700"
             >
               Save cut-offs
             </Button>

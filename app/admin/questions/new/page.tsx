@@ -445,7 +445,6 @@ export default function CreateQuestionPage() {
                 icon={<PlusOutlined />}
                 loading={loading || pageLoading}
                 disabled={pageLoading}
-                className="bg-blue-600 hover:bg-blue-700"
               >
                 Add Question
               </Button>

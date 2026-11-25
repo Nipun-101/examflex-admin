@@ -316,7 +316,7 @@ function HealthCardView({ card }: { card: HealthCardModel }) {
                 <li key={orderNumber} className="min-w-0">
                   <Link
                     href={`/admin/orders?search=${encodeURIComponent(orderNumber)}`}
-                    className="inline-flex max-w-full min-h-10 items-center break-all rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold !text-blue-700 !underline decoration-2 underline-offset-4 hover:bg-blue-100"
+                    className="inline-flex max-w-full min-h-10 items-center break-all rounded-lg bg-[#E3EEE5] px-3 py-1.5 text-sm font-semibold !text-console-green !underline decoration-2 underline-offset-4 hover:bg-[#D3E6D7]"
                   >
                     {orderNumber}
                   </Link>
@@ -329,7 +329,7 @@ function HealthCardView({ card }: { card: HealthCardModel }) {
             <div className="mt-auto border-t border-slate-200 pt-4">
               <Link
                 href={`/admin/orders?flag=${card.flag}`}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold !text-white shadow-sm !no-underline hover:bg-blue-700 sm:w-auto"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-console-ink px-5 py-2.5 text-center text-sm font-semibold !text-white !no-underline transition-colors hover:bg-console-ink-hover sm:w-auto"
               >
                 Filtered orders
               </Link>

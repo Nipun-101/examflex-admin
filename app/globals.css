@@ -86,18 +86,18 @@
   background: rgba(0, 0, 0, 0.25) !important;
 }
 .ant-switch-checked {
-  background: #1677ff !important;
+  background: #173b30 !important;
 }
 
 /* DatePicker OK sits on a white panel. Base button resets leave it white until hover. */
 .ant-picker-dropdown .ant-picker-ok .ant-btn-primary:not(:disabled) {
-  background: #1677ff !important;
+  background: #173b30 !important;
   color: #fff !important;
-  border-color: #1677ff !important;
+  border-color: #173b30 !important;
 }
 .ant-picker-dropdown .ant-picker-ok .ant-btn-primary:not(:disabled):hover {
-  background: #4096ff !important;
-  border-color: #4096ff !important;
+  background: #557c3e !important;
+  border-color: #557c3e !important;
 }
 .ant-picker-dropdown .ant-picker-ok .ant-btn-primary:disabled {
   background: rgba(0, 0, 0, 0.04) !important;

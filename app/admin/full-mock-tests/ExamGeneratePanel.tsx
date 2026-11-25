@@ -12,8 +12,6 @@ import type { GenerateDraftError } from "./api";
 
 type Counts = { easy: number; medium: number; hard: number };
 
-const primaryButtonClass = "bg-blue-600 hover:bg-blue-700";
-
 /** Even split of a subject's quota; the remainder goes to medium then hard. */
 export function defaultSplit(total: number): Counts {
   const base = Math.floor(total / 3);
@@ -168,7 +166,6 @@ export function ExamGeneratePanel({
         <Button
           type="primary"
           icon={<ThunderboltOutlined />}
-          className={primaryButtonClass}
           loading={generating}
           disabled={disabled || !allValid}
           onClick={handleGenerate}

@@ -29,8 +29,9 @@ const ACTION_BUTTON_STYLES: Partial<
       "!border-amber-400 !bg-amber-50 !text-amber-900 hover:!border-amber-500 hover:!bg-amber-100",
   },
   acknowledged: {
+    // Plain primary: the app-wide theme makes it the console dark green.
     type: "primary",
-    className: "bg-blue-600 hover:!bg-blue-700",
+    className: "",
   },
   responded: {
     type: "primary",
@@ -112,8 +113,7 @@ export function CounselingCard({
           <Button
             type={ACTION_BUTTON_STYLES[item.status]?.type ?? "primary"}
             className={
-              ACTION_BUTTON_STYLES[item.status]?.className ??
-              "bg-blue-600 hover:!bg-blue-700"
+              ACTION_BUTTON_STYLES[item.status]?.className ?? ""
             }
             loading={actionLoading}
             onClick={() => onAdvanceStatus(nextStatus)}

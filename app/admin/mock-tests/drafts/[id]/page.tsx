@@ -41,9 +41,6 @@ import type {
   TopicWiseSearchQuestion,
 } from "../../types";
 
-const primaryButtonClass =
-  "!bg-blue-600 hover:!bg-blue-700 !text-white !border-blue-600";
-
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "green",
   medium: "orange",
@@ -128,7 +125,6 @@ function PublishDraftForm({
             htmlType="submit"
             loading={publishing}
             disabled={publishing}
-            className={primaryButtonClass}
           >
             Publish
           </Button>

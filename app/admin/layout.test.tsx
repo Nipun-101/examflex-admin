@@ -398,7 +398,10 @@ describe("AdminLayout", () => {
       within(nav).getByRole("link", { name: "Sprint tests" }).focus();
     });
 
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Sprint tests");
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Sprint tests");
+    // Rendered outside the sidebar: the aside's transform + overflow clipping would hide it.
+    expect(document.getElementById("admin-sidebar")).not.toContainElement(tooltip);
   });
 
   it("keeps hidden pages reachable by URL with a correct breadcrumb", async () => {

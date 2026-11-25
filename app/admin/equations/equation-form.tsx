@@ -285,7 +285,6 @@ export function EquationForm({
             loading={loading}
             size="large"
             disabled={!canSubmit}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50"
           >
             {submitLabel}
           </Button>
