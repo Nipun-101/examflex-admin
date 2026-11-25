@@ -1,20 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import {
-  Table,
-  Button,
-  Space,
-  message,
-  Pagination,
-  Tag,
-  Tooltip,
-  Alert,
-  Input,
-} from "antd";
-import { Select } from "@/app/components/SearchableSelect";
-import { CloseOutlined } from "@ant-design/icons";
-import Link from "next/link";
+import { Tooltip, message, type TableColumnsType } from "antd";
+import { CircleHelp, Info, Pencil, Trash2, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import {
@@ -26,7 +14,7 @@ import {
   type Question,
 } from "@/app/services/ezprep-api";
 import { PageLoader } from "@/app/components/PageLoader";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
 import { questionsEditHref } from "./questions-list-href";
 import { CreateSprintFromSelectionModal } from "./CreateSprintFromSelectionModal";
 import { CreateTopicWiseFromSelectionModal } from "./CreateTopicWiseFromSelectionModal";
@@ -40,6 +28,31 @@ import {
 } from "./sprint-selection";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 import { topicWiseSelectionIssue } from "./topic-wise-selection";
+import { OverflowChips, TruncatedChip } from "../_components/OverflowChips";
+import {
+  CONSOLE_TOOLTIP_COLOR,
+  ClampText,
+  ColumnTitle,
+  DependentFilter,
+  DifficultyPill,
+  EmptyCell,
+  FilterSelect,
+  IconActionButton,
+  IconActionLink,
+  ListCard,
+  ListFooter,
+  ListPageHeader,
+  ListSearch,
+  ListTable,
+  ListToolbar,
+  PrimaryActionLink,
+  RowActions,
+  SubjectLabel,
+  TableEmptyState,
+} from "../_components/console-list";
+
+const SELECTION_BUTTON =
+  "inline-flex h-9 items-center rounded-full bg-console-ink px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#0F2E25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green disabled:cursor-not-allowed disabled:bg-[#DDE3D6] disabled:text-console-muted";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number.parseInt(value || "", 10);
@@ -224,272 +237,272 @@ function QuestionsPageContent() {
     });
   };
 
-  const columns = [
+  const submitSearch = (value: string) => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    updateQuery({ search: value.trim() || null, page: 1 });
+  };
+
+  const columns: TableColumnsType<Question> = [
     {
-      title: "Question",
+      title: <ColumnTitle>Question</ColumnTitle>,
       key: "question",
-      render: (record: Question) => (
-        <div>
-          <div>
-            {record?.questionText?.en?.text &&
-            record.questionText.en.text.length > 20
-              ? `${record.questionText.en.text.substring(0, 20)}...`
-              : record?.questionText?.en?.text}
+      // No width: gets whatever is left after the other columns, and stays deliberately
+      // narrow (two clipped lines). The full text lives on the edit page and in the tooltip.
+      render: (_: unknown, record: Question) => {
+        const english = record?.questionText?.en?.text || "";
+        const malayalam = record?.questionText?.ml?.text || "";
+        return (
+          <div className="min-w-0">
+            {english ? (
+              <ClampText
+                text={english}
+                className="text-[14px] font-semibold leading-snug text-console-ink"
+              />
+            ) : (
+              <span className="text-[14px] text-console-muted">Untitled question</span>
+            )}
+            {malayalam ? (
+              <div className="mt-0.5 truncate text-[12.5px] text-console-muted">{malayalam}</div>
+            ) : null}
           </div>
-          {record?.questionText?.ml?.text && (
-            <div className="text-gray-500 mt-1">
-              {record.questionText.ml.text.length > 20
-                ? `${record.questionText.ml.text.substring(0, 20)}...`
-                : record.questionText.ml.text}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: "Subject",
-      key: "subject",
-      render: (record: Question) => refName(record.subject) || "-",
-    },
-    {
-      title: "Difficulty",
-      key: "difficultyLevel",
-      render: (record: Question) => {
-        const colorMap: Record<string, string> = {
-          easy: "green",
-          medium: "orange",
-          hard: "red",
-        };
-        return record.difficultyLevel ? (
-          <Tag color={colorMap[record.difficultyLevel]}>
-            {record.difficultyLevel.charAt(0).toUpperCase() +
-              record.difficultyLevel.slice(1)}
-          </Tag>
-        ) : (
-          "-"
         );
       },
     },
-    questionTagsColumn(),
     {
-      title: ChapterUi.singular,
-      key: "topic",
-      render: (record: Question) => (
-        <>
-          {record.topic ? (
-            <Tag key={refId(record.topic)}>
-              {refName(record.topic) || refId(record.topic)}
-            </Tag>
-          ) : (
-            "-"
-          )}
-        </>
-      ),
+      title: <ColumnTitle>Subject</ColumnTitle>,
+      key: "subject",
+      width: "9%",
+      render: (_: unknown, record: Question) => <SubjectLabel name={refName(record.subject)} />,
     },
     {
-      title: "Exams",
-      key: "exams",
-      render: (record: Question) => (
-        <>
-          {record.exams?.map((exam) => (
-            <Tag key={refId(exam)} color="blue">
-              {refName(exam) || refId(exam)}
-            </Tag>
-          ))}
-        </>
-      ),
+      title: <ColumnTitle>Difficulty</ColumnTitle>,
+      key: "difficultyLevel",
+      width: 108,
+      render: (_: unknown, record: Question) => <DifficultyPill level={record.difficultyLevel} />,
     },
     {
-      title: "Actions",
-      key: "actions",
+      title: <ColumnTitle>Tags</ColumnTitle>,
+      key: "tags",
+      width: "13%",
       render: (_: unknown, record: Question) => (
-        <Space>
-          <Link href={questionsEditHref(record.id, searchParams)}>
-            <Button type="primary" className="bg-blue-600 hover:bg-blue-700">
-              Edit
-            </Button>
-          </Link>
-          <Button danger onClick={() => handleDelete(record.id)}>
-            Delete
-          </Button>
-        </Space>
+        <OverflowChips
+          items={questionTagLabels(record.tags)}
+          noun="tags"
+          empty={<span className="text-[13px] text-console-muted">No tags</span>}
+        />
+      ),
+    },
+    {
+      title: <ColumnTitle>{ChapterUi.singular}</ColumnTitle>,
+      key: "topic",
+      width: "22%",
+      render: (_: unknown, record: Question) => {
+        const name = record.topic ? refName(record.topic) || refId(record.topic) : "";
+        return name ? <TruncatedChip label={name} maxWidthClass="max-w-full" /> : <EmptyCell />;
+      },
+    },
+    {
+      title: <ColumnTitle>Exams</ColumnTitle>,
+      key: "exams",
+      width: "16%",
+      render: (_: unknown, record: Question) => (
+        <OverflowChips
+          items={(record.exams || [])
+            .map((exam) => refName(exam) || refId(exam) || "")
+            .filter(Boolean)}
+          tone="exam"
+          noun="exams"
+          empty={<EmptyCell />}
+        />
+      ),
+    },
+    {
+      title: <ColumnTitle>Actions</ColumnTitle>,
+      key: "actions",
+      width: 104,
+      render: (_: unknown, record: Question) => (
+        <RowActions>
+          <IconActionLink
+            href={questionsEditHref(record.id, searchParams)}
+            label="Edit question"
+            tooltip="Edit"
+            icon={Pencil}
+          />
+          <IconActionButton
+            label="Delete question"
+            tooltip="Delete"
+            icon={Trash2}
+            tone="danger"
+            onClick={() => handleDelete(record.id)}
+          />
+        </RowActions>
       ),
     },
   ];
 
+  const hasFilters = Boolean(
+    selectedExam || selectedSubject || selectedTopic || selectedSearch.trim()
+  );
+  const selectionNote =
+    selectedCount > 0 && !canCreateSprint
+      ? { tone: selectedCount < 10 ? "info" : "warning", text: sprintSelectionHint(selectedCount) }
+      : selectedCount > 0 && !canCreateTopic && topicIssue
+        ? { tone: "warning", text: topicIssue }
+        : null;
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Questions</h1>
-      <div className="flex justify-between mb-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="questions-list-search shrink-0">
-            <Input.Search
-              allowClear
-              placeholder="Search question text"
-              value={searchInput}
-              onChange={(event) => handleSearchInputChange(event.target.value)}
-              onSearch={(value) => {
-                if (searchDebounceRef.current) {
-                  clearTimeout(searchDebounceRef.current);
-                }
-                const trimmed = value.trim();
-                setSearchInput(value);
-                updateQuery({
-                  search: trimmed || null,
-                  page: 1,
-                });
-              }}
-              style={{ width: "100%" }}
-            />
-          </div>
-          <Select
+    <div className="w-full text-console-ink">
+      <ListPageHeader
+        eyebrow="Question bank"
+        title="Questions"
+        actions={<PrimaryActionLink href="/admin/questions/new">Add Question</PrimaryActionLink>}
+      />
+
+      <ListCard>
+        <ListToolbar className="xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
+          <ListSearch
+            placeholder="Search question text"
+            value={searchInput}
+            onChange={handleSearchInputChange}
+            onSubmit={submitSearch}
+            className="sm:col-span-2 xl:col-span-1"
+          />
+          <FilterSelect
             placeholder="Filter by exam"
             allowClear
-            className="questions-list-filter shrink-0"
-            popupMatchSelectWidth={false}
             value={selectedExam}
             onChange={(value) => updateQuery({ examId: value, page: 1 })}
-            options={
-              exams?.length > 0
-                ? exams.map((exam) => ({
-                    value: exam._id,
-                    label: exam.name,
-                  }))
-                : []
-            }
+            options={exams.map((exam) => ({ value: exam._id, label: exam.name }))}
           />
-          <Select
+          <FilterSelect
             placeholder="Filter by subject"
             allowClear
-            className="questions-list-filter shrink-0"
-            popupMatchSelectWidth={false}
             value={selectedSubject}
-            onChange={(value) => {
-              updateQuery({ subjectId: value, topicId: null, page: 1 });
-            }}
-            options={subjects.map((subject) => ({
-              value: subject._id,
-              label: subject.name,
-            }))}
+            onChange={(value) => updateQuery({ subjectId: value, topicId: null, page: 1 })}
+            options={subjects.map((subject) => ({ value: subject._id, label: subject.name }))}
           />
-          <Select
+          <DependentFilter
+            enabled={Boolean(selectedSubject)}
+            hint="Pick a subject first"
             placeholder={ChapterUi.filterPlaceholder}
             allowClear
-            disabled={!selectedSubject}
-            className="questions-list-filter shrink-0"
-            popupMatchSelectWidth={false}
             value={selectedTopic}
             onChange={(value) => updateQuery({ topicId: value, page: 1 })}
-            options={topics.map((topic) => ({
-              value: topic._id,
-              label: topic.name,
-            }))}
+            options={topics.map((topic) => ({ value: topic._id, label: topic.name }))}
           />
-        </div>
-        <div className="flex items-center gap-2">
-          {selectedCount > 0 ? (
-            <>
-              <Tooltip title={sprintSelectionHint(selectedCount)}>
+        </ListToolbar>
+
+        {selectedCount > 0 ? (
+          <div className="flex flex-col gap-3 border-t border-console-line bg-[#F2F6E7] px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-[15px] font-semibold text-console-ink">
+                {selectedCount} selected
+              </span>
+              {selectionNote ? (
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[14px] ${
+                    selectionNote.tone === "warning" ? "text-[#9A5A12]" : "text-console-muted"
+                  }`}
+                >
+                  <Info className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                  {selectionNote.text}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Tooltip title={sprintSelectionHint(selectedCount)} color={CONSOLE_TOOLTIP_COLOR}>
                 <span className="inline-block">
-                  <Button
+                  <button
+                    type="button"
                     disabled={!canCreateSprint}
-                    className={
-                      canCreateSprint
-                        ? "!bg-[#eb2f96] hover:!bg-[#c41d7f] !text-white !border-[#eb2f96]"
-                        : undefined
-                    }
                     onClick={() => setSprintModalOpen(true)}
+                    className={SELECTION_BUTTON}
                   >
                     + Sprint Test
-                  </Button>
+                  </button>
                 </span>
               </Tooltip>
               <Tooltip
-                title={
-                  topicIssue ||
-                  ChapterUi.canCreateFromSelection(selectedCount)
-                }
+                title={topicIssue || ChapterUi.canCreateFromSelection(selectedCount)}
+                color={CONSOLE_TOOLTIP_COLOR}
               >
                 <span className="inline-block">
-                  <Button
+                  <button
+                    type="button"
                     disabled={!canCreateTopic}
-                    className={
-                      canCreateTopic
-                        ? "!bg-[#722ed1] hover:!bg-[#531dab] !text-white !border-[#722ed1]"
-                        : undefined
-                    }
                     onClick={() => setTopicModalOpen(true)}
+                    className={SELECTION_BUTTON}
                   >
                     {ChapterUi.topicTestButton}
-                  </Button>
+                  </button>
                 </span>
               </Tooltip>
-              <Tooltip title="Clear selection">
-                <Button
-                  aria-label={`Clear selection (${selectedCount})`}
-                  icon={<CloseOutlined />}
-                  onClick={() => setSelectedQuestions(new Map())}
-                >
-                  ({selectedCount})
-                </Button>
-              </Tooltip>
-            </>
-          ) : null}
-          <Link href="/admin/questions/new">
-            <Button type="primary" className="bg-blue-600 hover:bg-blue-700">
-              Add Question
-            </Button>
-          </Link>
-        </div>
-      </div>
-      {selectedCount > 0 && !canCreateSprint ? (
-        <Alert
-          className="mb-4"
-          type={selectedCount < 10 ? "info" : "warning"}
-          showIcon
-          message={sprintSelectionHint(selectedCount)}
-        />
-      ) : null}
-      {selectedCount > 0 && canCreateSprint && !canCreateTopic && topicIssue ? (
-        <Alert className="mb-4" type="warning" showIcon message={topicIssue} />
-      ) : null}
-      <Table
-        columns={columns}
-        dataSource={questions}
-        rowKey="id"
-        loading={tableLoading || loading}
-        pagination={false}
-        rowSelection={{
-          selectedRowKeys: [...selectedQuestions.keys()],
-          preserveSelectedRowKeys: true,
-          onSelect: (record, checked) => {
-            setSelectedQuestions((current) =>
-              setQuestionSelected(current, snapshotQuestion(record), checked)
-            );
-          },
-          onSelectAll: (checked, _selectedRows, changeRows) => {
-            setSelectedQuestions((current) =>
-              setQuestionsSelected(
-                current,
-                changeRows.map((row) => snapshotQuestion(row)),
-                checked
-              )
-            );
-          },
-        }}
-      />
-      <div className="mt-4 flex justify-end">
-        <Pagination
-          current={page}
-          total={total}
-          pageSize={pageSize}
-          showSizeChanger
-          pageSizeOptions={["10", "20", "50"]}
-          onChange={(nextPage, nextPageSize) =>
-            updateQuery({ page: nextPage, limit: nextPageSize })
+              <button
+                type="button"
+                aria-label={`Clear selection (${selectedCount})`}
+                onClick={() => setSelectedQuestions(new Map())}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-console-line bg-white px-3.5 text-[14px] font-semibold text-console-ink transition-colors hover:border-console-green/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-console-green"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+                Clear
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <ListTable<Question>
+          columns={columns}
+          dataSource={questions}
+          rowKey="id"
+          loading={tableLoading || loading}
+          // Checkbox, difficulty and actions are fixed (260px); subject, tags, chapter and
+          // exams take 60% of the width; the question column gets the rest. Below 940px
+          // (tablets/phones) the table scrolls sideways instead of crushing the columns.
+          scroll={{ x: 940 }}
+          empty={
+            <TableEmptyState
+              icon={CircleHelp}
+              message={
+                hasFilters
+                  ? "No questions match these filters."
+                  : "No questions yet. Add one to start the bank."
+              }
+            />
           }
+          rowSelection={{
+            columnWidth: 48,
+            selectedRowKeys: [...selectedQuestions.keys()],
+            preserveSelectedRowKeys: true,
+            onSelect: (record, checked) => {
+              setSelectedQuestions((current) =>
+                setQuestionSelected(current, snapshotQuestion(record), checked)
+              );
+            },
+            onSelectAll: (checked, _selectedRows, changeRows) => {
+              setSelectedQuestions((current) =>
+                setQuestionsSelected(
+                  current,
+                  changeRows.map((row) => snapshotQuestion(row)),
+                  checked
+                )
+              );
+            },
+          }}
         />
-      </div>
+
+        <ListFooter
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          shownCount={questions.length}
+          noun="questions"
+          onPageChange={(nextPage) => updateQuery({ page: nextPage })}
+          onPageSizeChange={(size) => updateQuery({ limit: size, page: 1 })}
+        />
+      </ListCard>
+
       <CreateSprintFromSelectionModal
         open={sprintModalOpen}
         questions={selectedList}

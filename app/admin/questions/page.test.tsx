@@ -82,8 +82,8 @@ describe("QuestionsPage", () => {
     );
     expect(screen.getByRole("heading", { name: "Questions" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Search question text")).toBeInTheDocument();
-    expect(screen.getByText("No Tags")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute(
+    expect(screen.getByText("No tags")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Edit question" })).toHaveAttribute(
       "href",
       "/admin/questions/q-1?page=5&limit=10"
     );
@@ -172,5 +172,72 @@ describe("QuestionsPage", () => {
     expect(screen.getByText(/Select at least 10 questions/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /clear selection \(1\)/i }));
     expect(screen.queryByRole("button", { name: "+ Sprint Test" })).not.toBeInTheDocument();
+  });
+
+  it("folds extra tags and exams into a +N chip and keeps one chapter chip", async () => {
+    listQuestions.mockResolvedValue({
+      message: "ok",
+      data: [
+        {
+          id: "q-2",
+          questionText: { en: { text: "Which hormone regulates sleep?" } },
+          options: [],
+          correctAnswer: "opt-a",
+          isActive: true,
+          difficultyLevel: "medium",
+          subject: { id: "s1", name: "Zoology" },
+          topic: { id: "t1", name: "Chemical Coordination and Integration in Humans" },
+          tags: [{ name: "Endocrine" }, { name: "PYQ" }, { name: "Revision" }],
+          exams: [
+            { id: "e1", name: "NEET UG" },
+            { id: "e2", name: "AIIMS" },
+          ],
+        },
+      ],
+      pagination: { total: 1, page: 1, limit: 10, totalPages: 1, hasNextPage: false, hasPrevPage: false },
+    } as unknown as Awaited<ReturnType<typeof questionsApi.list>>);
+    searchParamsState.current = new URLSearchParams("page=1&limit=10");
+
+    render(<QuestionsPage />);
+
+    expect(await screen.findByText("Endocrine")).toBeInTheDocument();
+    expect(screen.queryByText("PYQ")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "2 more tags: PYQ, Revision" })
+    ).toHaveTextContent("+2");
+    expect(screen.getByText("NEET UG")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1 more exams: AIIMS" })).toHaveTextContent("+1");
+    expect(
+      screen.getByText("Chemical Coordination and Integration in Humans")
+    ).toHaveClass("truncate");
+    expect(screen.getByText("Medium")).toBeInTheDocument();
+    expect(screen.getByText("Zoology")).toBeInTheDocument();
+  });
+
+  it("pages with Previous and Next and shows the visible range", async () => {
+    render(<QuestionsPage />);
+    expect(await screen.findByText("Capital of India?")).toBeInTheDocument();
+
+    expect(screen.getByText("Showing 41–41 of 50 questions")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    expect(replace).toHaveBeenCalledWith("/admin/questions?page=4&limit=10", {
+      scroll: false,
+    });
+  });
+
+  it("shows a filter-aware empty state", async () => {
+    searchParamsState.current = new URLSearchParams("page=1&limit=10&search=zzz");
+    listQuestions.mockResolvedValue({
+      message: "ok",
+      data: [],
+      pagination: { total: 0, page: 1, limit: 10, totalPages: 0, hasNextPage: false, hasPrevPage: false },
+    });
+
+    render(<QuestionsPage />);
+
+    expect(await screen.findByText("No questions match these filters.")).toBeInTheDocument();
+    expect(screen.getByText("No questions to show")).toBeInTheDocument();
   });
 });

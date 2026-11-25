@@ -33,6 +33,11 @@ export type AdminNavItem = {
   label: string;
   icon: LucideIcon;
   badge?: AdminNavBadge;
+  /**
+   * Left out of the sidebar, but still used for the breadcrumb and active-state matching,
+   * so the page keeps working when opened by URL. Flip back to show it again.
+   */
+  hidden?: boolean;
 };
 
 export type AdminNavGroup = {
@@ -80,7 +85,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     label: "Content",
     items: [
-      { href: "/admin/current-affairs", label: "Current affairs", icon: Newspaper },
+      // Hidden from the sidebar for now; the page is still reachable by URL.
+      { href: "/admin/current-affairs", label: "Current affairs", icon: Newspaper, hidden: true },
       { href: "/admin/recommendations", label: "Recommendations", icon: TrendingUp },
     ],
   },

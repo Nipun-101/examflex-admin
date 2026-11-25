@@ -454,7 +454,7 @@ export default function AdminLayout({
                   />
                 ) : null}
                 <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
-                  {group.items.map((item) => (
+                  {group.items.filter((item) => !item.hidden).map((item) => (
                     <li key={item.href}>
                       <NavLink
                         item={item}

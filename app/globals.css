@@ -141,31 +141,56 @@
   border-radius: 6px !important;
 }
 
-/* Questions list toolbar: search text box ~210px after the search button */
-.questions-list-search {
-  width: 250px;
-  max-width: 250px;
+/* Admin list pages: pill-shaped filters that clip long labels with an ellipsis. */
+.console-filter.ant-select,
+.console-page-size.ant-select {
+  width: 100%;
+  min-width: 0;
 }
 
-.questions-list-search .ant-input-group-wrapper,
-.questions-list-search .ant-input-search {
-  width: 100% !important;
-}
-
-/* Questions list toolbar: fixed filter widths + ellipsis for long labels */
-.questions-list-filter.ant-select {
-  width: 180px !important;
-  max-width: 180px !important;
-}
-
-.questions-list-filter .ant-select-selector {
+.console-filter.ant-select .ant-select-selector,
+.console-page-size.ant-select .ant-select-selector {
+  border-radius: 9999px !important;
   overflow: hidden !important;
 }
 
-.questions-list-filter .ant-select-selection-item {
+.console-filter.ant-select .ant-select-selector {
+  padding-inline: 20px !important;
+  font-weight: 500;
+}
+
+.console-filter.ant-select .ant-select-arrow,
+.console-filter.ant-select .ant-select-clear {
+  inset-inline-end: 18px;
+}
+
+.console-filter.ant-select-disabled .ant-select-selector {
+  background: #f5f2ec !important;
+}
+
+.console-filter .ant-select-selection-item,
+.console-filter .ant-select-selection-placeholder {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+}
+
+.console-page-size.ant-select {
+  width: 118px;
+}
+
+.console-page-size.ant-select .ant-select-selector {
+  height: 40px !important;
+  padding-inline: 16px !important;
+}
+
+.console-page-size.ant-select .ant-select-selection-item {
+  line-height: 38px !important;
+}
+
+/* Keep row selection checkboxes vertically centred with the taller rows. */
+.console-table .ant-table-tbody > tr > td {
+  vertical-align: middle;
 }
 
 .ant-btn {

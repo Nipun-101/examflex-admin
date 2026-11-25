@@ -84,7 +84,7 @@ describe("RecommendationsPage", () => {
     expect(await screen.findByText("MBBS")).toBeInTheDocument();
     expect(screen.getByText("BDS")).toBeInTheDocument();
     for (const header of ["Title", "Exam", "Status", "Actions"]) {
-      expect(screen.getByText(header)).toBeInTheDocument();
+      expect(screen.getByRole("columnheader", { name: header })).toBeInTheDocument();
     }
     expect(screen.queryByText("Min %")).not.toBeInTheDocument();
     expect(screen.queryByText("Comfort %")).not.toBeInTheDocument();
@@ -108,18 +108,20 @@ describe("RecommendationsPage", () => {
     });
   });
 
-  it("edits via the row action", async () => {
+  it("links each row to its edit page", async () => {
     render(<RecommendationsPage />);
     await screen.findByText("MBBS");
-    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[0]);
-    expect(push).toHaveBeenCalledWith("/admin/recommendations/o1");
+    expect(screen.getAllByRole("link", { name: "Edit course" })[0]).toHaveAttribute(
+      "href",
+      "/admin/recommendations/o1"
+    );
   });
 
   it("deletes a course after confirming and reloads", async () => {
     vi.mocked(recommendationsApi.delete).mockResolvedValue({ data: {} } as never);
     render(<RecommendationsPage />);
     await screen.findByText("MBBS");
-    fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Delete course" })[0]);
     await waitFor(() => expect(recommendationsApi.delete).toHaveBeenCalledWith("o1"));
     await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
     expect(message.success).toHaveBeenCalledWith("Recommendation deleted");
@@ -129,7 +131,7 @@ describe("RecommendationsPage", () => {
     vi.mocked(recommendationsApi.delete).mockRejectedValue(new Error("no"));
     render(<RecommendationsPage />);
     await screen.findByText("MBBS");
-    fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Delete course" })[0]);
     await waitFor(() => expect(message.error).toHaveBeenCalled());
   });
 

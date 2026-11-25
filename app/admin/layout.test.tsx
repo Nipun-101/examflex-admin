@@ -318,7 +318,8 @@ describe("AdminLayout", () => {
     ]) {
       expect(within(nav).getByText(label)).toBeInTheDocument();
     }
-    expect(within(nav).getAllByRole("link")).toHaveLength(23);
+    expect(within(nav).getAllByRole("link")).toHaveLength(22);
+    expect(within(nav).queryByRole("link", { name: "Current affairs" })).not.toBeInTheDocument();
     expect(within(nav).getByRole("link", { name: "Chapters" })).toHaveAttribute(
       "href",
       "/admin/topics"
@@ -398,5 +399,15 @@ describe("AdminLayout", () => {
     });
 
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Sprint tests");
+  });
+
+  it("keeps hidden pages reachable by URL with a correct breadcrumb", async () => {
+    vi.mocked(usePathname).mockReturnValue("/admin/current-affairs/abc");
+    await renderReadyLayout();
+
+    const breadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(breadcrumb).getByText("Current affairs")).toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: "Admin navigation" });
+    expect(within(nav).queryByText("Current affairs")).not.toBeInTheDocument();
   });
 });

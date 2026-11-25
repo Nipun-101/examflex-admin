@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Pagination, Space, Table, Tag, Tooltip, message } from "antd";
-import { Select } from "@/app/components/SearchableSelect";
+import { message, type TableColumnsType } from "antd";
 import Link from "next/link";
+import { CircleCheck, Trash2, Wrench } from "lucide-react";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import { catalogApi, ezPrepApiClient } from "@/app/services/ezprep-api";
 import { ChapterUi } from "@/app/lib/chapter-ui";
@@ -14,57 +14,40 @@ import {
   FailedQuestionListResponse,
   LookupItem,
 } from "./types";
+import { OverflowChips, TruncatedChip } from "../_components/OverflowChips";
+import {
+  ClampText,
+  ColumnTitle,
+  DependentFilter,
+  DifficultyPill,
+  EmptyCell,
+  FilterSelect,
+  IconActionButton,
+  ListCard,
+  ListFooter,
+  ListPageHeader,
+  ListTable,
+  ListToolbar,
+  Pill,
+  ROW_ACTION_CLASS,
+  ROW_ACTION_TONE,
+  RowActions,
+  SubjectLabel,
+  TableEmptyState,
+  type PillTone,
+} from "../_components/console-list";
 
-const STAGE_COLORS: Record<string, string> = {
-  llm: "orange",
+const STAGE_TONE: Record<string, PillTone> = {
+  llm: "amber",
   validation: "red",
-  parse: "volcano",
-  import: "magenta",
+  parse: "red",
+  import: "violet",
 };
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: "green",
-  medium: "orange",
-  hard: "red",
-};
-
-const primaryButtonClass = "bg-blue-600 hover:bg-blue-700";
-const MAX_VISIBLE_EXAMS = 2;
-
-function truncate(text: string | null | undefined, max = 20): string {
-  if (!text) return "-";
-  return text.length > max ? `${text.substring(0, max)}...` : text;
-}
-
-function renderExamTags(
-  examIds: string[] | undefined,
-  examMap: Map<string, string>
-) {
-  if (!examIds?.length) return "-";
-
-  const labels = examIds.map((id) => ({
-    id,
-    name: examMap.get(id) ?? id,
-  }));
-  const visible = labels.slice(0, MAX_VISIBLE_EXAMS);
-  const hidden = labels.slice(MAX_VISIBLE_EXAMS);
-
-  return (
-    <div className="flex flex-wrap items-center gap-1 min-w-0 max-w-full">
-      {visible.map(({ id, name }) => (
-        <Tooltip key={id} title={name}>
-          <Tag color="blue" className="!m-0 max-w-full overflow-hidden">
-            <span className="block max-w-full truncate">{name}</span>
-          </Tag>
-        </Tooltip>
-      ))}
-      {hidden.length > 0 && (
-        <Tooltip title={hidden.map(({ name }) => name).join(", ")}>
-          <Tag className="cursor-default shrink-0">+{hidden.length}</Tag>
-        </Tooltip>
-      )}
-    </div>
-  );
+function stageLabel(stage: string) {
+  if (!stage) return "Unknown";
+  if (stage.toLowerCase() === "llm") return "LLM";
+  return stage.charAt(0).toUpperCase() + stage.slice(1);
 }
 
 export default function FailedQuestionsPage() {
@@ -228,173 +211,197 @@ export default function FailedQuestionsPage() {
     });
   };
 
-  const columns = [
+  const hasFilters = Boolean(selectedExam || selectedSubject || selectedTopic);
+
+  const columns: TableColumnsType<FailedQuestion> = [
     {
-      title: "#",
+      title: <ColumnTitle>#</ColumnTitle>,
       dataIndex: "questionNumber",
       key: "questionNumber",
-      width: 60,
+      width: 52,
+      render: (value: number) => (
+        <span className="text-[13px] font-semibold tabular-nums text-console-muted">{value}</span>
+      ),
     },
     {
-      title: "Question",
+      title: <ColumnTitle>Question</ColumnTitle>,
       key: "question",
+      // Flexible: takes the space the other columns leave.
       render: (_: unknown, record: FailedQuestion) => {
         const draft = record.question || record.questionDraft;
+        const english = draft?.questionText?.en?.text || "";
+        const malayalam = draft?.questionText?.ml?.text || "";
         return (
-          <div>
-            <div>{truncate(draft?.questionText?.en?.text)}</div>
-            {draft?.questionText?.ml?.text && (
-              <div className="text-gray-500 mt-1">
-                {truncate(draft.questionText.ml.text)}
-              </div>
+          <div className="min-w-0">
+            {english ? (
+              <ClampText
+                text={english}
+                className="text-[14px] font-semibold leading-snug text-console-ink"
+              />
+            ) : (
+              <EmptyCell />
             )}
+            {malayalam ? (
+              <div className="mt-0.5 truncate text-[12.5px] text-console-muted">{malayalam}</div>
+            ) : null}
           </div>
         );
       },
     },
     {
-      title: "Stage",
-      key: "failureStage",
+      title: <ColumnTitle>Failure</ColumnTitle>,
+      key: "failure",
+      width: "24%",
       render: (_: unknown, record: FailedQuestion) => (
-        <Tag color={STAGE_COLORS[record.failureStage] ?? "default"}>
-          {record.failureStage}
-        </Tag>
+        <div className="min-w-0">
+          <Pill tone={STAGE_TONE[record.failureStage?.toLowerCase()] ?? "neutral"}>
+            {stageLabel(record.failureStage)}
+          </Pill>
+          {record.failureMessage ? (
+            <ClampText
+              text={record.failureMessage}
+              className="mt-1 text-[12.5px] leading-snug text-console-danger"
+            />
+          ) : null}
+        </div>
       ),
     },
     {
-      title: "Failure",
-      key: "failureMessage",
-      render: (_: unknown, record: FailedQuestion) => (
-        <Tooltip title={record.failureMessage}>
-          <span className="text-red-600">{truncate(record.failureMessage, 40)}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: "Subject",
-      key: "subject",
-      render: (_: unknown, record: FailedQuestion) => {
-        const subjectId = (record.question || record.questionDraft)?.subject;
-        if (!subjectId) return "-";
-        return subjectMap.get(subjectId) ?? "-";
-      },
-    },
-    {
-      title: "Difficulty",
+      title: <ColumnTitle>Difficulty</ColumnTitle>,
       key: "difficultyLevel",
+      width: 108,
+      render: (_: unknown, record: FailedQuestion) => (
+        <DifficultyPill level={(record.question || record.questionDraft)?.difficultyLevel} />
+      ),
+    },
+    {
+      title: <ColumnTitle>{`Subject · ${ChapterUi.singular}`}</ColumnTitle>,
+      key: "topic",
+      width: "20%",
       render: (_: unknown, record: FailedQuestion) => {
-        const level = (record.question || record.questionDraft)
-          ?.difficultyLevel;
-        if (!level) return "-";
+        const draft = record.question || record.questionDraft;
+        const subjectName = draft?.subject ? subjectMap.get(draft.subject) : undefined;
+        const topicName = draft?.topic ? topicMap.get(draft.topic) : undefined;
+        if (!subjectName && !topicName) return <EmptyCell />;
         return (
-          <Tag color={DIFFICULTY_COLORS[level] ?? "default"}>
-            {level.charAt(0).toUpperCase() + level.slice(1)}
-          </Tag>
+          <div className="flex min-w-0 flex-col items-start gap-1">
+            {subjectName ? <SubjectLabel name={subjectName} /> : null}
+            {topicName ? <TruncatedChip label={topicName} maxWidthClass="max-w-full" /> : null}
+          </div>
         );
       },
     },
     {
-      title: ChapterUi.singular,
-      key: "topic",
-      render: (_: unknown, record: FailedQuestion) => {
-        const topicId = (record.question || record.questionDraft)?.topic;
-        if (!topicId) return "-";
-        const name = topicMap.get(topicId);
-        return name ? <Tag>{name}</Tag> : "-";
-      },
-    },
-    {
-      title: "Exams",
+      title: <ColumnTitle>Exams</ColumnTitle>,
       key: "exams",
-      render: (_: unknown, record: FailedQuestion) =>
-        renderExamTags(
-          (record.question || record.questionDraft)?.exams,
-          examMap
-        ),
+      width: "13%",
+      render: (_: unknown, record: FailedQuestion) => (
+        <OverflowChips
+          items={((record.question || record.questionDraft)?.exams || []).map(
+            (id) => examMap.get(id) ?? id
+          )}
+          tone="exam"
+          noun="exams"
+          empty={<EmptyCell />}
+        />
+      ),
     },
     {
-      title: "Actions",
+      title: <ColumnTitle>Actions</ColumnTitle>,
       key: "actions",
+      width: 128,
       render: (_: unknown, record: FailedQuestion) => (
-        <Space>
-          <Link href={`/admin/failed-questions/${record.id}`}>
-            <Button type="primary" className={primaryButtonClass}>
-              Fix
-            </Button>
+        <RowActions>
+          <Link
+            href={`/admin/failed-questions/${record.id}`}
+            className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary} !px-3.5`}
+          >
+            <Wrench className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            Fix
           </Link>
-          <Button
-            danger
+          <IconActionButton
+            label="Delete failed question"
+            tooltip="Delete"
+            icon={Trash2}
+            tone="danger"
             loading={deletingId === record.id}
             disabled={deletingId !== null && deletingId !== record.id}
             onClick={() => handleDelete(record)}
-          >
-            Delete
-          </Button>
-        </Space>
+          />
+        </RowActions>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h1 className="text-2xl font-bold">Failed Questions</h1>
-          <Select
+    <div className="w-full text-console-ink">
+      <ListPageHeader
+        eyebrow="Question bank"
+        title="Failed questions"
+        description="Import rows that still need a fix before they can go live."
+      />
+
+      <ListCard>
+        <ListToolbar className="xl:grid-cols-3">
+          <FilterSelect
             placeholder="Filter by exam"
             allowClear
-            style={{ width: 200 }}
             value={selectedExam}
-            onChange={(value) => setSelectedExam(value ?? null)}
-            options={exams.map((exam) => ({
-              value: exam._id,
-              label: exam.name,
-            }))}
+            onChange={(value) => setSelectedExam(value)}
+            options={exams.map((exam) => ({ value: exam._id, label: exam.name }))}
           />
-          <Select
+          <FilterSelect
             placeholder="Filter by subject"
             allowClear
-            style={{ width: 200 }}
             value={selectedSubject}
             onChange={(value) => {
-              setSelectedSubject(value ?? null);
+              setSelectedSubject(value);
               setSelectedTopic(null);
             }}
-            options={subjects.map((subject) => ({
-              value: subject._id,
-              label: subject.name,
-            }))}
+            options={subjects.map((subject) => ({ value: subject._id, label: subject.name }))}
           />
-          <Select
+          <DependentFilter
+            enabled={Boolean(selectedSubject)}
+            hint="Pick a subject first"
             placeholder={ChapterUi.filterPlaceholder}
             allowClear
-            disabled={!selectedSubject}
-            style={{ width: 200 }}
             value={selectedTopic}
-            onChange={(value) => setSelectedTopic(value ?? null)}
-            options={filteredTopics.map((topic) => ({
-              value: topic._id,
-              label: topic.name,
-            }))}
+            onChange={(value) => setSelectedTopic(value)}
+            options={filteredTopics.map((topic) => ({ value: topic._id, label: topic.name }))}
+            className="sm:col-span-2 xl:col-span-1"
           />
-        </div>
-      </div>
-      <Table
-        columns={columns}
-        dataSource={items}
-        rowKey="id"
-        loading={loading}
-        pagination={false}
-        scroll={{ x: true }}
-      />
-      <div className="mt-4 flex justify-end">
-        <Pagination
-          current={pagination.current}
-          total={pagination.total}
-          pageSize={pagination.pageSize}
-          onChange={(page) => fetchFailedQuestions(page)}
+        </ListToolbar>
+
+        <ListTable<FailedQuestion>
+          columns={columns}
+          dataSource={items}
+          rowKey="id"
+          loading={loading}
+          // Fixed columns (#, difficulty, actions) are 288px and the rest share 57%;
+          // the question column gets what is left. Below 940px the table scrolls instead.
+          scroll={{ x: 940 }}
+          empty={
+            <TableEmptyState
+              icon={CircleCheck}
+              message={
+                hasFilters
+                  ? "No failed questions match these filters."
+                  : "Nothing to fix. Every imported question went live."
+              }
+            />
+          }
         />
-      </div>
+
+        <ListFooter
+          page={pagination.current}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          shownCount={items.length}
+          noun="failed questions"
+          onPageChange={(page) => fetchFailedQuestions(page)}
+          onPageSizeChange={(size) => fetchFailedQuestions(1, size)}
+        />
+      </ListCard>
     </div>
   );
 }

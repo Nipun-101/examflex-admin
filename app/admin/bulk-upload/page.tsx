@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Input, Modal, Pagination, Space, Spin, Table, Tag, Tooltip, message } from "antd";
-import { Select } from "@/app/components/SearchableSelect";
-import { ImportOutlined } from "@ant-design/icons";
-import Link from "next/link";
+import { Modal, Spin, Tooltip, message, type TableColumnsType } from "antd";
+import { FileUp, FileText, Import, RotateCcw, Upload } from "lucide-react";
 import { catalogApi, ezPrepApiClient } from "@/app/services/ezprep-api";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 import { EzPrepApiError } from "@/app/services/ezprep-api/types";
@@ -22,6 +20,28 @@ import {
   PARSE_PDF_CONFIG,
   ParsePdfAcceptedResponse,
 } from "./types";
+import { OverflowChips, TruncatedChip } from "../_components/OverflowChips";
+import {
+  CONSOLE_TOOLTIP_COLOR,
+  ClampText,
+  ColumnTitle,
+  DependentFilter,
+  EmptyCell,
+  FilterSelect,
+  ListCard,
+  ListFooter,
+  ListPageHeader,
+  ListSearch,
+  ListTable,
+  ListToolbar,
+  Pill,
+  PrimaryActionLink,
+  ROW_ACTION_CLASS,
+  ROW_ACTION_TONE,
+  SubjectLabel,
+  TableEmptyState,
+  type PillTone,
+} from "../_components/console-list";
 
 const PROCESSING_MODAL_CONTENT: Record<
   BulkUploadProcessingAction,
@@ -35,14 +55,14 @@ const PROCESSING_MODAL_CONTENT: Record<
   },
 };
 
-const STATUS_COLORS: Record<BulkUploadStatus, string> = {
-  uploaded: "blue",
-  parsing: "processing",
-  parsed: "cyan",
-  processing: "orange",
-  enriched: "purple",
-  completed: "green",
-  failed: "red",
+const STATUS_TONE: Record<BulkUploadStatus, { tone: PillTone; spinning?: boolean }> = {
+  uploaded: { tone: "blue" },
+  parsing: { tone: "blue", spinning: true },
+  parsed: { tone: "violet" },
+  processing: { tone: "amber", spinning: true },
+  enriched: { tone: "lime" },
+  completed: { tone: "green" },
+  failed: { tone: "red" },
 };
 
 function formatStatus(status: BulkUploadStatus): string {
@@ -58,40 +78,6 @@ function formatFileSize(bytes: number): string {
 function isUuidLike(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     value
-  );
-}
-
-const primaryButtonClass = "bg-blue-600 hover:bg-blue-700";
-const MAX_VISIBLE_EXAMS = 2;
-
-function renderExamTags(
-  examIds: string[],
-  examMap: Map<string, string>
-) {
-  if (!examIds?.length) return "-";
-
-  const labels = examIds.map((id) => ({
-    id,
-    name: examMap.get(id) ?? id,
-  }));
-  const visible = labels.slice(0, MAX_VISIBLE_EXAMS);
-  const hidden = labels.slice(MAX_VISIBLE_EXAMS);
-
-  return (
-    <div className="flex flex-wrap items-center gap-1 min-w-0 max-w-full">
-      {visible.map(({ id, name }) => (
-        <Tooltip key={id} title={name}>
-          <Tag color="blue" className="!m-0 max-w-full overflow-hidden">
-            <span className="block max-w-full truncate">{name}</span>
-          </Tag>
-        </Tooltip>
-      ))}
-      {hidden.length > 0 && (
-        <Tooltip title={hidden.map(({ name }) => name).join(", ")}>
-          <Tag className="cursor-default shrink-0">+{hidden.length}</Tag>
-        </Tooltip>
-      )}
-    </div>
   );
 }
 
@@ -347,69 +333,71 @@ export default function BulkUploadPage() {
 
   const renderActionButton = (record: BulkUpload) => {
     const isLoading = actionLoadingId === record.id;
+    const busy = isLoading ? <Spin size="small" className="!mr-0.5" /> : null;
 
     switch (record.status) {
       case "uploaded":
         return (
-          <Button
-            type="primary"
-            className={primaryButtonClass}
-            loading={isLoading}
+          <button
+            type="button"
+            disabled={isLoading}
             onClick={() => handleParse(record)}
+            className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary}`}
           >
+            {busy}
             Parse PDF
-          </Button>
+          </button>
         );
       case "parsing":
         return (
-          <Button
-            type="primary"
-            className={primaryButtonClass}
-            loading={isLoading}
-            disabled
-          >
+          <button type="button" disabled className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.muted}`}>
             Parsing...
-          </Button>
+          </button>
         );
       case "parsed":
         return (
-          <Button
-            type="primary"
-            className={primaryButtonClass}
-            loading={isLoading}
+          <button
+            type="button"
+            disabled={isLoading}
             onClick={() => handleEnrich(record)}
+            className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary}`}
           >
+            {busy}
             AI Enrich
-          </Button>
+          </button>
         );
       case "processing":
         return (
-          <Button type="primary" className={primaryButtonClass} disabled>
+          <button type="button" disabled className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.muted}`}>
             Processing...
-          </Button>
+          </button>
         );
       case "enriched":
         return (
-          <Tooltip title="Import enriched questions to database">
-            <Button
-              type="primary"
-              className={primaryButtonClass}
-              loading={isLoading}
+          <Tooltip title="Import enriched questions to the question bank" color={CONSOLE_TOOLTIP_COLOR}>
+            <button
+              type="button"
+              aria-label="Add to Question Bank"
+              disabled={isLoading}
               onClick={() => handleImport(record)}
+              className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary}`}
             >
-              Add to Question Bank
-            </Button>
+              {busy ?? <Import className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />}
+              Add to bank
+            </button>
           </Tooltip>
         );
       case "failed":
         return (
-          <Button
-            danger
-            loading={isLoading}
+          <button
+            type="button"
+            disabled={isLoading}
             onClick={() => handleParse(record)}
+            className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.danger}`}
           >
+            {busy ?? <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />}
             Retry
-          </Button>
+          </button>
         );
       case "completed":
       default:
@@ -417,170 +405,189 @@ export default function BulkUploadPage() {
     }
   };
 
-  const columns = [
+  const hasFilters = Boolean(
+    selectedSubject || selectedTopic || selectedStatus || searchQuery.trim()
+  );
+
+  const columns: TableColumnsType<BulkUpload> = [
     {
-      title: "File Name",
+      title: <ColumnTitle>File</ColumnTitle>,
       key: "filename",
-      width: "24%",
-      ellipsis: true,
+      // Flexible: takes the space the other columns leave.
       render: (_: unknown, record: BulkUpload) => (
-        <div className="min-w-0">
-          <div className="font-medium truncate">{record.filename}</div>
-          {record.title &&
-            record.title !== record.filename &&
-            !isUuidLike(record.title) && (
-              <div className="text-gray-500 text-sm mt-1 truncate">
-                {record.title}
-              </div>
-            )}
-          <div className="text-gray-400 text-xs mt-1">
-            {formatFileSize(record.fileSize ?? 0)}
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F1ECE1] text-[#7A5A2E]">
+            <FileText className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <ClampText
+              text={record.filename}
+              lines={1}
+              className="text-[14px] font-semibold text-console-ink"
+            />
+            {record.title && record.title !== record.filename && !isUuidLike(record.title) ? (
+              <ClampText
+                text={record.title}
+                lines={1}
+                className="mt-0.5 text-[12.5px] text-console-muted"
+              />
+            ) : null}
+            <div className="mt-0.5 text-[12px] text-console-muted/80">
+              {formatFileSize(record.fileSize ?? 0)}
+            </div>
           </div>
         </div>
       ),
     },
     {
-      title: "Subject",
+      title: <ColumnTitle>Subject</ColumnTitle>,
       key: "subject",
-      width: "15%",
-      ellipsis: true,
-      render: (_: unknown, record: BulkUpload) =>
-        subjectMap.get(record.subjectId) ?? record.subjectId ?? "-",
+      width: "11%",
+      render: (_: unknown, record: BulkUpload) => (
+        <SubjectLabel name={subjectMap.get(record.subjectId) ?? record.subjectId} />
+      ),
     },
     {
-      title: ChapterUi.singular,
+      title: <ColumnTitle>{ChapterUi.singular}</ColumnTitle>,
       key: "topic",
-      width: "13%",
-      ellipsis: true,
+      width: "18%",
       render: (_: unknown, record: BulkUpload) =>
         record.topicId ? (
-          <Tag>{topicMap.get(record.topicId) ?? record.topicId}</Tag>
+          <TruncatedChip
+            label={topicMap.get(record.topicId) ?? record.topicId}
+            maxWidthClass="max-w-full"
+          />
         ) : (
-          "-"
+          <EmptyCell />
         ),
     },
     {
-      title: "Exams",
+      title: <ColumnTitle>Exams</ColumnTitle>,
       key: "exams",
-      width: "21%",
-      ellipsis: true,
-      onCell: () => ({ className: "!max-w-0 overflow-hidden" }),
-      render: (_: unknown, record: BulkUpload) =>
-        renderExamTags(record.examIds, examMap),
+      width: "14%",
+      render: (_: unknown, record: BulkUpload) => (
+        <OverflowChips
+          items={(record.examIds || []).map((id) => examMap.get(id) ?? id)}
+          tone="exam"
+          noun="exams"
+          empty={<EmptyCell />}
+        />
+      ),
     },
     {
-      title: "Status",
+      title: <ColumnTitle>Status</ColumnTitle>,
       key: "status",
-      width: "12%",
-      render: (_: unknown, record: BulkUpload) => (
-        <div>
-          <Tag color={STATUS_COLORS[record.status] ?? "default"}>
-            {formatStatus(record.status)}
-          </Tag>
-          {record.status === "failed" && record.errorMessage && (
-            <Tooltip title={record.errorMessage}>
-              <div className="text-red-500 text-xs mt-1 line-clamp-2">
-                {record.errorMessage}
-              </div>
-            </Tooltip>
-          )}
-        </div>
-      ),
+      width: "14%",
+      render: (_: unknown, record: BulkUpload) => {
+        const style = STATUS_TONE[record.status] ?? { tone: "neutral" as const };
+        return (
+          <div className="min-w-0">
+            <Pill tone={style.tone} spinning={style.spinning}>
+              {formatStatus(record.status)}
+            </Pill>
+            {record.status === "failed" && record.errorMessage ? (
+              <ClampText
+                text={record.errorMessage}
+                className="mt-1 text-[12px] leading-snug text-console-danger"
+              />
+            ) : null}
+          </div>
+        );
+      },
     },
     {
-      title: "Actions",
+      title: <ColumnTitle>Actions</ColumnTitle>,
       key: "actions",
-      width: "15%",
-      render: (_: unknown, record: BulkUpload) => (
-        <Space>{renderActionButton(record)}</Space>
-      ),
+      width: 148,
+      render: (_: unknown, record: BulkUpload) => renderActionButton(record),
     },
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-4 gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h1 className="text-2xl font-bold">Bulk Upload</h1>
-          <Input.Search
+    <div className="w-full text-console-ink">
+      <ListPageHeader
+        eyebrow="Question bank"
+        title="Bulk upload"
+        description="Upload PDFs, parse them, enrich with AI, then add the questions to the bank."
+        actions={
+          <PrimaryActionLink href="/admin/bulk-upload/upload" icon={Upload}>
+            Upload
+          </PrimaryActionLink>
+        }
+      />
+
+      <ListCard>
+        <ListToolbar className="xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
+          <ListSearch
             placeholder="Search by file name"
-            allowClear
-            style={{ width: 220 }}
             value={searchInput}
-            onChange={(e) => {
-              const value = e.target.value;
+            onChange={(value) => {
               setSearchInput(value);
               if (!value) setSearchQuery("");
             }}
-            onSearch={(value) => setSearchQuery(value.trim())}
+            onSubmit={(value) => setSearchQuery(value.trim())}
+            className="sm:col-span-2 xl:col-span-1"
           />
-          <Select
+          <FilterSelect<BulkUploadStatus>
             placeholder="Filter by status"
             allowClear
-            style={{ width: 180 }}
             value={selectedStatus}
-            onChange={(value) => setSelectedStatus(value ?? null)}
+            onChange={(value) => setSelectedStatus(value)}
             options={BULK_UPLOAD_STATUSES.map((status) => ({
               value: status,
               label: formatStatus(status),
             }))}
           />
-          <Select
+          <FilterSelect
             placeholder="Filter by subject"
             allowClear
-            style={{ width: 200 }}
             value={selectedSubject}
             onChange={(value) => {
-              setSelectedSubject(value ?? null);
+              setSelectedSubject(value);
               setSelectedTopic(null);
             }}
-            options={subjects.map((subject) => ({
-              value: subject._id,
-              label: subject.name,
-            }))}
+            options={subjects.map((subject) => ({ value: subject._id, label: subject.name }))}
           />
-          <Select
+          <DependentFilter
+            enabled={Boolean(selectedSubject)}
+            hint="Pick a subject first"
             placeholder={ChapterUi.filterPlaceholder}
             allowClear
-            disabled={!selectedSubject}
-            style={{ width: 200 }}
             value={selectedTopic}
-            onChange={(value) => setSelectedTopic(value ?? null)}
-            options={filteredTopics.map((topic) => ({
-              value: topic._id,
-              label: topic.name,
-            }))}
+            onChange={(value) => setSelectedTopic(value)}
+            options={filteredTopics.map((topic) => ({ value: topic._id, label: topic.name }))}
           />
-        </div>
-        <Link href="/admin/bulk-upload/upload">
-          <Button type="primary" className={primaryButtonClass}>
-            Upload
-          </Button>
-        </Link>
-      </div>
+        </ListToolbar>
 
-      <Table
-        columns={columns}
-        dataSource={uploads}
-        rowKey="id"
-        loading={loading}
-        pagination={false}
-        tableLayout="fixed"
-        style={{ width: "100%" }}
-        scroll={{ x: 960 }}
-      />
-
-      <div className="mt-4 flex justify-end">
-        <Pagination
-          current={pagination.current}
-          total={pagination.total}
-          pageSize={pagination.pageSize}
-          onChange={(page) => fetchUploads(page)}
-          showSizeChanger
-          onShowSizeChange={(_, size) => fetchUploads(1, size)}
-          pageSizeOptions={["10", "20", "50"]}
+        <ListTable<BulkUpload>
+          columns={columns}
+          dataSource={uploads}
+          rowKey="id"
+          loading={loading}
+          // Actions are fixed (148px), the rest share 57%; the file column gets what is left.
+          scroll={{ x: 900 }}
+          empty={
+            <TableEmptyState
+              icon={FileUp}
+              message={
+                hasFilters
+                  ? "No uploads match these filters."
+                  : "No uploads yet. Upload a PDF to start an import."
+              }
+            />
+          }
         />
-      </div>
+
+        <ListFooter
+          page={pagination.current}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          shownCount={uploads.length}
+          noun="uploads"
+          onPageChange={(page) => fetchUploads(page)}
+          onPageSizeChange={(size) => fetchUploads(1, size)}
+        />
+      </ListCard>
 
       <Modal
         open={!!processingUpload}
@@ -590,19 +597,17 @@ export default function BulkUploadPage() {
         centered
         width={400}
       >
-        <div className="flex flex-col items-center py-8 gap-5">
+        <div className="flex flex-col items-center gap-5 py-8">
           <Spin size="large" />
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 text-lg font-medium">
-              <ImportOutlined className="text-blue-600" />
+            <div className="flex items-center justify-center gap-2 text-lg font-semibold text-console-ink">
+              <Import className="h-5 w-5 text-console-green" strokeWidth={1.75} aria-hidden="true" />
               {processingUpload
                 ? PROCESSING_MODAL_CONTENT[processingUpload.action].title
                 : ""}
             </div>
-            <p className="text-gray-600 mt-2 break-all">
-              {processingUpload?.filename}
-            </p>
-            <p className="text-gray-400 text-sm mt-3">
+            <p className="mt-2 break-all text-console-muted">{processingUpload?.filename}</p>
+            <p className="mt-3 text-sm text-console-muted/80">
               {processingUpload
                 ? PROCESSING_MODAL_CONTENT[processingUpload.action].description
                 : ""}
