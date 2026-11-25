@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { ConfigProvider, Modal } from "antd";
+import { ConfigProvider, Modal, Select } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AntdProvider } from "./antd-provider";
 
@@ -40,5 +41,37 @@ describe("AntdProvider", () => {
       )
     );
     expect(warned).toBe(false);
+  });
+
+  it("styles selected and hovered dropdown options with light tints, also inside page themes", async () => {
+    render(
+      <AntdProvider>
+        <Select open value="a" options={[{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }]} />
+        <ConsolePageShell eyebrow="Papers" title="Shell page">
+          <Select open value="b" options={[{ value: "b", label: "Bravo" }]} />
+        </ConsolePageShell>
+      </AntdProvider>
+    );
+    await screen.findAllByText("Alpha");
+
+    const css = Array.from(document.querySelectorAll("style"))
+      .map((node) => node.textContent ?? "")
+      .join("\n")
+      .toLowerCase();
+    const selectedRules = css
+      .split("}")
+      .filter(
+        (rule) =>
+          rule.includes("ant-select-item-option-selected:not(.ant-select-item-option-disabled)") &&
+          rule.includes("background")
+      );
+
+    // One rule per theme in play (app-wide + the shell page theme).
+    expect(selectedRules.length).toBeGreaterThanOrEqual(2);
+    // Every selected-option background uses the light green, never antd's derived dark tint.
+    for (const rule of selectedRules) {
+      expect(rule).toContain("#e3eee5");
+    }
+    expect(css).toContain("#f5f2ec");
   });
 });

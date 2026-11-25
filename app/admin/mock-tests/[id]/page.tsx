@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Card, Descriptions, Tag, Table, Space, message } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Table, message, type TableColumnsType } from "antd";
+import { ClipboardList, ListChecks } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -12,7 +12,21 @@ import {
 } from "@/app/services/ezprep-api";
 import { PageLoader } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
+import { OverflowChips, TruncatedChip } from "@/app/admin/_components/OverflowChips";
+import {
+  ClampText,
+  ConsolePageShell,
+  EmptyCell,
+  Pill,
+  SubjectLabel,
+} from "@/app/admin/_components/console-list";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  YesNoPill,
+} from "@/app/admin/_components/console-detail";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import {
   questionPreviewExpandable,
@@ -46,31 +60,49 @@ export default function MockTestDetailPage(props: {
     }
   };
 
-  const questionColumns = [
+  const questionColumns: TableColumnsType<MockTestQuestion> = [
     {
       title: "Question",
       key: "question",
-      render: (record: MockTestQuestion) =>
-        record?.questionText?.en?.text?.slice(0, 120) || "Question",
+      // Flexible: takes what the other columns leave. Click the row for the full preview.
+      render: (_: unknown, record: MockTestQuestion) => (
+        <ClampText
+          text={record?.questionText?.en?.text?.slice(0, 120) || "Question"}
+          className="text-[14px] font-semibold leading-snug text-console-ink"
+        />
+      ),
     },
     {
       title: "Subject",
       key: "subject",
-      render: (record: MockTestQuestion) => (
-        <Tag color="blue">{refName(record?.subject) || "N/A"}</Tag>
+      width: "14%",
+      render: (_: unknown, record: MockTestQuestion) => (
+        <SubjectLabel name={refName(record?.subject) || "N/A"} />
       ),
     },
     {
       title: ChapterUi.singular,
       key: "topic",
-      render: (record: MockTestQuestion) =>
+      width: "24%",
+      render: (_: unknown, record: MockTestQuestion) =>
         refName(record?.topic) ? (
-          <Tag color="purple">{refName(record.topic)}</Tag>
+          <TruncatedChip label={refName(record.topic)!} maxWidthClass="max-w-full" />
         ) : (
-          "-"
+          <EmptyCell />
         ),
     },
-    questionTagsColumn(),
+    {
+      title: "Tags",
+      key: "tags",
+      width: "18%",
+      render: (_: unknown, record: MockTestQuestion) => (
+        <OverflowChips
+          items={questionTagLabels((record as { tags?: unknown }).tags)}
+          noun="tags"
+          empty={<span className="text-[13px] text-console-muted">No tags</span>}
+        />
+      ),
+    },
   ];
 
   if (loading) {
@@ -81,103 +113,105 @@ export default function MockTestDetailPage(props: {
     return null;
   }
 
+  const questions = (mockTest.questions || mockTest.questionIds) ?? [];
+  const mix = mockTest.difficultyDistribution;
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button 
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push('/admin/mock-tests')}
-          >
-            Back to Mock Tests
-          </Button>
-          <h1 className="text-2xl font-bold">{mockTest.title || 'Mock Test Details'}</h1>
-        </div>
-
-        <Card title="Mock Test Details">
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-            <Descriptions.Item label="Title">{mockTest.title || 'N/A'}</Descriptions.Item>
-            <Descriptions.Item label="Status">
-              <Tag color={mockTest.isActive ? 'green' : 'red'}>
-                {mockTest.isActive ? 'Active' : 'Inactive'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Questions">{mockTest.totalQuestions}</Descriptions.Item>
-            <Descriptions.Item label="Duration">{mockTest.durationInMinutes} minutes</Descriptions.Item>
-            <Descriptions.Item label="Exam">
-              <Tag color="cyan">{refName(mockTest.exam) || 'N/A'}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Subject">
-              <Tag color="blue">{refName(mockTest.subject) || 'N/A'}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label={ChapterUi.singular} span="filled">
-              {refName(mockTest.topic) ? <Tag color="purple">{refName(mockTest.topic)}</Tag> : 'Not set'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Difficulty Distribution" span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-              {mockTest.difficultyDistribution ? (
-                <Space>
-                  <Tag color="green">Easy: {mockTest.difficultyDistribution.easy}</Tag>
-                  <Tag color="orange">Medium: {mockTest.difficultyDistribution.medium}</Tag>
-                  <Tag color="red">Hard: {mockTest.difficultyDistribution.hard}</Tag>
-                </Space>
-              ) : 'Not set'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Marks Per Question">{mockTest.marksPerQuestion}</Descriptions.Item>
-            <Descriptions.Item label="Negative Marking">{mockTest.negativeMarking}</Descriptions.Item>
-            <Descriptions.Item label="Passing Score">{mockTest.passingScore || 'Not set'}</Descriptions.Item>
-            <Descriptions.Item label="Generation Mode">
-              <Tag>{mockTest.generationMode}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Allow Retake">
-              <Tag color={mockTest.allowRetake ? 'green' : 'red'}>
-                {mockTest.allowRetake ? 'Yes' : 'No'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Shuffle Options">
-              <Tag color={mockTest.shuffleOptions ? 'green' : 'red'}>
-                {mockTest.shuffleOptions ? 'Yes' : 'No'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Show Results Immediately" span="filled">
-              <Tag color={mockTest.showResultsImmediately ? 'green' : 'red'}>
-                {mockTest.showResultsImmediately ? 'Yes' : 'No'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Description" span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-              {mockTest.description || 'No description'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Created At" span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-              {new Date(mockTest.createdAt).toLocaleString()}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        <Card title={`Questions (${(mockTest.questions || mockTest.questionIds)?.length || 0})`}>
-          <Table
-            columns={questionColumns}
-            dataSource={mockTest.questions || mockTest.questionIds}
-            rowKey="id"
-            pagination={{ pageSize: 10 }}
-            onRow={questionPreviewOnRow}
-            expandable={questionPreviewExpandable(
-              (record: MockTestQuestion) => (
-                <QuestionPreview
-                  question={{
-                    _id: record.id,
-                    questionText: {
-                      en: record.questionText?.en || { text: null },
-                      ml: record.questionText?.ml || { text: null },
-                    },
-                    optionType: record.optionType,
-                    correctAnswer: record.correctAnswer,
-                    options: record.options || [],
-                  } as SafeQuestion}
-                />
-              )
+    <ConsolePageShell
+      eyebrow={ChapterUi.paperTypeTitle + " test"}
+      title={mockTest.title || "Mock Test Details"}
+      back={{ label: `Back to ${ChapterUi.navPapers}`, onClick: () => router.push("/admin/mock-tests") }}
+      badge={
+        mockTest.isActive ? <Pill tone="green">Active</Pill> : <Pill tone="red">Inactive</Pill>
+      }
+    >
+      <DetailSection title="Test details" icon={ClipboardList} tone="green">
+        <DetailGrid>
+          <DetailItem label="Title">{mockTest.title || "N/A"}</DetailItem>
+          <DetailItem label="Total Questions">{mockTest.totalQuestions}</DetailItem>
+          <DetailItem label="Duration">{mockTest.durationInMinutes} minutes</DetailItem>
+          <DetailItem label="Generation Mode">
+            <Pill tone="neutral" dot={false}>
+              {mockTest.generationMode}
+            </Pill>
+          </DetailItem>
+          <DetailItem label="Exam">
+            {refName(mockTest.exam) ? (
+              <TruncatedChip label={refName(mockTest.exam)!} tone="exam" maxWidthClass="max-w-full" />
+            ) : (
+              "N/A"
             )}
-          />
-        </Card>
-      </div>
-    </div>
+          </DetailItem>
+          <DetailItem label="Subject">
+            <SubjectLabel name={refName(mockTest.subject) || "N/A"} />
+          </DetailItem>
+          <DetailItem label={ChapterUi.singular}>
+            {refName(mockTest.topic) ? (
+              <TruncatedChip label={refName(mockTest.topic)!} maxWidthClass="max-w-full" />
+            ) : (
+              "Not set"
+            )}
+          </DetailItem>
+          <DetailItem label="Difficulty Distribution">
+            {mix ? (
+              <span className="flex flex-wrap gap-1.5">
+                <Pill tone="green">Easy: {mix.easy}</Pill>
+                <Pill tone="amber">Medium: {mix.medium}</Pill>
+                <Pill tone="red">Hard: {mix.hard}</Pill>
+              </span>
+            ) : (
+              "Not set"
+            )}
+          </DetailItem>
+          <DetailItem label="Marks Per Question">{mockTest.marksPerQuestion}</DetailItem>
+          <DetailItem label="Negative Marking">{mockTest.negativeMarking}</DetailItem>
+          <DetailItem label="Passing Score">{mockTest.passingScore || "Not set"}</DetailItem>
+          <DetailItem label="Allow Retake">
+            <YesNoPill value={mockTest.allowRetake} />
+          </DetailItem>
+          <DetailItem label="Shuffle Options">
+            <YesNoPill value={mockTest.shuffleOptions} />
+          </DetailItem>
+          <DetailItem label="Show Results Immediately">
+            <YesNoPill value={mockTest.showResultsImmediately} />
+          </DetailItem>
+          <DetailItem label="Created At" wide>
+            {new Date(mockTest.createdAt).toLocaleString()}
+          </DetailItem>
+          <DetailItem label="Description" wide>
+            <span className="font-normal leading-relaxed">
+              {mockTest.description || "No description"}
+            </span>
+          </DetailItem>
+        </DetailGrid>
+      </DetailSection>
+
+      <DetailSection title={`Questions (${questions.length})`} icon={ListChecks} tone="violet" flush>
+        <Table<MockTestQuestion>
+          columns={questionColumns}
+          dataSource={questions}
+          rowKey="id"
+          tableLayout="fixed"
+          pagination={{ pageSize: 10, position: ["bottomCenter"] }}
+          onRow={questionPreviewOnRow}
+          expandable={questionPreviewExpandable(
+            (record: MockTestQuestion) => (
+              <QuestionPreview
+                question={{
+                  _id: record.id,
+                  questionText: {
+                    en: record.questionText?.en || { text: null },
+                    ml: record.questionText?.ml || { text: null },
+                  },
+                  optionType: record.optionType,
+                  correctAnswer: record.correctAnswer,
+                  options: record.options || [],
+                } as SafeQuestion}
+              />
+            )
+          )}
+        />
+      </DetailSection>
+    </ConsolePageShell>
   );
 }

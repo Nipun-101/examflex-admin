@@ -6,15 +6,14 @@ import {
   Form,
   Input,
   InputNumber,
-  Typography,
   message,
 } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { catalogApi, formatEzPrepError } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
 
-const { Title } = Typography;
 
 export default function EditCategoryPage(props: {
   params: Promise<{ id: string }>;
@@ -67,13 +66,13 @@ export default function EditCategoryPage(props: {
 
   return (
     <EditPageShell loading={initialLoading}>
-    <div className="space-y-6">
+    <ConsolePageShell
+      eyebrow="Catalog"
+      title="Edit Category"
+      back={{ label: "Back to Categories", onClick: () => router.push("/admin/categories") }}
+    >
       <Card
-        title={
-          <Title level={4} className="mb-0">
-            Edit Category
-          </Title>
-        }
+        title="Details"
         className="w-full shadow-sm"
       >
         <Form
@@ -157,7 +156,7 @@ export default function EditCategoryPage(props: {
           </Form.Item>
         </Form>
       </Card>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }

@@ -24,21 +24,10 @@ import {
   ListSearch,
   ListTable,
   ListToolbar,
-  Pill,
   RowActions,
   TableEmptyState,
-  type PillTone,
 } from "../_components/console-list";
-
-const STATUS_STYLE: Record<OrderStatus, { tone: PillTone; label: string }> = {
-  CREATED: { tone: "neutral", label: "Created" },
-  PENDING_PAYMENT: { tone: "amber", label: "Pending payment" },
-  PAID: { tone: "green", label: "Paid" },
-  FAILED: { tone: "red", label: "Failed" },
-  EXPIRED: { tone: "neutral", label: "Expired" },
-  CANCELLED: { tone: "neutral", label: "Cancelled" },
-  REFUNDED: { tone: "violet", label: "Refunded" },
-};
+import { OrderStatusPill } from "./order-status";
 
 function formatCreated(value?: string) {
   if (!value) return null;
@@ -152,10 +141,7 @@ export default function OrdersPage() {
       title: <ColumnTitle>Status</ColumnTitle>,
       key: "status",
       width: 160,
-      render: (_: unknown, row: AdminOrder) => {
-        const style = STATUS_STYLE[row.status] ?? { tone: "neutral" as const, label: row.status };
-        return <Pill tone={style.tone}>{style.label}</Pill>;
-      },
+      render: (_: unknown, row: AdminOrder) => <OrderStatusPill status={row.status} />,
     },
     {
       title: <ColumnTitle>Amount</ColumnTitle>,

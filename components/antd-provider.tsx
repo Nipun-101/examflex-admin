@@ -18,8 +18,39 @@ export const ADMIN_ANTD_THEME: ThemeConfig = {
     colorLinkHover: "#557C3E",
     colorLinkActive: "#173B30",
     fontFamily: "inherit",
+    /*
+     * Light tints for "selected"/"hovered" items (dropdown options, menus, pickers, table row
+     * selection). antd derives these from colorPrimary, and from our dark ink it produces a heavy
+     * grey-green that makes option text unreadable, so pin them to the console's light greens.
+     */
+    colorPrimaryBg: "#E3EEE5",
+    colorPrimaryBgHover: "#D3E6D7",
+    colorPrimaryBorder: "#B9D3BF",
+    colorPrimaryBorderHover: "#8FB59A",
+    controlItemBgHover: "#F5F2EC",
+    controlItemBgActive: "#E3EEE5",
+    controlItemBgActiveHover: "#D3E6D7",
+    controlOutline: "rgba(47, 107, 79, 0.15)",
   },
   components: {
+    Select: {
+      optionActiveBg: "#F5F2EC",
+      optionSelectedBg: "#E3EEE5",
+      optionSelectedColor: "#173B30",
+      optionSelectedFontWeight: 600,
+    },
+    TreeSelect: {
+      nodeHoverBg: "#F5F2EC",
+      nodeSelectedBg: "#E3EEE5",
+    },
+    Cascader: {
+      optionSelectedBg: "#E3EEE5",
+    },
+    Dropdown: {
+      controlItemBgHover: "#F5F2EC",
+      controlItemBgActive: "#E3EEE5",
+      controlItemBgActiveHover: "#D3E6D7",
+    },
     Button: {
       // Outlined/default buttons: ink text, and a lime-green border + text on hover.
       defaultColor: "#173B30",

@@ -298,7 +298,7 @@ describe("FullMockDraftPage", () => {
 
   it("loads a reviewable draft", async () => {
     await renderReady();
-    expect(screen.getByText("REVIEW")).toBeInTheDocument();
+    expect(screen.getByText("In review")).toBeInTheDocument();
     expect(
       screen.getAllByText("Who elects the President?").length
     ).toBeGreaterThan(0);

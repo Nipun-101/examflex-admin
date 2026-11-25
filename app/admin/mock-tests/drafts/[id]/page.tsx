@@ -4,8 +4,6 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
-  Descriptions,
   Form,
   Input,
   InputNumber,
@@ -13,14 +11,30 @@ import {
   Space,
   Switch,
   Table,
-  Tag,
   message,
+  type TableColumnsType,
 } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ClipboardList, ListChecks, Loader2, RefreshCw, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import { PageLoader } from "@/app/components/PageLoader";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
+import { OverflowChips, TruncatedChip } from "@/app/admin/_components/OverflowChips";
+import {
+  ClampText,
+  ConsolePageShell,
+  DifficultyPill,
+  EmptyCell,
+  Pill,
+  ROW_ACTION_CLASS,
+  ROW_ACTION_TONE,
+} from "@/app/admin/_components/console-list";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  DraftStatusPill,
+} from "@/app/admin/_components/console-detail";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import {
@@ -41,11 +55,15 @@ import type {
   TopicWiseSearchQuestion,
 } from "../../types";
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: "green",
-  medium: "orange",
-  hard: "red",
-};
+function questionTags(record: { tags?: unknown }) {
+  return (
+    <OverflowChips
+      items={questionTagLabels(record.tags)}
+      noun="tags"
+      empty={<span className="text-[13px] text-console-muted">No tags</span>}
+    />
+  );
+}
 
 function PublishDraftForm({
   settings,
@@ -61,7 +79,7 @@ function PublishDraftForm({
   const [form] = Form.useForm<PublishTopicWiseDraftPayload>();
 
   return (
-    <Card title="Publish">
+    <DetailSection title="Publish" icon={Send} tone="lime">
       <Form
         form={form}
         layout="vertical"
@@ -133,7 +151,7 @@ function PublishDraftForm({
           </Button>
         </Space>
       </Form>
-    </Card>
+    </DetailSection>
   );
 }
 
@@ -314,64 +332,84 @@ export default function TopicWiseDraftPage(props: {
   const settings = draft.settings;
   const mix = settings.difficultyDistribution;
 
-  const questionColumns = (subject: TopicWiseDraftSubjectBlock) => [
+  const questionColumns = (
+    subject: TopicWiseDraftSubjectBlock
+  ): TableColumnsType<TopicWiseQuestionItem> => [
     {
       title: "#",
       dataIndex: "position",
       key: "position",
-      width: 60,
-      render: (position: number) => position + 1,
+      width: 52,
+      render: (position: number) => (
+        <span className="text-[13px] font-semibold tabular-nums text-console-muted">
+          {position + 1}
+        </span>
+      ),
     },
     {
       title: "Question",
       key: "question",
-      render: (record: TopicWiseQuestionItem) =>
-        record.questionText?.en?.text?.slice(0, 100) || "Question",
+      // Flexible: takes what the other columns leave. Click the row for the full preview.
+      render: (_: unknown, record: TopicWiseQuestionItem) => (
+        <div className="min-w-0">
+          <ClampText
+            text={record.questionText?.en?.text?.slice(0, 100) || "Question"}
+            className="text-[14px] font-semibold leading-snug text-console-ink"
+          />
+          {record.replacedFrom ? (
+            <span className="mt-1 inline-block">
+              <Pill tone="amber" dot={false}>
+                Replaced
+              </Pill>
+            </span>
+          ) : null}
+        </div>
+      ),
     },
     {
       title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
+      width: "22%",
       render: (topicId?: string) =>
         topicId ? (
-          <Tag color="purple">{topicNameById.get(topicId) || topicId}</Tag>
+          <TruncatedChip label={topicNameById.get(topicId) || topicId} maxWidthClass="max-w-full" />
         ) : (
-          "-"
+          <EmptyCell />
         ),
     },
     {
       title: "Difficulty",
       dataIndex: "difficultyLevel",
       key: "difficulty",
-      render: (level?: string) =>
-        level ? (
-          <Tag color={DIFFICULTY_COLORS[level] || "default"}>{level}</Tag>
-        ) : (
-          "-"
-        ),
+      width: 108,
+      render: (level?: string) => <DifficultyPill level={level} />,
     },
-    questionTagsColumn(),
     {
-      title: "",
-      key: "replaced",
-      render: (record: TopicWiseQuestionItem) =>
-        record.replacedFrom ? <Tag color="gold">Replaced</Tag> : null,
+      title: "Tags",
+      key: "tags",
+      width: "16%",
+      render: (_: unknown, record: TopicWiseQuestionItem) =>
+        questionTags(record as { tags?: unknown }),
     },
     ...(editable
       ? [
           {
             title: "Actions",
             key: "actions",
-            render: (record: TopicWiseQuestionItem) => (
-              <Button
-                type="link"
+            width: 124,
+            render: (_: unknown, record: TopicWiseQuestionItem) => (
+              <button
+                type="button"
                 onClick={(event) => {
                   stopQuestionRowToggle(event);
                   void openReplace(subject, record);
                 }}
+                className={`${ROW_ACTION_CLASS} border border-console-line bg-white text-console-ink hover:border-console-ink-hover/50 hover:text-console-ink-hover`}
               >
+                <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
                 Replace
-              </Button>
+              </button>
             ),
           },
         ]
@@ -379,108 +417,114 @@ export default function TopicWiseDraftPage(props: {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push("/admin/mock-tests")}
-          >
-            Back to Mock Tests
-          </Button>
-          <h1 className="text-2xl font-bold">
-            {settings.title || ChapterUi.draftFallbackTitle}
-          </h1>
-          <Tag color="blue">{draft.status}</Tag>
-        </div>
+    <ConsolePageShell
+      eyebrow={`${ChapterUi.paperTypeTitle} draft`}
+      title={settings.title || ChapterUi.draftFallbackTitle}
+      back={{ label: `Back to ${ChapterUi.navPapers}`, onClick: () => router.push("/admin/mock-tests") }}
+      badge={<DraftStatusPill status={draft.status} />}
+    >
+      <DetailSection title="Draft" icon={ClipboardList} tone="green">
+        <DetailGrid>
+          <DetailItem label="Exam">
+            {draft.examName ? (
+              <TruncatedChip label={draft.examName} tone="exam" maxWidthClass="max-w-full" />
+            ) : (
+              <EmptyCell />
+            )}
+          </DetailItem>
+          <DetailItem label="Subject">{draft.subjectName}</DetailItem>
+          <DetailItem label={ChapterUi.singular}>
+            {draft.topicName || draft.topicId || ChapterUi.missingOnDraft}
+          </DetailItem>
+          <DetailItem label="Duration">{settings.durationInMinutes} mins</DetailItem>
+          <DetailItem label="Difficulty" wide>
+            <span className="flex flex-wrap gap-1.5">
+              <Pill tone="green">{mix.easy} easy</Pill>
+              <Pill tone="amber">{mix.medium} medium</Pill>
+              <Pill tone="red">{mix.hard} hard</Pill>
+            </span>
+          </DetailItem>
+        </DetailGrid>
+      </DetailSection>
 
-        <Card title="Draft">
-          <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
-            <Descriptions.Item label="Exam">{draft.examName}</Descriptions.Item>
-            <Descriptions.Item label="Subject">{draft.subjectName}</Descriptions.Item>
-            <Descriptions.Item label={ChapterUi.singular}>
-              {draft.topicName || draft.topicId || ChapterUi.missingOnDraft}
-            </Descriptions.Item>
-            <Descriptions.Item label="Duration">
-              {settings.durationInMinutes} mins
-            </Descriptions.Item>
-            <Descriptions.Item label="Difficulty">
-              {mix.easy} easy / {mix.medium} medium / {mix.hard} hard
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        {draft.subjects.map((subject) => (
-          <Card key={subject.subjectId} title={subject.name}>
-            <Table
-              columns={questionColumns(subject)}
-              dataSource={subject.questions}
-              rowKey={(record: TopicWiseQuestionItem) =>
-                `${record.position}-${record._id}`
-              }
-              pagination={false}
-              onRow={questionPreviewOnRow}
-              expandable={questionPreviewExpandable(
-                (record: TopicWiseQuestionItem) => (
-                  <QuestionPreview question={record as SafeQuestion} />
-                )
-              )}
-            />
-          </Card>
-        ))}
-
-        {editable && !draft.topicId ? (
-          <Alert
-            type="error"
-            showIcon
-            message={ChapterUi.noTopicOnDraft}
-            description={ChapterUi.noTopicOnDraftHint}
-            action={
-              <Button danger onClick={handleDiscard}>
-                Discard draft
-              </Button>
-            }
+      {draft.subjects.map((subject) => (
+        <DetailSection
+          key={subject.subjectId}
+          title={subject.name}
+          icon={ListChecks}
+          tone="violet"
+          extra={
+            <span className="text-[14px] font-semibold text-console-muted">
+              {subject.questions.length} questions
+            </span>
+          }
+          flush
+        >
+          <Table<TopicWiseQuestionItem>
+            columns={questionColumns(subject)}
+            dataSource={subject.questions}
+            rowKey={(record: TopicWiseQuestionItem) => `${record.position}-${record._id}`}
+            tableLayout="fixed"
+            pagination={false}
+            onRow={questionPreviewOnRow}
+            expandable={questionPreviewExpandable((record: TopicWiseQuestionItem) => (
+              <QuestionPreview question={record as SafeQuestion} />
+            ))}
           />
-        ) : null}
+        </DetailSection>
+      ))}
 
-        {editable && draft.topicId ? (
-          <PublishDraftForm
-            settings={settings}
-            publishing={publishing}
-            onPublish={handlePublish}
-            onDiscard={handleDiscard}
-          />
-        ) : null}
-      </div>
+      {editable && !draft.topicId ? (
+        <Alert
+          type="error"
+          showIcon
+          className="!rounded-[20px]"
+          message={ChapterUi.noTopicOnDraft}
+          description={ChapterUi.noTopicOnDraftHint}
+          action={
+            <Button danger onClick={handleDiscard}>
+              Discard draft
+            </Button>
+          }
+        />
+      ) : null}
+
+      {editable && draft.topicId ? (
+        <PublishDraftForm
+          settings={settings}
+          publishing={publishing}
+          onPublish={handlePublish}
+          onDiscard={handleDiscard}
+        />
+      ) : null}
 
       <Modal
-        title={`Replace question #${
-          replaceSlot ? replaceSlot.question.position + 1 : ""
-        }`}
+        title={`Replace question #${replaceSlot ? replaceSlot.question.position + 1 : ""}`}
         open={!!replaceSlot}
         onCancel={() => setReplaceSlot(null)}
         footer={null}
         width={900}
+        // Same table styling and phone scrolling as the page.
+        wrapClassName="console-shell"
         destroyOnHidden
       >
-        <p className="text-gray-500 mb-4">
-          {ChapterUi.replacementMustMatch}
-        </p>
+        <p className="mb-4 text-console-muted">{ChapterUi.replacementMustMatch}</p>
         <Space wrap className="mb-4">
           <Input.Search
             placeholder="Search question text"
             allowClear
-            className="w-64"
+            className="w-64 max-w-full"
             onSearch={(value) => {
               setReplaceSearch(value);
               setReplacePagination((prev) => ({ ...prev, current: 1 }));
             }}
           />
-          <Tag color="purple">{draft.topicName || ChapterUi.locked}</Tag>
+          <TruncatedChip label={draft.topicName || ChapterUi.locked} maxWidthClass="max-w-[240px]" />
         </Space>
-        <Table
+        <Table<TopicWiseSearchQuestion>
           size="small"
           rowKey="_id"
+          tableLayout="fixed"
           loading={replaceLoading}
           dataSource={replaceResults}
           onRow={questionPreviewOnRow}
@@ -503,36 +547,60 @@ export default function TopicWiseDraftPage(props: {
             {
               title: "Question",
               key: "question",
-              render: (record: TopicWiseSearchQuestion) =>
-                record.snippet || record.questionText?.en?.text || record._id,
+              render: (_: unknown, record: TopicWiseSearchQuestion) => (
+                <ClampText
+                  text={record.snippet || record.questionText?.en?.text || record._id}
+                  className="text-[13.5px] leading-snug text-console-ink"
+                />
+              ),
             },
             {
               title: ChapterUi.singular,
               dataIndex: "topic",
               key: "topic",
+              width: "24%",
               render: (topicId?: string) =>
-                topicId ? topicNameById.get(topicId) || topicId : "-",
+                topicId ? (
+                  <TruncatedChip
+                    label={topicNameById.get(topicId) || topicId}
+                    maxWidthClass="max-w-full"
+                  />
+                ) : (
+                  <EmptyCell />
+                ),
             },
-            questionTagsColumn(),
+            {
+              title: "Tags",
+              key: "tags",
+              width: "18%",
+              render: (_: unknown, record: TopicWiseSearchQuestion) =>
+                questionTags(record as { tags?: unknown }),
+            },
             {
               title: "",
               key: "use",
-              render: (record: TopicWiseSearchQuestion) => (
-                <Button
-                  type="link"
-                  loading={replacingId === record._id}
+              width: 112,
+              render: (_: unknown, record: TopicWiseSearchQuestion) => (
+                <button
+                  type="button"
+                  disabled={replacingId === record._id}
+                  aria-busy={replacingId === record._id || undefined}
                   onClick={(event) => {
                     stopQuestionRowToggle(event);
                     void handleReplace(record._id);
                   }}
+                  className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary} !h-8 !px-3`}
                 >
+                  {replacingId === record._id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : null}
                   Use this
-                </Button>
+                </button>
               ),
             },
           ]}
         />
       </Modal>
-    </div>
+    </ConsolePageShell>
   );
 }

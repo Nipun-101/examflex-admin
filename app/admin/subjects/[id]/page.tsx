@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, message } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,6 @@ import { EditPageShell } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 import { useVectorSubjects, VECTOR_SUBJECT_HELP } from "../useVectorSubjects";
 
-const { Title } = Typography;
 
 export default function EditSubjectPage(props: {
   params: Promise<{ id: string }>;
@@ -77,9 +77,13 @@ export default function EditSubjectPage(props: {
 
   return (
     <EditPageShell loading={initialLoading}>
-    <div className="space-y-6">
+    <ConsolePageShell
+      eyebrow="Catalog"
+      title="Edit Subject"
+      back={{ label: "Back to Subjects", onClick: () => router.push("/admin/subjects") }}
+    >
       <Card
-        title={<Title level={4} className="mb-0">Edit Subject</Title>}
+        title="Details"
         className="w-full shadow-sm"
       >
         <Form
@@ -149,7 +153,7 @@ export default function EditSubjectPage(props: {
           </Form.Item>
         </Form>
       </Card>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }

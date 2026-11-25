@@ -318,8 +318,10 @@ describe("PublishedFullMockPage", () => {
 
     const topicChip = (await screen.findAllByText(longTopic))[0];
     expect(topicChip).toHaveClass("truncate", "max-w-[10rem]");
+    // Tags use the shared overflow chip: the text clips inside a width-capped chip.
     const tagChip = await screen.findByText(longTag);
-    expect(tagChip).toHaveClass("truncate", "max-w-[10rem]");
+    expect(tagChip).toHaveClass("truncate");
+    expect(tagChip.closest('[data-testid="chip"]')?.className).toMatch(/max-w-/);
 
     fireEvent.mouseEnter(topicChip);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(longTopic);

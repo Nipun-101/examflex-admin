@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Form, Input, Radio, message, Tooltip } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { use, useState, useEffect, useMemo } from "react";
 import { DeleteOutlined, InfoCircleOutlined, PlusOutlined } from "@ant-design/icons";
@@ -416,11 +417,14 @@ export default function EditQuestionPage(props: {
 
   return (
     <EditPageShell loading={pageLoading}>
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Card title="Edit Question">
-          <div className="mb-6 rounded border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-2 text-sm font-medium text-gray-500">
+    <ConsolePageShell
+      eyebrow="Question bank"
+      title="Edit Question"
+      back={{ label: "Back to Questions", onClick: () => router.push(questionsListHref(searchParams)) }}
+    >
+        <Card title="Question">
+          <div className="mb-6 rounded-2xl bg-[#F5F2EC] p-4 sm:p-5">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-console-ink/80">
               Rendered preview
             </div>
             <QuestionPreview question={previewQuestion} />
@@ -710,8 +714,7 @@ export default function EditQuestionPage(props: {
         </Card>
 
         <CitationsCard questionId={params.id} />
-      </div>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 } 

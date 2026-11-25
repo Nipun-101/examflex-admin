@@ -1,6 +1,10 @@
 "use client";
 
-import { Button, Card, Input, Space, Tag, Typography, message } from "antd";
+import { Button, Input, Space, message } from "antd";
+import { ArrowLeftRight, Download, Landmark, Receipt, Undo2 } from "lucide-react";
+import { ConsolePageShell, Pill } from "@/app/admin/_components/console-list";
+import { DetailGrid, DetailItem, DetailSection } from "@/app/admin/_components/console-detail";
+import { OrderStatusPill } from "../order-status";
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
@@ -16,7 +20,6 @@ import {
   type OrderStatus,
 } from "@/app/services/ezprep-api";
 
-const { Title, Text } = Typography;
 
 const REFUND_CONFIRM_TITLE = "Refund this order?";
 const REFUND_CONFIRM_CONTENT =
@@ -109,114 +112,90 @@ export default function OrderDetailPage(props: {
   return (
     <EditPageShell loading={loading}>
       {order ? (
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Title level={4} className="mb-0">
-              {order.orderNumber}
-            </Title>
-            <Button onClick={() => router.push("/admin/orders")}>Back</Button>
-          </div>
-
-          <Card className="shadow-sm">
-            <Space direction="vertical" size="small" className="w-full">
-              <div>
-                <Text type="secondary">Status </Text>
-                <Tag>{order.status as OrderStatus}</Tag>
-              </div>
-              <div>
-                <Text type="secondary">Amount </Text>
-                <Text>{formatPaiseAsRupees(order.amount)}</Text>
-              </div>
-              <div>
-                <Text type="secondary">Name </Text>
-                <Text>{order.user?.name?.trim() || "Unknown user"}</Text>
-              </div>
-              <div>
-                <Text type="secondary">Email </Text>
-                <Text>{buyerEmail || "—"}</Text>
-              </div>
-              <div>
-                <Text type="secondary">Phone </Text>
-                <Text>{buyerPhone || "—"}</Text>
-              </div>
-              {order.user?.username ? (
-                <div>
-                  <Text type="secondary">Username </Text>
-                  <Text>{order.user.username}</Text>
-                </div>
+        <ConsolePageShell
+          eyebrow="Commerce · Order"
+          title={order.orderNumber}
+          back={{ label: "Back to Orders", onClick: () => router.push("/admin/orders") }}
+          badge={
+            <span className="flex flex-wrap items-center gap-2">
+              <OrderStatusPill status={order.status as OrderStatus} />
+              {order.redundantPurchase ? <Pill tone="amber">Redundant purchase</Pill> : null}
+              {order.refund?.initiatedBySource === "PROVIDER" ? (
+                <Pill tone="orange">External refund</Pill>
               ) : null}
-              <div>
-                <Text type="secondary">Payment </Text>
-                <Text>
-                  {order.payment
-                    ? `${order.payment.status} · ${order.payment.provider}`
-                    : "—"}
-                </Text>
-              </div>
+            </span>
+          }
+          actions={
+            showRepair ? (
+              <Button type="primary" size="large" loading={repairing} onClick={retryProvisioning}>
+                Retry provisioning
+              </Button>
+            ) : null
+          }
+        >
+          <DetailSection title="Order" icon={Receipt} tone="green">
+            <DetailGrid>
+              <DetailItem label="Amount">{formatPaiseAsRupees(order.amount)}</DetailItem>
+              <DetailItem label="Payment">
+                {order.payment ? `${order.payment.status} · ${order.payment.provider}` : "—"}
+              </DetailItem>
+              <DetailItem label="Name">{order.user?.name?.trim() || "Unknown user"}</DetailItem>
+              <DetailItem label="Email">{buyerEmail || "—"}</DetailItem>
+              <DetailItem label="Phone">{buyerPhone || "—"}</DetailItem>
+              {order.user?.username ? (
+                <DetailItem label="Username">{order.user.username}</DetailItem>
+              ) : null}
               {order.invoice ? (
-                <div>
-                  <Text type="secondary">Invoice </Text>
+                <DetailItem label="Invoice">
                   <a
                     href={`${EZPREP_PROXY_PREFIX}/v1/admin/invoices/${order.invoice.id}/pdf`}
+                    className="inline-flex items-center gap-1.5 text-console-green underline decoration-console-green/40 underline-offset-4 hover:text-console-ink-hover"
                   >
+                    <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                     Download invoice
                   </a>
-                  <Text type="secondary"> ({order.invoice.invoiceNumber})</Text>
-                </div>
+                  <span className="ml-1 font-normal text-console-muted">
+                    ({order.invoice.invoiceNumber})
+                  </span>
+                </DetailItem>
               ) : null}
               {order.refund ? (
-                <div>
-                  <Text type="secondary">Refund </Text>
-                  <Text>
-                    {order.refund.status}
-                    {order.refund.providerRefundId
-                      ? ` · ${order.refund.providerRefundId}`
-                      : ""}
-                  </Text>
-                </div>
+                <DetailItem label="Refund">
+                  {order.refund.status}
+                  {order.refund.providerRefundId ? ` · ${order.refund.providerRefundId}` : ""}
+                </DetailItem>
               ) : null}
               {order.lateCaptureAt ? (
-                <div>
-                  <Text type="secondary">Late capture </Text>
-                  <Text>{new Date(order.lateCaptureAt).toLocaleString("en-IN")}</Text>
-                </div>
+                <DetailItem label="Late capture">
+                  {new Date(order.lateCaptureAt).toLocaleString("en-IN")}
+                </DetailItem>
               ) : null}
-              {order.redundantPurchase ? (
-                <div>
-                  <Tag color="gold">Redundant purchase</Tag>
-                </div>
-              ) : null}
-              {order.refund?.initiatedBySource === "PROVIDER" ? (
-                <div>
-                  <Tag color="orange">External refund</Tag>
-                </div>
-              ) : null}
-            </Space>
-          </Card>
-
-          {showRepair ? (
-            <Button type="primary" loading={repairing} onClick={retryProvisioning}>
-              Retry provisioning
-            </Button>
-          ) : null}
+            </DetailGrid>
+          </DetailSection>
 
           {(order.duplicatePayments ?? []).length > 0 ? (
-            <Card title="Duplicate payments" className="shadow-sm">
-              <ul className="space-y-2 text-sm">
+            <DetailSection title="Duplicate payments" icon={ArrowLeftRight} tone="amber">
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {(order.duplicatePayments ?? []).map((payment) => (
-                  <li key={payment.id}>
+                  <li
+                    key={payment.id}
+                    className="break-words rounded-xl bg-[#F5F2EC] px-4 py-3 text-[14px] text-console-ink"
+                  >
                     {payment.providerPaymentId || payment.id} · {payment.status} · refund{" "}
                     {payment.refundStatus ?? "none"}
                   </li>
                 ))}
               </ul>
-            </Card>
+            </DetailSection>
           ) : null}
 
           {order.tax ? <TaxBlock order={order} /> : null}
 
           {order.status === "PAID" && order.refund?.status !== "INITIATED" ? (
-            <Card title="Refund" className="shadow-sm">
+            <DetailSection title="Refund" icon={Undo2} tone="rose">
+              <p className="m-0 mb-4 text-[14.5px] text-console-muted">
+                Refunds the full amount. Type the order number to confirm.
+              </p>
               <Space direction="vertical" className="w-full max-w-xl">
                 <Input.TextArea
                   rows={3}
@@ -240,9 +219,9 @@ export default function OrderDetailPage(props: {
                   Refund
                 </Button>
               </Space>
-            </Card>
+            </DetailSection>
           ) : null}
-        </div>
+        </ConsolePageShell>
       ) : null}
     </EditPageShell>
   );
@@ -258,26 +237,17 @@ function TaxBlock({ order }: { order: AdminOrderDetail }) {
       ? `${buyerName} (${buyerCode})`
       : buyerCode || buyerName || "—";
   return (
-    <Card title="GST" className="shadow-sm">
-      <Space direction="vertical" size="small">
-        <TaxLine label="Taxable" value={formatPaiseAsRupees(tax.taxableAmount)} />
-        <TaxLine label="CGST" value={formatPaiseAsRupees(tax.cgst)} />
-        <TaxLine label="SGST" value={formatPaiseAsRupees(tax.sgst)} />
-        <TaxLine label="IGST" value={formatPaiseAsRupees(tax.igst)} />
-        <TaxLine label="Rate" value={`${tax.taxRate}%`} />
-        <TaxLine label="Supply type" value={supplyTypeLabel(tax)} />
-        <TaxLine label="Buyer state" value={buyer} />
-      </Space>
-    </Card>
-  );
-}
-
-function TaxLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <Text type="secondary">{label} </Text>
-      <Text>{value}</Text>
-    </div>
+    <DetailSection title="GST" icon={Landmark} tone="violet">
+      <DetailGrid>
+        <DetailItem label="Taxable">{formatPaiseAsRupees(tax.taxableAmount)}</DetailItem>
+        <DetailItem label="CGST">{formatPaiseAsRupees(tax.cgst)}</DetailItem>
+        <DetailItem label="SGST">{formatPaiseAsRupees(tax.sgst)}</DetailItem>
+        <DetailItem label="IGST">{formatPaiseAsRupees(tax.igst)}</DetailItem>
+        <DetailItem label="Rate">{`${tax.taxRate}%`}</DetailItem>
+        <DetailItem label="Supply type">{supplyTypeLabel(tax)}</DetailItem>
+        <DetailItem label="Buyer state">{buyer}</DetailItem>
+      </DetailGrid>
+    </DetailSection>
   );
 }
 

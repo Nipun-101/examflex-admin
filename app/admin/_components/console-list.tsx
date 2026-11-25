@@ -16,7 +16,7 @@ import {
   type TableProps,
   type ThemeConfig,
 } from "antd";
-import { Loader2, Plus, Search, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Search, X, type LucideIcon } from "lucide-react";
 import { Select } from "@/app/components/SearchableSelect";
 
 export const CONSOLE_TOOLTIP_COLOR = "#173B30";
@@ -75,26 +75,47 @@ export const ROW_ACTION_TONE = {
 /* Page heading                                                        */
 /* ------------------------------------------------------------------ */
 
+export type PageBackAction = { label: string; onClick: () => void };
+
 export function ListPageHeader({
   eyebrow,
   title,
   description,
   actions,
+  back,
+  badge,
 }: {
   eyebrow: string;
   title: string;
   description?: ReactNode;
   actions?: ReactNode;
+  /** Back button above the eyebrow (detail pages). */
+  back?: PageBackAction;
+  /** Shown next to the title, e.g. a status pill. */
+  badge?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <header className="min-w-0">
+        {back ? (
+          <button
+            type="button"
+            onClick={back.onClick}
+            className={`-ml-1 mb-4 inline-flex h-9 items-center gap-1.5 rounded-full px-2 text-[14px] font-semibold text-console-green transition-colors hover:bg-console-hover hover:text-console-ink ${FOCUS_RING}`}
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+            {back.label}
+          </button>
+        ) : null}
         <p className="m-0 text-xs font-semibold uppercase tracking-[0.14em] text-console-green">
           {eyebrow}
         </p>
-        <h1 className="m-0 mt-2 text-[34px] font-bold leading-[1.1] tracking-tight text-console-ink sm:text-[44px]">
-          {title}
-        </h1>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h1 className="m-0 min-w-0 break-words text-[34px] font-bold leading-[1.1] tracking-tight text-console-ink sm:text-[44px]">
+            {title}
+          </h1>
+          {badge}
+        </div>
         {description ? (
           <p className="m-0 mt-3 max-w-3xl text-[15px] text-console-muted sm:text-base">
             {description}
@@ -346,12 +367,21 @@ export function SubjectLabel({ name }: { name?: string | null }) {
 /* Pills                                                               */
 /* ------------------------------------------------------------------ */
 
-export type PillTone = "green" | "amber" | "red" | "violet" | "blue" | "neutral" | "lime";
+export type PillTone =
+  | "green"
+  | "amber"
+  | "orange"
+  | "red"
+  | "violet"
+  | "blue"
+  | "neutral"
+  | "lime";
 
 const PILL_TONE: Record<PillTone, { pill: string; dot: string }> = {
   green: { pill: "bg-[#E1EEE4] text-console-green", dot: "bg-console-green" },
   amber: { pill: "bg-[#FCEBD3] text-[#9A5A12]", dot: "bg-[#D98A1C]" },
   red: { pill: "bg-[#F6E0DA] text-console-danger", dot: "bg-console-danger" },
+  orange: { pill: "bg-[#F9E2D6] text-[#B4482A]", dot: "bg-[#D0623F]" },
   violet: { pill: "bg-[#E8E6F6] text-[#4B4396]", dot: "bg-[#6A5FC1]" },
   blue: { pill: "bg-[#E3EBF6] text-[#2F5488]", dot: "bg-[#3E6DB0]" },
   neutral: { pill: "bg-[#EFEBE3] text-console-muted", dot: "bg-console-muted/60" },
@@ -370,7 +400,8 @@ export function Pill({
   /** Replace the dot with a spinner for in-progress states. */
   spinning?: boolean;
 }) {
-  const style = PILL_TONE[tone];
+  // Fall back rather than crash the page if a caller passes an unknown tone.
+  const style = PILL_TONE[tone] ?? PILL_TONE.neutral;
   return (
     <span
       className={`inline-flex h-6 max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[12.5px] font-semibold ${style.pill}`}
@@ -583,17 +614,28 @@ export function ConsolePageShell({
   title,
   description,
   actions,
+  back,
+  badge,
   children,
 }: {
   eyebrow: string;
   title: string;
   description?: ReactNode;
   actions?: ReactNode;
+  back?: PageBackAction;
+  badge?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="console-shell w-full text-console-ink">
-      <ListPageHeader eyebrow={eyebrow} title={title} description={description} actions={actions} />
+      <ListPageHeader
+        eyebrow={eyebrow}
+        title={title}
+        description={description}
+        actions={actions}
+        back={back}
+        badge={badge}
+      />
       <ConfigProvider theme={CONSOLE_SHELL_THEME}>
         <div className="mt-8 space-y-6">{children}</div>
       </ConfigProvider>

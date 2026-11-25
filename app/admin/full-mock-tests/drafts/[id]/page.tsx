@@ -4,8 +4,6 @@ import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
-  Descriptions,
   Form,
   Input,
   InputNumber,
@@ -13,11 +11,11 @@ import {
   Space,
   Switch,
   Table,
-  Tag,
   message,
+  type TableColumnsType,
 } from "antd";
 import { Select } from "@/app/components/SearchableSelect";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ArrowUpRight, ClipboardList, ListChecks, Loader2, RefreshCw, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import { catalogApi } from "@/app/services/ezprep-api";
@@ -25,7 +23,24 @@ import { formatEzPrepError, fullMockApi } from "../../api";
 import { loadTopicNamesForQuestions } from "../../topic-names";
 import { PageLoader } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
+import { OverflowChips } from "@/app/admin/_components/OverflowChips";
+import {
+  ClampText,
+  ConsolePageShell,
+  DifficultyPill,
+  EmptyCell,
+  Pill,
+  ROW_ACTION_CLASS,
+  ROW_ACTION_TONE,
+} from "@/app/admin/_components/console-list";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  DraftStatusPill,
+} from "@/app/admin/_components/console-detail";
+import { MarksCell, QuestionSnippetCell, SubjectMetaPills } from "../../paper-ui";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { QuestionPreview } from "../../QuestionPreview";
 import { TopicTag } from "../../TopicTag";
@@ -50,19 +65,15 @@ const { TextArea } = Input;
 type PublishFormValues = Omit<PublishDraftPayload, "courseCutoffs"> & {
   courseCutoffs?: CourseCutoffValues;
 };
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: "green",
-  medium: "orange",
-  hard: "red",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  REVIEW: "blue",
-  PUBLISHED: "green",
-  PUBLISHING: "orange",
-  GENERATING: "orange",
-  DISCARDED: "red",
-};
+function questionTags(record: { tags?: unknown }) {
+  return (
+    <OverflowChips
+      items={questionTagLabels(record.tags)}
+      noun="tags"
+      empty={<span className="text-[13px] text-console-muted">No tags</span>}
+    />
+  );
+}
 
 interface TopicOption {
   value: string;
@@ -372,120 +383,139 @@ export default function FullMockDraftPage(props: {
     return snapshot?.duration != null ? `${snapshot.duration} mins` : "-";
   }, [draft, snapshot?.duration]);
 
-  const questionColumns = (subject: DraftSubjectBlock) => [
+  const questionColumns = (
+    subject: DraftSubjectBlock
+  ): TableColumnsType<DraftQuestionItem> => [
     {
       title: "#",
       dataIndex: "position",
       key: "position",
-      width: 60,
-      render: (position: number) => position + 1,
+      width: 52,
+      render: (position: number) => (
+        <span className="text-[13px] font-semibold tabular-nums text-console-muted">
+          {position + 1}
+        </span>
+      ),
     },
     {
       title: "Question",
       key: "question",
-      render: (record: DraftQuestionItem) => (
-        <QuestionPreview question={record} snippetOnly />
+      // Flexible: takes what the other columns leave. The full preview is shown below each row.
+      render: (_: unknown, record: DraftQuestionItem) => (
+        <div className="min-w-0">
+          <QuestionSnippetCell question={record} />
+          {record.replacedFrom ? (
+            <span className="mt-1 inline-block">
+              <Pill tone="amber" dot={false}>
+                Replaced
+              </Pill>
+            </span>
+          ) : null}
+        </div>
       ),
     },
     {
       title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
+      width: "18%",
       render: (topicId?: string) =>
-        topicId ? (
-          <TopicTag name={topicNameById.get(topicId) || topicId} />
-        ) : (
-          "-"
-        ),
+        topicId ? <TopicTag name={topicNameById.get(topicId) || topicId} /> : <EmptyCell />,
     },
     {
       title: "Difficulty",
       dataIndex: "difficultyLevel",
       key: "difficultyLevel",
-      render: (level?: string) =>
-        level ? (
-          <Tag color={DIFFICULTY_COLORS[level] || "default"}>{level}</Tag>
-        ) : (
-          "-"
-        ),
+      width: 108,
+      render: (level?: string) => <DifficultyPill level={level} />,
     },
-    questionTagsColumn({ truncate: true }),
+    {
+      title: "Tags",
+      key: "tags",
+      width: "15%",
+      render: (_: unknown, record: DraftQuestionItem) =>
+        questionTags(record as { tags?: unknown }),
+    },
     {
       title: "Marks",
       key: "marks",
-      render: (record: DraftQuestionItem) =>
-        record.negativeMarking
-          ? `${record.marksPerQuestion} / -${record.negativeMarking}`
-          : record.marksPerQuestion,
-    },
-    {
-      title: "",
-      key: "replaced",
-      width: 90,
-      render: (record: DraftQuestionItem) =>
-        record.replacedFrom ? <Tag color="gold">Replaced</Tag> : null,
+      width: 88,
+      render: (_: unknown, record: DraftQuestionItem) => <MarksCell record={record} />,
     },
     ...(isEditable
       ? [
           {
             title: "Actions",
             key: "actions",
-            render: (record: DraftQuestionItem) => (
-              <Button
-                type="link"
-                size="small"
+            width: 124,
+            render: (_: unknown, record: DraftQuestionItem) => (
+              <button
+                type="button"
                 onClick={(event) => {
                   stopQuestionRowToggle(event);
                   void openReplace(subject, record);
                 }}
+                className={`${ROW_ACTION_CLASS} border border-console-line bg-white text-console-ink hover:border-console-ink-hover/50 hover:text-console-ink-hover`}
               >
+                <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
                 Replace
-              </Button>
+              </button>
             ),
           },
         ]
       : []),
   ];
 
-  const replaceColumns = [
+  const replaceColumns: TableColumnsType<SearchQuestionItem> = [
     {
       title: "Question",
       key: "question",
-      render: (record: SearchQuestionItem) =>
-        record.snippet || <QuestionPreview question={record} snippetOnly />,
+      render: (_: unknown, record: SearchQuestionItem) =>
+        record.snippet ? (
+          <ClampText text={record.snippet} className="text-[13.5px] leading-snug text-console-ink" />
+        ) : (
+          <QuestionSnippetCell question={record} />
+        ),
     },
     {
       title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
+      width: "22%",
       render: (topicId?: string) =>
-        topicId ? topicNameById.get(topicId) || topicId : "-",
+        topicId ? <TopicTag name={topicNameById.get(topicId) || topicId} /> : <EmptyCell />,
     },
     {
       title: "Difficulty",
       dataIndex: "difficultyLevel",
       key: "difficultyLevel",
-      render: (level?: string) =>
-        level ? (
-          <Tag color={DIFFICULTY_COLORS[level] || "default"}>{level}</Tag>
-        ) : (
-          "-"
-        ),
+      width: 104,
+      render: (level?: string) => <DifficultyPill level={level} />,
     },
-    questionTagsColumn(),
+    {
+      title: "Tags",
+      key: "tags",
+      width: "16%",
+      render: (_: unknown, record: SearchQuestionItem) =>
+        questionTags(record as { tags?: unknown }),
+    },
     {
       title: "Actions",
       key: "actions",
-      render: (record: SearchQuestionItem) => (
-        <Button
-          type="link"
-          size="small"
-          loading={replacingId === record._id}
+      width: 112,
+      render: (_: unknown, record: SearchQuestionItem) => (
+        <button
+          type="button"
           disabled={!!replacingId}
+          aria-busy={replacingId === record._id || undefined}
           onClick={() => handleReplace(record._id)}
+          className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary} !h-8 !px-3`}
         >
+          {replacingId === record._id ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          ) : null}
           Use this
-        </Button>
+        </button>
       ),
     },
   ];
@@ -500,201 +530,149 @@ export default function FullMockDraftPage(props: {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => {
-              message.info("Draft kept — resume it anytime from the drafts list");
-              router.push("/admin/full-mock-tests");
+    <ConsolePageShell
+      eyebrow="Full mock draft"
+      title={snapshot?.name || "Full Mock Draft"}
+      back={{
+        label: "Back to Full mock tests",
+        onClick: () => {
+          message.info("Draft kept — resume it anytime from the drafts list");
+          router.push("/admin/full-mock-tests");
+        },
+      }}
+      badge={<DraftStatusPill status={draft.status} />}
+    >
+      <DetailSection title="Exam Blueprint" icon={ClipboardList} tone="green">
+        <DetailGrid>
+          <DetailItem label="Exam">{snapshot?.name}</DetailItem>
+          <DetailItem label="Mode">
+            {snapshot?.isSessionWise ? (
+              <Pill tone="violet">Session-wise</Pill>
+            ) : (
+              <Pill tone="blue">Mixed</Pill>
+            )}
+          </DetailItem>
+          <DetailItem label="Total Questions">{snapshot?.totalQuestions}</DetailItem>
+          <DetailItem label="Duration">{paperDuration}</DetailItem>
+          <DetailItem label="Total Marks">{snapshot?.totalMarks ?? "-"}</DetailItem>
+          <DetailItem label="Description" wide>
+            <span className="font-normal leading-relaxed">
+              {snapshot?.description || "No description"}
+            </span>
+          </DetailItem>
+        </DetailGrid>
+      </DetailSection>
+
+      {draft.subjects.map((subject) => (
+        <DetailSection
+          key={subject.subjectId}
+          title={subject.name}
+          icon={ListChecks}
+          tone="violet"
+          extra={<SubjectMetaPills subject={subject} />}
+          flush
+        >
+          <Table<DraftQuestionItem>
+            columns={questionColumns(subject)}
+            dataSource={subject.questions}
+            rowKey={(record: DraftQuestionItem) => `${record.position}-${record._id}`}
+            tableLayout="fixed"
+            pagination={false}
+            expandable={{
+              expandedRowRender: (record) => <QuestionPreview question={record} />,
+              expandedRowKeys: subject.questions.map(
+                (record) => `${record.position}-${record._id}`
+              ),
+              showExpandColumn: false,
+            }}
+          />
+        </DetailSection>
+      ))}
+
+      {isEditable ? (
+        <DetailSection title="Publish" icon={Send} tone="lime">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handlePublish}
+            initialValues={{
+              allowRetake: true,
+              shuffleOptions: false,
+              keepSubjectOrder: true,
+              showResultsImmediately: true,
+              accessMode: "FREE",
             }}
           >
-            Back to Full Mock Tests
-          </Button>
-          <h1 className="text-2xl font-bold">
-            {snapshot?.name || "Full Mock Draft"}
-          </h1>
-          <Tag color={STATUS_COLORS[draft.status] || "default"}>
-            {draft.status}
-          </Tag>
-        </div>
-
-        <Card title="Exam Blueprint">
-          <Descriptions
-            bordered
-            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-          >
-            <Descriptions.Item label="Exam">
-              {snapshot?.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="Mode">
-              <Tag color={snapshot?.isSessionWise ? "purple" : "blue"}>
-                {snapshot?.isSessionWise ? "Session-wise" : "Mixed"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Questions">
-              {snapshot?.totalQuestions}
-            </Descriptions.Item>
-            <Descriptions.Item label="Duration">
-              {paperDuration}
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Marks" span="filled">
-              {snapshot?.totalMarks ?? "-"}
-            </Descriptions.Item>
-            <Descriptions.Item
-              label="Description"
-              span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            >
-              {snapshot?.description || "No description"}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        {draft.subjects.map((subject) => (
-          <Card
-            key={subject.subjectId}
-            title={
-              <Space wrap>
-                <span>{subject.name}</span>
-                <Tag>{subject.questions.length} questions</Tag>
-                <Tag>
-                  {subject.marksPerQuestion} mark
-                  {subject.marksPerQuestion === 1 ? "" : "s"} / Q
-                </Tag>
-                {subject.hasNegativeMarking ? (
-                  <Tag color="red">-{subject.negativeMarksPerQuestion}</Tag>
-                ) : (
-                  <Tag>No negative</Tag>
-                )}
-                {subject.sessionTime != null ? (
-                  <Tag color="purple">{subject.sessionTime} min session</Tag>
-                ) : null}
-              </Space>
-            }
-          >
-            <Table
-              columns={questionColumns(subject)}
-              dataSource={subject.questions}
-              rowKey={(record: DraftQuestionItem) =>
-                `${record.position}-${record._id}`
-              }
-              pagination={false}
-              expandable={{
-                expandedRowRender: (record) => (
-                  <QuestionPreview question={record} />
-                ),
-                expandedRowKeys: subject.questions.map(
-                  (record) => `${record.position}-${record._id}`
-                ),
-                showExpandColumn: false,
-              }}
-            />
-          </Card>
-        ))}
-
-        {isEditable ? (
-          <Card title="Publish">
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handlePublish}
-              initialValues={{
-                allowRetake: true,
-                shuffleOptions: false,
-                keepSubjectOrder: true,
-                showResultsImmediately: true,
-                accessMode: "FREE",
-              }}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item label="Test Title" name="title">
-                  <Input placeholder="Defaults to exam name if empty" />
-                </Form.Item>
-                <Form.Item label="Passing Score" name="passingScore">
-                  <InputNumber min={0} className="w-full" placeholder="Optional" />
-                </Form.Item>
-              </div>
-              <Form.Item label="Description" name="description">
-                <TextArea rows={3} placeholder="Optional description" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Form.Item label="Test Title" name="title">
+                <Input placeholder="Defaults to exam name if empty" />
               </Form.Item>
-              {!snapshot?.isSessionWise ? (
-                <Form.Item
-                  label="Keep subject order"
-                  name="keepSubjectOrder"
-                  valuePropName="checked"
-                  tooltip="Mixed papers only. This does not shuffle answer choices."
-                  extra="On: each subject stays together in exam order. Off: questions stay mixed across the paper."
-                >
-                  <Switch />
-                </Form.Item>
-              ) : null}
+              <Form.Item label="Passing Score" name="passingScore">
+                <InputNumber min={0} className="w-full" placeholder="Optional" />
+              </Form.Item>
+            </div>
+            <Form.Item label="Description" name="description">
+              <TextArea rows={3} placeholder="Optional description" />
+            </Form.Item>
+            {!snapshot?.isSessionWise ? (
               <Form.Item
-                label="Course cut-offs (optional)"
-                name="courseCutoffs"
-                extra="Marks a student needs for each course on this paper. Set them based on how hard this paper is; you can also add or change them later from the published mock."
+                label="Keep subject order"
+                name="keepSubjectOrder"
+                valuePropName="checked"
+                tooltip="Mixed papers only. This does not shuffle answer choices."
+                extra="On: each subject stays together in exam order. Off: questions stay mixed across the paper."
               >
-                <CourseCutoffFields
-                  examId={draft?.examId}
-                  totalMarks={resolveTotalMarks(
-                    snapshot?.totalMarks,
-                    draft?.subjects
-                  )}
-                />
+                <Switch />
               </Form.Item>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Form.Item
-                  label="Allow Retake"
-                  name="allowRetake"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-                <Form.Item
-                  label="Shuffle Options"
-                  name="shuffleOptions"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-                <Form.Item
-                  label="Show Results Immediately"
-                  name="showResultsImmediately"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-                <AccessModeSwitch />
-              </div>
-              <Space>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={publishing}
-                >
-                  Publish Full Mock
-                </Button>
-                <Button danger onClick={handleDiscard}>
-                  Discard Draft
-                </Button>
-              </Space>
-            </Form>
-          </Card>
-        ) : draft.status === "PUBLISHED" && draft.publishedMockTestId ? (
-          <Card>
-            <Button
-              type="primary"
-              onClick={() =>
-                router.push(
-                  `/admin/full-mock-tests/${draft.publishedMockTestId}`
-                )
-              }
+            ) : null}
+            <Form.Item
+              label="Course cut-offs (optional)"
+              name="courseCutoffs"
+              extra="Marks a student needs for each course on this paper. Set them based on how hard this paper is; you can also add or change them later from the published mock."
             >
-              View Published Test
-            </Button>
-          </Card>
-        ) : null}
-      </div>
+              <CourseCutoffFields
+                examId={draft?.examId}
+                totalMarks={resolveTotalMarks(snapshot?.totalMarks, draft?.subjects)}
+              />
+            </Form.Item>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Form.Item label="Allow Retake" name="allowRetake" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+              <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+              <Form.Item
+                label="Show Results Immediately"
+                name="showResultsImmediately"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <AccessModeSwitch />
+            </div>
+            <Space wrap>
+              <Button type="primary" htmlType="submit" loading={publishing}>
+                Publish Full Mock
+              </Button>
+              <Button danger onClick={handleDiscard}>
+                Discard Draft
+              </Button>
+            </Space>
+          </Form>
+        </DetailSection>
+      ) : draft.status === "PUBLISHED" && draft.publishedMockTestId ? (
+        <div className="flex flex-col gap-3 rounded-[24px] border border-console-line bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p className="m-0 text-[15px] text-console-muted">This draft has been published.</p>
+          <Button
+            type="primary"
+            icon={<ArrowUpRight className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => router.push(`/admin/full-mock-tests/${draft.publishedMockTestId}`)}
+          >
+            View Published Test
+          </Button>
+        </div>
+      ) : null}
 
       <Modal
         title={`Replace question #${
@@ -704,9 +682,11 @@ export default function FullMockDraftPage(props: {
         onCancel={() => setReplaceSlot(null)}
         footer={null}
         width={900}
+        // Same table styling and phone scrolling as the page.
+        wrapClassName="console-shell"
         destroyOnHidden
       >
-        <p className="text-gray-500 mb-4">
+        <p className="mb-4 text-console-muted">
           {replaceAllowCrossSubject
             ? "Choose another subject below. This slot still belongs to the current section."
             : ChapterUi.sprintReplaceTopicMayDiffer}
@@ -740,7 +720,7 @@ export default function FullMockDraftPage(props: {
           <Input.Search
             placeholder="Search question text"
             allowClear
-            className="w-64"
+            className="w-64 max-w-full"
             onSearch={(value) => {
               setReplaceSearch(value);
               setReplacePagination((prev) => ({ ...prev, current: 1 }));
@@ -793,10 +773,11 @@ export default function FullMockDraftPage(props: {
             ]}
           />
         </Space>
-        <Table
+        <Table<SearchQuestionItem>
           columns={replaceColumns}
           dataSource={replaceResults}
           rowKey="_id"
+          tableLayout="fixed"
           loading={replaceLoading}
           size="small"
           pagination={{
@@ -813,6 +794,6 @@ export default function FullMockDraftPage(props: {
           }}
         />
       </Modal>
-    </div>
+    </ConsolePageShell>
   );
 }

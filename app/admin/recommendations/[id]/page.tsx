@@ -1,5 +1,6 @@
 "use client";
 
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Form, message } from "antd";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -89,25 +90,22 @@ export default function EditRecommendationPage() {
 
   return (
     <EditPageShell loading={initialLoading}>
-      <div className="mx-auto max-w-2xl space-y-4">
+      <ConsolePageShell
+        eyebrow="Content"
+        title="Edit course pathway"
+        back={{ label: "Back to recommendations", onClick: () => router.push("/admin/recommendations") }}
+      >
         <OfferingForm
           form={form}
           examOptions={examOptions}
           loading={loading}
           submitLabel="Save changes"
-          title="Edit course pathway"
+          title="Course details"
           onSubmit={handleSubmit}
           showActiveToggle
           requireCompleteFields
         />
-        <button
-          type="button"
-          className="text-sm text-console-green underline hover:text-console-ink-hover"
-          onClick={() => router.push("/admin/recommendations")}
-        >
-          Back to recommendations
-        </button>
-      </div>
+      </ConsolePageShell>
     </EditPageShell>
   );
 }

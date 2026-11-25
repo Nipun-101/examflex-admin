@@ -1,5 +1,6 @@
 "use client";
 
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Form, message } from "antd";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -91,7 +92,11 @@ export default function CreateEquationPage() {
 
   return (
     <EditPageShell loading={initialLoading}>
-      <div className="space-y-6">
+      <ConsolePageShell
+        eyebrow="Question bank"
+        title="Add Equation"
+        back={{ label: "Back to equations", onClick: () => router.push("/admin/equations") }}
+      >
         <EquationForm
           form={form}
           subjects={subjects}
@@ -102,16 +107,9 @@ export default function CreateEquationPage() {
           loading={loading}
           submitLabel="Create Equation"
           onSubmit={handleSubmit}
-          title="Add Equation"
+          title="Equation details"
         />
-        <button
-          type="button"
-          className="text-sm text-console-green underline hover:text-console-ink-hover"
-          onClick={() => router.push("/admin/equations")}
-        >
-          Back to equations
-        </button>
-      </div>
+      </ConsolePageShell>
     </EditPageShell>
   );
 }

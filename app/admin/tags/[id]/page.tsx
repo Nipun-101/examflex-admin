@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, message } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +16,6 @@ import { EditPageShell } from "@/app/components/PageLoader";
 import { setFormValue } from "@/app/lib/form-store";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 
-const { Title } = Typography;
 
 interface SubjectOption {
   value: string;
@@ -109,13 +109,13 @@ export default function EditTagPage(props: { params: Promise<{ id: string }> }) 
 
   return (
     <EditPageShell loading={initialLoading}>
-    <div className="space-y-6">
+    <ConsolePageShell
+      eyebrow="Catalog"
+      title="Edit Tag"
+      back={{ label: "Back to Tags", onClick: () => router.push("/admin/tags") }}
+    >
       <Card
-        title={
-          <Title level={4} className="mb-0">
-            Edit Tag
-          </Title>
-        }
+        title="Details"
         className="w-full shadow-sm"
       >
         <Form
@@ -196,7 +196,7 @@ export default function EditTagPage(props: { params: Promise<{ id: string }> }) 
           </Form.Item>
         </Form>
       </Card>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }
