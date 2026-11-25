@@ -58,14 +58,14 @@ export const CONSOLE_LIST_THEME: ThemeConfig = {
 const FOCUS_RING =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green";
 
-export const PRIMARY_PILL_CLASS = `inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-console-ink px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[#0F2E25] hover:text-white disabled:cursor-not-allowed disabled:bg-[#DDE3D6] disabled:text-console-muted ${FOCUS_RING}`;
+export const PRIMARY_PILL_CLASS = `inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-console-ink px-6 text-[15px] font-semibold text-white transition-colors hover:bg-console-ink-hover hover:text-white disabled:cursor-not-allowed disabled:bg-[#DDE3D6] disabled:text-console-muted ${FOCUS_RING}`;
 
 /** Small text button for row-level workflow actions (Parse PDF, Fix…). */
 export const ROW_ACTION_CLASS = `inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13.5px] font-semibold transition-colors disabled:cursor-not-allowed ${FOCUS_RING}`;
 
 export const ROW_ACTION_TONE = {
   primary:
-    "bg-console-ink text-white hover:bg-[#0F2E25] hover:text-white disabled:bg-[#DDE3D6] disabled:text-console-muted",
+    "bg-console-ink text-white hover:bg-console-ink-hover hover:text-white disabled:bg-[#DDE3D6] disabled:text-console-muted",
   danger:
     "border border-console-danger/30 bg-white text-console-danger hover:bg-[#FBEEEA] disabled:opacity-60",
   muted: "bg-[#EFEBE3] text-console-muted",
@@ -544,6 +544,59 @@ export function ListFooter({
           Next
         </button>
       </nav>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Section-based pages (create form + list cards)                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Theme for pages built from antd Cards (paper generators, catalog CRUD). Unlike the list
+ * theme it leaves form control sizes alone, so existing forms keep their layout.
+ */
+export const CONSOLE_SHELL_THEME: ThemeConfig = {
+  token: {
+    colorPrimary: "#173B30",
+    colorLink: "#2F6B4F",
+    colorLinkHover: "#173B30",
+    fontFamily: "inherit",
+    colorTextHeading: "#173B30",
+  },
+  components: {
+    Table: CONSOLE_LIST_THEME.components?.Table,
+    Card: {
+      headerFontSize: 17,
+      headerHeight: 60,
+    },
+    Checkbox: CONSOLE_LIST_THEME.components?.Checkbox,
+  },
+};
+
+/**
+ * Page title outside the content, then the page's existing antd Cards restyled as rounded
+ * white sections (see `.console-shell` in globals.css). Behaviour inside is untouched.
+ */
+export function ConsolePageShell({
+  eyebrow,
+  title,
+  description,
+  actions,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="console-shell w-full text-console-ink">
+      <ListPageHeader eyebrow={eyebrow} title={title} description={description} actions={actions} />
+      <ConfigProvider theme={CONSOLE_SHELL_THEME}>
+        <div className="mt-8 space-y-6">{children}</div>
+      </ConfigProvider>
     </div>
   );
 }

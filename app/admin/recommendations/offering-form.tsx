@@ -114,7 +114,6 @@ export function OfferingForm({
           htmlType="submit"
           loading={loading}
           disabled={!canSubmit}
-          className="!border-blue-600 !bg-blue-600 !text-white hover:!border-blue-700 hover:!bg-blue-700 disabled:!border-blue-400 disabled:!bg-blue-400 disabled:!text-white disabled:!opacity-100"
         >
           {submitLabel}
         </Button>

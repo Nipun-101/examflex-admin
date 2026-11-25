@@ -142,7 +142,7 @@ describe("FullMockTestsPage", () => {
 
   it("lists exams, drafts, and published full mocks", async () => {
     await renderReady();
-    expect(screen.getByText("Full Mock Tests")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Full mock tests" })).toBeInTheDocument();
     expect(screen.getByText("Polity, History")).toBeInTheDocument();
     expect(screen.getByText("UPSC Full Mock 1")).toBeInTheDocument();
     expect(screen.getByText("Drafts")).toBeInTheDocument();

@@ -53,6 +53,9 @@ const config: Config = {
         // Admin console palette (dashboard + sidebar refresh).
         console: {
           ink: '#173B30',
+          // Hover for solid ink buttons: a mossy lime-green, clearly different from the dark
+          // base while keeping white text readable (~4.8:1 contrast).
+          'ink-hover': '#557C3E',
           green: '#2F6B4F',
           lime: '#DDE89C',
           canvas: '#F6F4EF',

@@ -11,6 +11,7 @@ import {
   Typography,
   message,
 } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { PlusOutlined } from "@ant-design/icons";
 import { useCallback, useEffect, useState } from "react";
@@ -265,7 +266,7 @@ export default function ProductsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <ConsolePageShell eyebrow="Commerce" title="Products">
       <Card
         title={<Title level={4} className="mb-0">Add New Product</Title>}
         className="w-full shadow-sm"
@@ -326,7 +327,6 @@ export default function ProductsPage() {
               htmlType="submit"
               size="large"
               icon={<PlusOutlined />}
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               Create Product
@@ -384,6 +384,6 @@ export default function ProductsPage() {
           }}
         />
       </Card>
-    </div>
+    </ConsolePageShell>
   );
 }

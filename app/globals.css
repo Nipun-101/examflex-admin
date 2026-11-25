@@ -105,6 +105,43 @@
   border-color: #d9d9d9 !important;
 }
 
+/*
+ * Primary buttons: Tailwind's base reset (`button { background-color: transparent }`) beats
+ * antd's low-specificity primary background, so solid buttons render white until hovered.
+ * Restore the fill app-wide in the admin console colour. Ghost and disabled buttons keep
+ * antd's own styling.
+ */
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):not(.ant-btn-dangerous) {
+  background-color: #173b30;
+  border-color: #173b30;
+  color: #fff;
+}
+/* Hover shifts to a mossy lime-green so it clearly reads as hover on the dark fill. */
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):not(.ant-btn-dangerous):hover {
+  background-color: #557c3e;
+  border-color: #557c3e;
+  color: #fff;
+}
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):not(.ant-btn-dangerous):active {
+  background-color: #4a6e35;
+  border-color: #4a6e35;
+}
+/* antd adds a 2px drop shadow under solid buttons; on the dark fill it shows as a grey strip. */
+.ant-btn-primary,
+.ant-btn-primary:hover,
+.ant-btn-primary:active {
+  box-shadow: none !important;
+}
+.ant-btn-primary.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost) {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+  color: #fff;
+}
+.ant-btn-primary.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):hover {
+  background-color: #ff7875;
+  border-color: #ff7875;
+}
+
 /* Ant Design Theme Overrides */
 .ant-layout {
   background: #f5f5f5 !important;
@@ -186,6 +223,43 @@
 
 .console-page-size.ant-select .ant-select-selection-item {
   line-height: 38px !important;
+}
+
+/* Section-based admin pages (ConsolePageShell): antd Cards as rounded white sections. */
+.console-shell .ant-card {
+  border-radius: 24px;
+  border-color: #e5e1d7;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.console-shell .ant-card .ant-card {
+  border-radius: 16px;
+}
+
+.console-shell .ant-card-head {
+  border-bottom-color: #ece8df;
+}
+
+.console-shell .ant-card-head-title,
+.console-shell .ant-card-head-title .ant-typography {
+  margin: 0 !important;
+  font-size: 17px !important;
+  font-weight: 700;
+  color: #173b30;
+}
+
+.console-shell .ant-table-thead > tr > th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(23, 59, 48, 0.8) !important;
+  white-space: nowrap;
+}
+
+.console-shell .ant-table-tbody > tr > td {
+  vertical-align: middle;
 }
 
 /* Keep row selection checkboxes vertically centred with the taller rows. */

@@ -148,7 +148,7 @@ export default function UsersPage() {
           <button
             type="button"
             onClick={() => handleSearch(searchInput)}
-            className="inline-flex h-11 shrink-0 items-center rounded-full bg-console-ink px-6 text-[15px] font-semibold text-white transition-colors hover:bg-[#0F2E25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green"
+            className="inline-flex h-11 shrink-0 items-center rounded-full bg-console-ink px-6 text-[15px] font-semibold text-white transition-colors hover:bg-console-ink-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green"
           >
             Search
           </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Form, Input, Table, Typography, message } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
@@ -205,7 +206,7 @@ export default function TagsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <ConsolePageShell eyebrow="Catalog" title="Tags">
       <Card
         title={
           <Title level={4} className="mb-0">
@@ -279,7 +280,6 @@ export default function TagsPage() {
               htmlType="submit"
               size="large"
               icon={<PlusOutlined />}
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               Create Tag
@@ -317,6 +317,6 @@ export default function TagsPage() {
           }}
         />
       </Card>
-    </div>
+    </ConsolePageShell>
   );
 }

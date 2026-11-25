@@ -11,9 +11,9 @@ import {
   Switch,
   Table,
   Tag,
-  Typography,
   message,
 } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { PlusOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,6 @@ import type { SprintDraftListItem, SprintTest } from "./types";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { SPRINT_SIZE_OPTIONS } from "./types";
 
-const { Title } = Typography;
 const { TextArea } = Input;
 
 export default function SprintTestsPage() {
@@ -132,9 +131,7 @@ export default function SprintTestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <Title level={2}>Sprint Tests</Title>
+    <ConsolePageShell eyebrow="Papers" title="Sprint tests">
 
         <Card title="Create Sprint Test">
           <Form
@@ -222,7 +219,7 @@ export default function SprintTestsPage() {
               icon={<PlusOutlined />}
               loading={creating}
               disabled={creating}
-              className="!bg-blue-600 hover:!bg-blue-700 !text-white !border-blue-600"
+             
             >
               Create Draft
             </Button>
@@ -357,7 +354,6 @@ export default function SprintTestsPage() {
             ]}
           />
         </Card>
-      </div>
-    </div>
+    </ConsolePageShell>
   );
 }

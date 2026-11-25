@@ -52,7 +52,7 @@ import {
 } from "../_components/console-list";
 
 const SELECTION_BUTTON =
-  "inline-flex h-9 items-center rounded-full bg-console-ink px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#0F2E25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green disabled:cursor-not-allowed disabled:bg-[#DDE3D6] disabled:text-console-muted";
+  "inline-flex h-9 items-center rounded-full bg-console-ink px-4 text-[14px] font-semibold text-white transition-colors hover:bg-console-ink-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green disabled:cursor-not-allowed disabled:bg-[#DDE3D6] disabled:text-console-muted";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number.parseInt(value || "", 10);

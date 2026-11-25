@@ -10,9 +10,9 @@ import {
   Spin,
   Table,
   Tag,
-  Typography,
   message,
 } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { Breakpoint } from "antd/es/_util/responsiveObserver";
@@ -36,9 +36,7 @@ import type {
   SubjectDifficultySplit,
 } from "./types";
 
-const { Title } = Typography;
 const { Search } = Input;
-const primaryButtonClass = "bg-blue-600 hover:bg-blue-700";
 
 const DRAFT_STATUS_COLORS: Record<string, string> = {
   REVIEW: "blue",
@@ -302,7 +300,6 @@ export default function FullMockTestsPage() {
             type="primary"
             size="small"
             icon={open ? <UpOutlined /> : <DownOutlined />}
-            className={primaryButtonClass}
             disabled={!!generatingId}
             aria-expanded={open}
             onClick={(event) => {
@@ -465,9 +462,7 @@ export default function FullMockTestsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <Title level={2}>Full Mock Tests</Title>
+    <ConsolePageShell eyebrow="Papers" title="Full mock tests">
 
         <Card title="Generate from Exam">
           <p className="text-gray-500 mb-4">
@@ -619,7 +614,6 @@ export default function FullMockTestsPage() {
             }}
           />
         </Card>
-      </div>
 
       <Modal
         open={!!generatingId}
@@ -640,6 +634,6 @@ export default function FullMockTestsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </ConsolePageShell>
   );
 }
