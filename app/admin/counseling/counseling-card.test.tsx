@@ -76,9 +76,9 @@ describe("CounselingCard", () => {
         onAdvanceStatus={onAdvanceStatus}
       />
     );
-    expect(
-      screen.getByRole("button", { name: "Mark responded" })
-    ).toHaveClass("bg-blue-600");
+    // The acknowledged step uses the plain primary button (console dark green via the theme).
+    expect(screen.getByRole("button", { name: "Mark responded" })).toHaveClass("ant-btn-primary");
+    expect(screen.getByRole("button", { name: "Mark responded" })).not.toHaveClass("bg-blue-600");
 
     rerender(
       <CounselingCard

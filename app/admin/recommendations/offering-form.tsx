@@ -1,5 +1,7 @@
 "use client";
 
+import { TrendingUp } from "lucide-react";
+import { DetailSection } from "@/app/admin/_components/console-detail";
 import { Alert, Button, Form, Input, InputNumber, Switch } from "antd";
 import type { FormInstance } from "antd/es/form";
 import { Select } from "@/app/components/SearchableSelect";
@@ -50,13 +52,13 @@ export function OfferingForm({
     : true;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+    <DetailSection title={title} icon={TrendingUp} tone="green">
       <Form
         form={form}
         layout="vertical"
         onFinish={onSubmit}
         initialValues={{ isActive: true }}
+        className="max-w-2xl"
       >
         <Alert
           type="info"
@@ -114,11 +116,10 @@ export function OfferingForm({
           htmlType="submit"
           loading={loading}
           disabled={!canSubmit}
-          className="!border-blue-600 !bg-blue-600 !text-white hover:!border-blue-700 hover:!bg-blue-700 disabled:!border-blue-400 disabled:!bg-blue-400 disabled:!text-white disabled:!opacity-100"
         >
           {submitLabel}
         </Button>
       </Form>
-    </div>
+    </DetailSection>
   );
 }

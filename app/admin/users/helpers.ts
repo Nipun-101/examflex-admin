@@ -39,14 +39,15 @@ export function getInitials(name?: string): string {
 
 export function avatarColor(seed?: string): string {
   const palette = [
-    "#1677ff",
-    "#722ed1",
-    "#13c2c2",
-    "#eb2f96",
-    "#fa8c16",
-    "#52c41a",
-    "#2f54eb",
-    "#08979c",
+    // Muted tones from the admin console palette; white initials stay readable on each.
+    "#1F7A6E",
+    "#4B4396",
+    "#B4366A",
+    "#4E8A2A",
+    "#B4482A",
+    "#2F6B4F",
+    "#3E5C8A",
+    "#A0621B",
   ];
   const text = seed ?? "";
   let hash = 0;

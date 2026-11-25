@@ -111,7 +111,8 @@ describe("MockTestDetailPage", () => {
     expect(screen.getByText("UPSC")).toBeInTheDocument();
     expect(screen.getByText("Easy: 3")).toBeInTheDocument();
     expect(screen.getByText("Questions (1)")).toBeInTheDocument();
-    expect(screen.getAllByRole("columnheader", { name: "Chapter" }).length).toBeGreaterThan(1);
+    // The details are tiles now (not a bordered table), so only the questions table has the header.
+    expect(screen.getByRole("columnheader", { name: "Chapter" })).toBeInTheDocument();
     expect(screen.getAllByText("Parliament").length).toBeGreaterThan(1);
     expect(screen.getByText(/Who is the speaker/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /expand row/i }));
@@ -159,7 +160,7 @@ describe("MockTestDetailPage", () => {
     get.mockResolvedValue({ message: "ok", data: detail });
     renderPage();
     await screen.findAllByText("Polity Practice");
-    fireEvent.click(screen.getByRole("button", { name: /back to mock tests/i }));
+    fireEvent.click(screen.getByRole("button", { name: /back to chapter wise tests/i }));
     expect(push).toHaveBeenCalledWith("/admin/mock-tests");
   });
 

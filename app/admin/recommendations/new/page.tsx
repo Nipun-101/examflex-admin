@@ -1,5 +1,6 @@
 "use client";
 
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Form, message } from "antd";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -57,24 +58,21 @@ export default function CreateRecommendationPage() {
 
   return (
     <EditPageShell loading={initialLoading}>
-      <div className="mx-auto max-w-2xl space-y-4">
+      <ConsolePageShell
+        eyebrow="Content"
+        title="Add course pathway"
+        back={{ label: "Back to recommendations", onClick: () => router.push("/admin/recommendations") }}
+      >
         <OfferingForm
           form={form}
           examOptions={examOptions}
           loading={loading}
           submitLabel="Create course"
-          title="Add course pathway"
+          title="Course details"
           onSubmit={handleSubmit}
           requireCompleteFields
         />
-        <button
-          type="button"
-          className="text-sm text-blue-600 underline"
-          onClick={() => router.push("/admin/recommendations")}
-        >
-          Back to recommendations
-        </button>
-      </div>
+      </ConsolePageShell>
     </EditPageShell>
   );
 }

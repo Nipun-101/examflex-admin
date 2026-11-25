@@ -4,8 +4,6 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Button,
-  Card,
-  Descriptions,
   Form,
   Input,
   InputNumber,
@@ -13,18 +11,34 @@ import {
   Space,
   Switch,
   Table,
-  Tag,
   message,
+  type TableColumnsType,
 } from "antd";
 import { Select } from "@/app/components/SearchableSelect";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ClipboardList, ListChecks, Loader2, RefreshCw, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import { catalogApi } from "@/app/services/ezprep-api";
 import { formatEzPrepError, sprintTestsApi } from "../../api";
 import { PageLoader } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
+import { OverflowChips, TruncatedChip } from "@/app/admin/_components/OverflowChips";
+import {
+  ClampText,
+  ConsolePageShell,
+  DifficultyPill,
+  EmptyCell,
+  Pill,
+  ROW_ACTION_CLASS,
+  ROW_ACTION_TONE,
+} from "@/app/admin/_components/console-list";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  DraftStatusPill,
+} from "@/app/admin/_components/console-detail";
 import { AccessModeSwitch } from "@/app/components/AccessModeSwitch";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import {
@@ -41,14 +55,19 @@ import type {
   SprintSearchQuestion,
 } from "../../types";
 
-const primaryButtonClass =
-  "!bg-blue-600 hover:!bg-blue-700 !text-white !border-blue-600";
+function questionTags(record: { tags?: unknown }) {
+  return (
+    <OverflowChips
+      items={questionTagLabels(record.tags)}
+      noun="tags"
+      empty={<span className="text-[13px] text-console-muted">No tags</span>}
+    />
+  );
+}
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: "green",
-  medium: "orange",
-  hard: "red",
-};
+function chapterChip(name?: string) {
+  return name ? <TruncatedChip label={name} maxWidthClass="max-w-full" /> : <EmptyCell />;
+}
 
 export default function SprintDraftPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -322,57 +341,80 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
   const editable = draft.status === "REVIEW";
   const settings = draft.settings;
 
-  const questionColumns = (subject: SprintDraftSubjectBlock) => [
+  const questionColumns = (
+    subject: SprintDraftSubjectBlock
+  ): TableColumnsType<SprintQuestionItem> => [
     {
       title: "#",
       dataIndex: "position",
       key: "position",
-      width: 60,
-      render: (position: number) => position + 1,
+      width: 52,
+      render: (position: number) => (
+        <span className="text-[13px] font-semibold tabular-nums text-console-muted">
+          {position + 1}
+        </span>
+      ),
     },
     {
       title: "Question",
       key: "question",
-      render: (record: SprintQuestionItem) =>
-        record.questionText?.en?.text?.slice(0, 100) || "Question",
+      // Flexible: takes what the other columns leave. Click the row for the full preview.
+      render: (_: unknown, record: SprintQuestionItem) => (
+        <div className="min-w-0">
+          <ClampText
+            text={record.questionText?.en?.text?.slice(0, 100) || "Question"}
+            className="text-[14px] font-semibold leading-snug text-console-ink"
+          />
+          {record.replacedFrom ? (
+            <span className="mt-1 inline-block">
+              <Pill tone="amber" dot={false}>
+                Replaced
+              </Pill>
+            </span>
+          ) : null}
+        </div>
+      ),
     },
     {
       title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
+      width: "22%",
       render: (topicId?: string) =>
-        topicId ? <Tag color="purple">{topicNameById.get(topicId) || topicId}</Tag> : "-",
+        chapterChip(topicId ? topicNameById.get(topicId) || topicId : undefined),
     },
     {
       title: "Difficulty",
       dataIndex: "difficultyLevel",
       key: "difficulty",
-      render: (level?: string) =>
-        level ? <Tag color={DIFFICULTY_COLORS[level] || "default"}>{level}</Tag> : "-",
+      width: 108,
+      render: (level?: string) => <DifficultyPill level={level} />,
     },
-    questionTagsColumn(),
     {
-      title: "",
-      key: "replaced",
-      render: (record: SprintQuestionItem) =>
-        record.replacedFrom ? <Tag color="gold">Replaced</Tag> : null,
+      title: "Tags",
+      key: "tags",
+      width: "16%",
+      render: (_: unknown, record: SprintQuestionItem) =>
+        questionTags(record as { tags?: unknown }),
     },
     ...(editable
       ? [
           {
             title: "Actions",
             key: "actions",
-            render: (record: SprintQuestionItem) => (
-              <Button
-                type="link"
-                size="small"
+            width: 124,
+            render: (_: unknown, record: SprintQuestionItem) => (
+              <button
+                type="button"
                 onClick={(event) => {
                   stopQuestionRowToggle(event);
                   void openReplace(subject, record);
                 }}
+                className={`${ROW_ACTION_CLASS} border border-console-line bg-white text-console-ink hover:border-console-ink-hover/50 hover:text-console-ink-hover`}
               >
+                <RefreshCw className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
                 Replace
-              </Button>
+              </button>
             ),
           },
         ]
@@ -380,106 +422,101 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push("/admin/sprint-tests")}>
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">{settings.title || draft.examName}</h1>
-          <Tag color={editable ? "blue" : "default"}>{draft.status}</Tag>
-        </div>
+    <ConsolePageShell
+      eyebrow="Sprint draft"
+      title={settings.title || draft.examName}
+      back={{ label: "Back to Sprint tests", onClick: () => router.push("/admin/sprint-tests") }}
+      badge={<DraftStatusPill status={draft.status} />}
+    >
+      <DetailSection title="Sprint draft" icon={ClipboardList} tone="green">
+        <DetailGrid>
+          <DetailItem label="Exam">
+            {draft.examName ? (
+              <TruncatedChip label={draft.examName} tone="exam" maxWidthClass="max-w-full" />
+            ) : (
+              <EmptyCell />
+            )}
+          </DetailItem>
+          <DetailItem label="Questions">{settings.totalQuestions}</DetailItem>
+          <DetailItem label="Duration">{settings.durationInMinutes} minutes</DetailItem>
+          <DetailItem label="Marks / Q">{settings.marksPerQuestion}</DetailItem>
+        </DetailGrid>
+      </DetailSection>
 
-        <Card title="Sprint draft">
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-            <Descriptions.Item label="Exam">{draft.examName}</Descriptions.Item>
-            <Descriptions.Item label="Questions">{settings.totalQuestions}</Descriptions.Item>
-            <Descriptions.Item label="Duration">{settings.durationInMinutes} minutes</Descriptions.Item>
-            <Descriptions.Item label="Marks / Q">{settings.marksPerQuestion}</Descriptions.Item>
-          </Descriptions>
-        </Card>
+      {draft.subjects.map((subject) => (
+        <DetailSection
+          key={subject.subjectId}
+          title={subject.name}
+          icon={ListChecks}
+          tone="violet"
+          extra={
+            <Pill tone="neutral" dot={false}>
+              {subject.questions.length} questions
+            </Pill>
+          }
+          flush
+        >
+          <Table<SprintQuestionItem>
+            columns={questionColumns(subject)}
+            dataSource={subject.questions}
+            rowKey={(record: SprintQuestionItem) => `${record.position}-${record._id}`}
+            tableLayout="fixed"
+            pagination={false}
+            onRow={questionPreviewOnRow}
+            expandable={questionPreviewExpandable((record: SprintQuestionItem) => (
+              <QuestionPreview question={record as SafeQuestion} />
+            ))}
+          />
+        </DetailSection>
+      ))}
 
-        {draft.subjects.map((subject) => (
-          <Card
-            key={subject.subjectId}
-            title={
-              <Space>
-                <span>{subject.name}</span>
-                <Tag>{subject.questions.length} questions</Tag>
-              </Space>
-            }
-          >
-            <Table
-              columns={questionColumns(subject)}
-              dataSource={subject.questions}
-              rowKey={(record: SprintQuestionItem) =>
-                `${record.position}-${record._id}`
-              }
-              pagination={false}
-              onRow={questionPreviewOnRow}
-              expandable={questionPreviewExpandable(
-                (record: SprintQuestionItem) => (
-                  <QuestionPreview question={record as SafeQuestion} />
-                )
-              )}
-            />
-          </Card>
-        ))}
-
-        {editable ? (
-          <Card title="Publish">
-            <Form form={form} layout="vertical" onFinish={handlePublish}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item label="Test Title" name="title">
-                  <Input />
-                </Form.Item>
-                <Form.Item label="Marks Per Question" name="marksPerQuestion">
-                  <InputNumber min={0} className="w-full" />
-                </Form.Item>
-                <Form.Item label="Negative Marking" name="negativeMarking">
-                  <InputNumber min={0} className="w-full" />
-                </Form.Item>
-                <Form.Item label="Passing Score" name="passingScore">
-                  <InputNumber min={0} className="w-full" />
-                </Form.Item>
-              </div>
-              <Form.Item label="Description" name="description">
-                <Input.TextArea rows={3} />
+      {editable ? (
+        <DetailSection title="Publish" icon={Send} tone="lime">
+          <Form form={form} layout="vertical" onFinish={handlePublish}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Form.Item label="Test Title" name="title">
+                <Input />
               </Form.Item>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Form.Item label="Allow Retake" name="allowRetake" valuePropName="checked">
-                  <Switch />
-                </Form.Item>
-                <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked">
-                  <Switch />
-                </Form.Item>
-                <Form.Item
-                  label="Show Results Immediately"
-                  name="showResultsImmediately"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-                <AccessModeSwitch />
-              </div>
-              <Space>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={publishing}
-                  disabled={publishing}
-                  className={primaryButtonClass}
-                >
-                  Publish
-                </Button>
-                <Button danger onClick={handleDiscard}>
-                  Discard
-                </Button>
-              </Space>
-            </Form>
-          </Card>
-        ) : null}
-      </div>
+              <Form.Item label="Marks Per Question" name="marksPerQuestion">
+                <InputNumber min={0} className="w-full" />
+              </Form.Item>
+              <Form.Item label="Negative Marking" name="negativeMarking">
+                <InputNumber min={0} className="w-full" />
+              </Form.Item>
+              <Form.Item label="Passing Score" name="passingScore">
+                <InputNumber min={0} className="w-full" />
+              </Form.Item>
+            </div>
+            <Form.Item label="Description" name="description">
+              <Input.TextArea rows={3} />
+            </Form.Item>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Form.Item label="Allow Retake" name="allowRetake" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+              <Form.Item label="Shuffle Options" name="shuffleOptions" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+              <Form.Item
+                label="Show Results Immediately"
+                name="showResultsImmediately"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <AccessModeSwitch />
+            </div>
+            <Space wrap>
+              <Button type="primary" htmlType="submit" loading={publishing} disabled={publishing}>
+                Publish
+              </Button>
+              <Button danger onClick={handleDiscard}>
+                Discard
+              </Button>
+            </Space>
+          </Form>
+        </DetailSection>
+      ) : null}
 
       <Modal
         title={`Replace question #${
@@ -489,9 +526,11 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
         onCancel={() => setReplaceSlot(null)}
         footer={null}
         width={900}
+        // Same table styling and phone scrolling as the page.
+        wrapClassName="console-shell"
         destroyOnHidden
       >
-        <p className="text-gray-500 mb-4">
+        <p className="mb-4 text-console-muted">
           {replaceAllowCrossSubject
             ? "Choose another subject below. This slot still belongs to the current section."
             : ChapterUi.sprintReplaceTopicMayDiffer}
@@ -526,7 +565,7 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
           <Input.Search
             placeholder="Search question text"
             allowClear
-            className="w-64"
+            className="w-64 max-w-full"
             onSearch={(value) => {
               setReplaceSearch(value);
               setReplacePagination((prev) => ({ ...prev, current: 1 }));
@@ -579,9 +618,10 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
             ]}
           />
         </Space>
-        <Table
+        <Table<SprintSearchQuestion>
           size="small"
           rowKey="_id"
+          tableLayout="fixed"
           loading={replaceLoading}
           dataSource={replaceResults}
           pagination={{
@@ -600,46 +640,57 @@ export default function SprintDraftPage(props: { params: Promise<{ id: string }>
             {
               title: "Question",
               key: "question",
-              render: (record: SprintSearchQuestion) =>
-                record.snippet || record.questionText?.en?.text || record._id,
+              render: (_: unknown, record: SprintSearchQuestion) => (
+                <ClampText
+                  text={record.snippet || record.questionText?.en?.text || record._id}
+                  className="text-[13.5px] leading-snug text-console-ink"
+                />
+              ),
             },
             {
               title: ChapterUi.singular,
               dataIndex: "topic",
               key: "topic",
+              width: "22%",
               render: (topicId?: string) =>
-                topicId ? topicNameById.get(topicId) || topicId : "-",
+                chapterChip(topicId ? topicNameById.get(topicId) || topicId : undefined),
             },
             {
               title: "Difficulty",
               dataIndex: "difficultyLevel",
               key: "difficulty",
-              render: (level?: string) =>
-                level ? (
-                  <Tag color={DIFFICULTY_COLORS[level] || "default"}>{level}</Tag>
-                ) : (
-                  "-"
-                ),
+              width: 104,
+              render: (level?: string) => <DifficultyPill level={level} />,
             },
-            questionTagsColumn(),
+            {
+              title: "Tags",
+              key: "tags",
+              width: "16%",
+              render: (_: unknown, record: SprintSearchQuestion) =>
+                questionTags(record as { tags?: unknown }),
+            },
             {
               title: "Actions",
               key: "use",
-              render: (record: SprintSearchQuestion) => (
-                <Button
-                  type="link"
-                  size="small"
-                  loading={replacingId === record._id}
+              width: 112,
+              render: (_: unknown, record: SprintSearchQuestion) => (
+                <button
+                  type="button"
                   disabled={!!replacingId}
+                  aria-busy={replacingId === record._id || undefined}
                   onClick={() => void handleReplace(record._id)}
+                  className={`${ROW_ACTION_CLASS} ${ROW_ACTION_TONE.primary} !h-8 !px-3`}
                 >
+                  {replacingId === record._id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : null}
                   Use this
-                </Button>
+                </button>
               ),
             },
           ]}
         />
       </Modal>
-    </div>
+    </ConsolePageShell>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { Button, Card, Form, Input, Radio, message, Tooltip } from "antd";
+import { useRouter } from "next/navigation";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { useState, useEffect } from "react";
 import { InfoCircleOutlined, PlusOutlined } from "@ant-design/icons";
@@ -13,6 +15,7 @@ import { ChapterUi } from "@/app/lib/chapter-ui";
 import { catalogApi, formatEzPrepError, questionsApi, refId, type QuestionPayload } from "@/app/services/ezprep-api";
 
 export default function CreateQuestionPage() {
+  const router = useRouter();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -192,9 +195,12 @@ export default function CreateQuestionPage() {
 
   return (
     <EditPageShell loading={pageLoading}>
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Card title="Add New Question">
+    <ConsolePageShell
+      eyebrow="Question bank"
+      title="Add New Question"
+      back={{ label: "Back to Questions", onClick: () => router.push("/admin/questions") }}
+    >
+        <Card title="Question">
           <Form
             form={form}
             layout="vertical"
@@ -445,15 +451,13 @@ export default function CreateQuestionPage() {
                 icon={<PlusOutlined />}
                 loading={loading || pageLoading}
                 disabled={pageLoading}
-                className="bg-blue-600 hover:bg-blue-700"
               >
                 Add Question
               </Button>
             </Form.Item>
           </Form>
         </Card>
-      </div>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }

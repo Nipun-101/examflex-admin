@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Divider, Form, Input, InputNumber, message, Switch, Table, Typography } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
@@ -280,7 +281,7 @@ export default function ExamsPage() {
   };
   
   return (
-    <div className="space-y-6">
+    <ConsolePageShell eyebrow="Catalog" title="Exams">
       <Card
         title={<Title level={4} className="mb-0">Add New Exam</Title>}
         className="w-full shadow-sm"
@@ -566,7 +567,6 @@ export default function ExamsPage() {
               htmlType="submit" 
               size="large" 
               icon={<PlusOutlined />}
-              className="bg-blue-600 hover:bg-blue-700"
               loading ={loading}
             >
               Create Exam
@@ -592,6 +592,6 @@ export default function ExamsPage() {
           }}
         />
       </Card>
-    </div>
+    </ConsolePageShell>
   );
 }

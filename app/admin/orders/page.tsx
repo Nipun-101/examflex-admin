@@ -1,9 +1,10 @@
 "use client";
 
-import { Button, Card, Input, Table, Tag, Typography, message } from "antd";
-import { Select } from "@/app/components/SearchableSelect";
+import { message, type TableColumnsType } from "antd";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { ArrowUpRight, Receipt } from "lucide-react";
 import {
   formatEzPrepError,
   formatPaiseAsRupees,
@@ -12,20 +13,33 @@ import {
   type AdminOrderFlag,
   type OrderStatus,
 } from "@/app/services/ezprep-api";
+import {
+  ColumnTitle,
+  EmptyCell,
+  FilterSelect,
+  IconActionLink,
+  ListCard,
+  ListFooter,
+  ListPageHeader,
+  ListSearch,
+  ListTable,
+  ListToolbar,
+  RowActions,
+  TableEmptyState,
+} from "../_components/console-list";
+import { OrderStatusPill } from "./order-status";
 
-const { Title } = Typography;
+function formatCreated(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return {
+    date: date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+    time: date.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
+  };
+}
 
-const STATUS_COLORS: Record<OrderStatus, string> = {
-  CREATED: "default",
-  PENDING_PAYMENT: "gold",
-  PAID: "green",
-  FAILED: "red",
-  EXPIRED: "default",
-  CANCELLED: "default",
-  REFUNDED: "purple",
-};
-
-const STATUS_FILTER_OPTIONS = [
+const STATUS_FILTER_OPTIONS: Array<{ value: OrderStatus | ""; label: string }> = [
   { value: "", label: "All statuses" },
   { value: "PAID", label: "Paid" },
   { value: "REFUNDED", label: "Refunded" },
@@ -53,11 +67,11 @@ function flagFromQuery(value: string | null): AdminOrderFlag | "" {
 }
 
 export default function OrdersPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [search, setSearch] = useState(searchParams?.get("search") ?? "");
+  const [searchInput, setSearchInput] = useState(search);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "">("");
   const [flagFilter, setFlagFilter] = useState<AdminOrderFlag | "">(
     flagFromQuery(searchParams?.get("flag") ?? null)
@@ -94,120 +108,182 @@ export default function OrdersPage() {
     void fetchOrders();
   }, [fetchOrders]);
 
-  return (
-    <div className="space-y-6">
-      <Card
-        title={<Title level={4} className="mb-0">Orders</Title>}
-        className="shadow-sm"
-        extra={
-          <div className="flex flex-wrap gap-2">
-            <Input.Search
-              allowClear
-              placeholder="Search order number"
-              defaultValue={search}
-              className="w-48 sm:w-64"
-              onSearch={(value) => {
-                setSearch(value);
-                setPagination((prev) => ({ ...prev, current: 1 }));
-              }}
-            />
-            <Select
-              aria-label="Order flag"
-              className="w-48"
-              value={flagFilter}
-              options={FLAG_FILTER_OPTIONS}
-              onChange={(value: AdminOrderFlag | "") => {
-                setFlagFilter(value);
-                setPagination((prev) => ({ ...prev, current: 1 }));
-              }}
-            />
-            <Select
-              className="w-44"
-              value={statusFilter}
-              options={STATUS_FILTER_OPTIONS}
-              onChange={(value: OrderStatus | "") => {
-                setStatusFilter(value);
-                setPagination((prev) => ({ ...prev, current: 1 }));
-              }}
-            />
+  const applySearch = (value: string) => {
+    setSearch(value.trim());
+    setPagination((prev) => ({ ...prev, current: 1 }));
+  };
+
+  const hasFilters = Boolean(search || statusFilter || flagFilter);
+
+  const columns: TableColumnsType<AdminOrder> = [
+    {
+      title: <ColumnTitle>Order</ColumnTitle>,
+      key: "orderNumber",
+      // Flexible: takes the space the other columns leave.
+      render: (_: unknown, row: AdminOrder) => (
+        <div className="min-w-0">
+          <Link
+            href={`/admin/orders/${row.id}`}
+            className="block truncate text-[14px] font-semibold text-console-ink hover:text-console-green hover:underline"
+            title={row.orderNumber}
+          >
+            {row.orderNumber}
+          </Link>
+          {row.paymentProvider ? (
+            <div className="mt-0.5 truncate text-[12.5px] capitalize text-console-muted">
+              {row.paymentProvider}
+            </div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      title: <ColumnTitle>Status</ColumnTitle>,
+      key: "status",
+      width: 160,
+      render: (_: unknown, row: AdminOrder) => <OrderStatusPill status={row.status} />,
+    },
+    {
+      title: <ColumnTitle>Amount</ColumnTitle>,
+      key: "amount",
+      width: 128,
+      render: (_: unknown, row: AdminOrder) => (
+        <span className="text-[14px] font-semibold tabular-nums text-console-ink">
+          {formatPaiseAsRupees(row.amount)}
+        </span>
+      ),
+    },
+    {
+      title: <ColumnTitle>User</ColumnTitle>,
+      key: "user",
+      width: "28%",
+      render: (_: unknown, row: AdminOrder) => {
+        const name = row.user?.name?.trim() || "Unknown user";
+        const userId = row.user?.id || row.userId;
+        return (
+          <div className="min-w-0">
+            {userId ? (
+              <Link
+                href={`/admin/users/${userId}`}
+                className="block truncate text-[14px] font-semibold text-console-ink hover:text-console-green hover:underline"
+                title={name}
+              >
+                {name}
+              </Link>
+            ) : (
+              <span className="block truncate text-[14px] font-semibold text-console-ink">
+                {name}
+              </span>
+            )}
+            {row.user?.email ? (
+              <div className="mt-0.5 truncate text-[12.5px] text-console-muted">
+                {row.user.email}
+              </div>
+            ) : null}
           </div>
-        }
-      >
-        <Table
-          columns={[
-            {
-              title: "Order",
-              dataIndex: "orderNumber",
-              render: (value: string, row: AdminOrder) => (
-                <Button
-                  type="link"
-                  className="px-0"
-                  onClick={() => router.push(`/admin/orders/${row.id}`)}
-                >
-                  {value}
-                </Button>
-              ),
-            },
-            {
-              title: "Status",
-              dataIndex: "status",
-              render: (status: OrderStatus) => (
-                <Tag color={STATUS_COLORS[status]}>{status}</Tag>
-              ),
-            },
-            {
-              title: "Amount",
-              dataIndex: "amount",
-              render: (amount: number) => formatPaiseAsRupees(amount),
-            },
-            {
-              title: "User",
-              key: "user",
-              render: (_value: unknown, row: AdminOrder) => {
-                const name = row.user?.name?.trim() || "Unknown user";
-                const userId = row.user?.id || row.userId;
-                if (!userId) {
-                  return name;
-                }
-                return (
-                  <Button
-                    type="link"
-                    className="px-0"
-                    onClick={() => router.push(`/admin/users/${userId}`)}
-                  >
-                    {name}
-                  </Button>
-                );
-              },
-            },
-            {
-              title: "Created",
-              dataIndex: "createdAt",
-              render: (value?: string) =>
-                value ? new Date(value).toLocaleString("en-IN") : "—",
-            },
-          ]}
+        );
+      },
+    },
+    {
+      title: <ColumnTitle>Created</ColumnTitle>,
+      key: "createdAt",
+      width: 150,
+      render: (_: unknown, row: AdminOrder) => {
+        const created = formatCreated(row.createdAt);
+        if (!created) return <EmptyCell />;
+        return (
+          <div className="text-[13.5px] leading-snug">
+            <div className="text-console-ink">{created.date}</div>
+            <div className="text-console-muted">{created.time}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: <ColumnTitle>Open</ColumnTitle>,
+      key: "actions",
+      width: 72,
+      render: (_: unknown, row: AdminOrder) => (
+        <RowActions>
+          <IconActionLink
+            href={`/admin/orders/${row.id}`}
+            label={`Open order ${row.orderNumber}`}
+            tooltip="Open order"
+            icon={ArrowUpRight}
+          />
+        </RowActions>
+      ),
+    },
+  ];
+
+  return (
+    <div className="w-full text-console-ink">
+      <ListPageHeader
+        eyebrow="Commerce"
+        title="Orders"
+        description="Every purchase with its payment status. Open an order for payments, invoices, and refunds."
+      />
+
+      <ListCard>
+        <ListToolbar className="xl:grid-cols-[1.3fr_1fr_1fr]">
+          <ListSearch
+            placeholder="Search order number"
+            value={searchInput}
+            onChange={(value) => {
+              setSearchInput(value);
+              if (!value) applySearch("");
+            }}
+            onSubmit={applySearch}
+            className="sm:col-span-2 xl:col-span-1"
+          />
+          <FilterSelect<AdminOrderFlag | "">
+            aria-label="Order flag"
+            value={flagFilter}
+            options={FLAG_FILTER_OPTIONS}
+            onChange={(value) => {
+              setFlagFilter(value ?? "");
+              setPagination((prev) => ({ ...prev, current: 1 }));
+            }}
+          />
+          <FilterSelect<OrderStatus | "">
+            aria-label="Order status"
+            value={statusFilter}
+            options={STATUS_FILTER_OPTIONS}
+            onChange={(value) => {
+              setStatusFilter(value ?? "");
+              setPagination((prev) => ({ ...prev, current: 1 }));
+            }}
+          />
+        </ListToolbar>
+
+        <ListTable<AdminOrder>
+          columns={columns}
           dataSource={orders}
           rowKey="id"
           loading={tableLoading}
-          scroll={{ x: true }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            position: ["bottomCenter"],
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} orders`,
-            onChange: (page, pageSize) => {
-              setPagination((prev) => ({
-                ...prev,
-                current: page,
-                pageSize: pageSize || 20,
-              }));
-            },
-          }}
+          // Fixed columns are 510px and user takes 28%; the order column gets the rest.
+          scroll={{ x: 880 }}
+          empty={
+            <TableEmptyState
+              icon={Receipt}
+              message={hasFilters ? "No orders match these filters." : "No orders yet."}
+            />
+          }
         />
-      </Card>
+
+        <ListFooter
+          page={pagination.current}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          shownCount={orders.length}
+          noun="orders"
+          pageSizes={[10, 20, 50, 100]}
+          onPageChange={(page) => setPagination((prev) => ({ ...prev, current: page }))}
+          onPageSizeChange={(size) =>
+            setPagination((prev) => ({ ...prev, current: 1, pageSize: size }))
+          }
+        />
+      </ListCard>
     </div>
   );
 }

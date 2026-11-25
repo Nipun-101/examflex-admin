@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, Form, Input, InputNumber, Slider, Table, Typography, Switch, Space, message, Tag } from "antd";
+import { Button, Card, Form, Input, InputNumber, Slider, Table, Switch, Space, message, Tag } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +15,6 @@ import { ChapterUi } from "@/app/lib/chapter-ui";
 import { topicWiseDraftsApi } from "./api";
 import type { TopicWiseDraftListItem } from "./types";
 
-const { Title } = Typography;
 const { TextArea } = Input;
 
 function EllipsisTag({
@@ -384,9 +384,7 @@ export default function MockTestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <Title level={2}>{ChapterUi.managementTitle}</Title>
+    <ConsolePageShell eyebrow="Papers" title={ChapterUi.navPapers}>
         
         <Card title={ChapterUi.createCardTitle}>
           <Form
@@ -640,7 +638,6 @@ export default function MockTestsPage() {
                 icon={<PlusOutlined />}
                 loading={loading}
                 disabled={totalQuestions !== null && !isDifficultyValid}
-                className="bg-blue-600 hover:bg-blue-700"
               >
                 Create Draft
               </Button>
@@ -818,7 +815,6 @@ export default function MockTestsPage() {
             }}
           />
         </Card>
-      </div>
-    </div>
+    </ConsolePageShell>
   );
 }

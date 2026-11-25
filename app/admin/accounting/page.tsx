@@ -1,25 +1,28 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Typography, message } from "antd";
+import { useEffect, useState } from "react";
+import { message } from "antd";
 import {
-  AuditOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CrownOutlined,
-  DollarOutlined,
-  FileDoneOutlined,
-  FileTextOutlined,
-  LineChartOutlined,
-  RollbackOutlined,
-  SafetyCertificateOutlined,
-  ShoppingOutlined,
-  StopOutlined,
-  SwapOutlined,
-  TagOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+  ArrowLeftRight,
+  Ban,
+  CircleCheck,
+  Clock,
+  Crown,
+  FileCheck,
+  IndianRupee,
+  Landmark,
+  OctagonAlert,
+  Receipt,
+  RefreshCw,
+  ShieldCheck,
+  ShoppingBag,
+  Tag,
+  TrendingUp,
+  Undo2,
+  User,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { PageLoader } from "@/app/components/PageLoader";
 import {
   accountingApi,
@@ -29,7 +32,21 @@ import {
   type MoneyTotal,
 } from "@/app/services/ezprep-api";
 
-const { Title, Paragraph } = Typography;
+type Tone = "green" | "lime" | "violet" | "amber" | "red" | "rose" | "sand" | "orange";
+
+/** Icon tile colours, matching the dashboard. */
+const TONE_TILE: Record<Tone, string> = {
+  green: "bg-[#E3EEE5] text-[#2F6B4F]",
+  lime: "bg-[#EEF3D3] text-[#56651B]",
+  violet: "bg-[#E8E6F6] text-[#4B4396]",
+  amber: "bg-[#FCEBD3] text-[#9A5A12]",
+  red: "bg-[#F6E0DA] text-[#B5432F]",
+  rose: "bg-[#F7E1E5] text-[#B23A58]",
+  sand: "bg-[#F1ECE1] text-[#7A5A2E]",
+  orange: "bg-[#F9E2D6] text-[#B4482A]",
+};
+
+type SplitPart = { label: string; value: number; color: string };
 
 type AccountingCard = {
   key: string;
@@ -37,10 +54,12 @@ type AccountingCard = {
   value: string;
   description: string;
   detail?: string;
-  icon: ReactNode;
-  accent: string;
-  tint: string;
-  shadow: string;
+  icon: LucideIcon;
+  tone: Tone;
+  /** Dark highlighted card (the design's lead metric). */
+  featured?: boolean;
+  /** Proportion bar with a legend under the description. */
+  split?: { label: string; parts: SplitPart[] };
 };
 
 type AccountingSection = {
@@ -77,13 +96,8 @@ function formatUpdated(iso: string): string {
   });
 }
 
-function card(
-  partial: Omit<AccountingCard, "tint" | "shadow"> & { tint: string }
-): AccountingCard {
-  return {
-    ...partial,
-    shadow: `0 10px 24px ${partial.accent}29`,
-  };
+function card(partial: AccountingCard): AccountingCard {
+  return partial;
 }
 
 function sections(overview: AccountingOverview): AccountingSection[] {
@@ -98,27 +112,31 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           label: "Paid users",
           value: formatCount(people.paidUsers),
           description: "Distinct accounts with a usable entitlement right now.",
-          icon: <CrownOutlined />,
-          accent: "#1677ff",
-          tint: "linear-gradient(180deg, #e6f4ff 0%, #ffffff 72%)",
+          icon: Crown,
+          tone: "green",
         }),
         card({
           key: "free-users",
           label: "Free users",
           value: formatCount(people.freeUsers),
           description: "Learners without a usable entitlement.",
-          icon: <UserOutlined />,
-          accent: "#13c2c2",
-          tint: "linear-gradient(180deg, #e6fffb 0%, #ffffff 72%)",
+          icon: User,
+          tone: "lime",
         }),
         card({
           key: "learners",
           label: "Learners",
           value: formatCount(people.learners),
           description: "Registered students, including paid and free.",
-          icon: <TeamOutlined />,
-          accent: "#2f54eb",
-          tint: "linear-gradient(180deg, #f0f5ff 0%, #ffffff 72%)",
+          icon: Users,
+          tone: "violet",
+          split: {
+            label: "Paid and free learners",
+            parts: [
+              { label: "Paid", value: people.paidUsers, color: "bg-console-green" },
+              { label: "Free", value: people.freeUsers, color: "bg-[#C9DE9A]" },
+            ],
+          },
         }),
       ],
     },
@@ -131,36 +149,41 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           label: "Entitlements issued",
           value: formatCount(entitlements.issued),
           description: "Every grant ever created, including expired and revoked.",
-          icon: <SafetyCertificateOutlined />,
-          accent: "#722ed1",
-          tint: "linear-gradient(180deg, #f9f0ff 0%, #ffffff 72%)",
+          icon: ShieldCheck,
+          tone: "lime",
+          featured: true,
+          split: {
+            label: "Entitlements by status",
+            parts: [
+              { label: "Active", value: entitlements.active, color: "bg-[#C4DD8A]" },
+              { label: "Expired", value: entitlements.expired, color: "bg-[#E9B35A]" },
+              { label: "Revoked", value: entitlements.revoked, color: "bg-[#E98A73]" },
+            ],
+          },
         }),
         card({
           key: "active",
           label: "Active now",
           value: formatCount(entitlements.active),
           description: "Grants that still unlock content.",
-          icon: <CheckCircleOutlined />,
-          accent: "#52c41a",
-          tint: "linear-gradient(180deg, #f6ffed 0%, #ffffff 72%)",
+          icon: CircleCheck,
+          tone: "green",
         }),
         card({
           key: "expired",
           label: "Entitlements expired",
           value: formatCount(entitlements.expired),
           description: "Grants whose end date has passed. Lifetime grants stay out.",
-          icon: <ClockCircleOutlined />,
-          accent: "#fa8c16",
-          tint: "linear-gradient(180deg, #fff7e6 0%, #ffffff 72%)",
+          icon: Clock,
+          tone: "amber",
         }),
         card({
           key: "revoked",
           label: "Entitlements revoked",
           value: formatCount(entitlements.revoked),
           description: "Grants withdrawn by a refund or an admin.",
-          icon: <StopOutlined />,
-          accent: "#f5222d",
-          tint: "linear-gradient(180deg, #fff1f0 0%, #ffffff 72%)",
+          icon: Ban,
+          tone: "red",
         }),
       ],
     },
@@ -174,9 +197,8 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           value: formatCount(orders.paid),
           description: "Paid orders that have not been refunded.",
           detail: `Pending payment ${formatCount(orders.pending)} · Failed ${formatCount(orders.failed)}`,
-          icon: <FileTextOutlined />,
-          accent: "#08979c",
-          tint: "linear-gradient(180deg, #e6fffb 0%, #ffffff 72%)",
+          icon: Receipt,
+          tone: "sand",
         }),
         card({
           key: "refunded-orders",
@@ -184,9 +206,8 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           value: formatCount(orders.refunded),
           description: "Paid orders reversed after a completed refund.",
           detail: `Checkout expired ${formatCount(orders.expired)} · Cancelled ${formatCount(orders.cancelled)}`,
-          icon: <RollbackOutlined />,
-          accent: "#eb2f96",
-          tint: "linear-gradient(180deg, #fff0f6 0%, #ffffff 72%)",
+          icon: Undo2,
+          tone: "rose",
         }),
       ],
     },
@@ -200,9 +221,8 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           value: formatCount(catalog.products.published),
           description: "Published products learners can buy.",
           detail: `Draft ${formatCount(catalog.products.draft)} · Archived ${formatCount(catalog.products.archived)}`,
-          icon: <ShoppingOutlined />,
-          accent: "#d48806",
-          tint: "linear-gradient(180deg, #fffbe6 0%, #ffffff 72%)",
+          icon: ShoppingBag,
+          tone: "violet",
         }),
         card({
           key: "offers",
@@ -210,9 +230,8 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           value: formatCount(catalog.offers.active),
           description: "Active prices currently available on a product.",
           detail: `Inactive ${formatCount(catalog.offers.inactive)}`,
-          icon: <TagOutlined />,
-          accent: "#531dab",
-          tint: "linear-gradient(180deg, #f9f0ff 0%, #ffffff 72%)",
+          icon: Tag,
+          tone: "rose",
         }),
       ],
     },
@@ -225,92 +244,159 @@ function sections(overview: AccountingOverview): AccountingSection[] {
           label: "Payments received",
           value: formatMoney(money.paymentsReceived),
           description: "Primary payments that were captured, including ones later refunded.",
-          icon: <DollarOutlined />,
-          accent: "#1677ff",
-          tint: "linear-gradient(180deg, #e6f4ff 0%, #ffffff 72%)",
+          icon: IndianRupee,
+          tone: "green",
         }),
         card({
           key: "refunds",
           label: "Refunds issued",
           value: formatMoney(money.refundsIssued),
           description: "Completed refunds of real orders, including partial refunds.",
-          icon: <RollbackOutlined />,
-          accent: "#cf1322",
-          tint: "linear-gradient(180deg, #fff1f0 0%, #ffffff 72%)",
+          icon: Undo2,
+          tone: "red",
         }),
         card({
           key: "net",
           label: "Net receipts",
           value: formatMoney(money.netReceipts),
           description: "Payments received minus order refunds.",
-          icon: <LineChartOutlined />,
-          accent: "#237804",
-          tint: "linear-gradient(180deg, #f6ffed 0%, #ffffff 72%)",
+          icon: TrendingUp,
+          tone: "lime",
         }),
         card({
           key: "tax",
           label: "Tax on paid orders",
           value: formatMoney(money.taxOnPaidOrders),
           description: "GST still attached to orders that have not been refunded.",
-          icon: <AuditOutlined />,
-          accent: "#c41d7f",
-          tint: "linear-gradient(180deg, #fff0f6 0%, #ffffff 72%)",
+          icon: Landmark,
+          tone: "violet",
         }),
         card({
           key: "duplicate-refunds",
           label: "Duplicate capture refunds",
           value: formatMoney(money.duplicateCaptureRefunds),
           description: "Money returned for a second capture. Not included in refunds issued.",
-          icon: <SwapOutlined />,
-          accent: "#fa541c",
-          tint: "linear-gradient(180deg, #fff2e8 0%, #ffffff 72%)",
+          icon: ArrowLeftRight,
+          tone: "orange",
         }),
         card({
           key: "invoices",
           label: "Invoices issued",
           value: formatCount(money.invoicesIssued),
           description: "Tax invoices generated for paid orders.",
-          icon: <FileDoneOutlined />,
-          accent: "#1d39c4",
-          tint: "linear-gradient(180deg, #f0f5ff 0%, #ffffff 72%)",
+          icon: FileCheck,
+          tone: "sand",
         }),
       ],
     },
   ];
 }
 
-function AccountingCardView({ card: item }: { card: AccountingCard }) {
+const GRID_BY_COUNT: Record<number, string> = {
+  2: "sm:grid-cols-2 xl:grid-cols-3",
+  3: "sm:grid-cols-2 xl:grid-cols-3",
+  4: "sm:grid-cols-2 xl:grid-cols-4",
+};
+
+function SplitBar({ split, featured }: { split: NonNullable<AccountingCard["split"]>; featured: boolean }) {
+  const total = split.parts.reduce((sum, part) => sum + Math.max(0, part.value), 0);
   return (
-    <div
-      className="h-full min-w-0 rounded-2xl border border-solid px-4 py-4 sm:min-h-[168px] sm:px-5"
-      style={{
-        background: item.tint,
-        borderColor: `${item.accent}33`,
-        borderTopWidth: 4,
-        borderTopColor: item.accent,
-        boxShadow: item.shadow,
-      }}
+    <div className="mt-5">
+      <div
+        role="img"
+        aria-label={`${split.label}: ${split.parts
+          .map((part) => `${part.label} ${formatCount(part.value)}`)
+          .join(", ")}`}
+        className={`flex h-2.5 w-full overflow-hidden rounded-full ${
+          featured ? "bg-white/[0.15]" : "bg-[#EEF0E8]"
+        }`}
+      >
+        {total > 0
+          ? split.parts.map((part) =>
+              part.value > 0 ? (
+                <span
+                  key={part.label}
+                  className={`h-full ${part.color}`}
+                  style={{ width: `${(part.value / total) * 100}%` }}
+                />
+              ) : null
+            )
+          : null}
+      </div>
+      <ul
+        aria-hidden="true"
+        className={`m-0 mt-3 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[14px] font-semibold ${
+          featured ? "text-white" : "text-console-ink"
+        }`}
+      >
+        {split.parts.map((part) => (
+          <li key={part.label} className="inline-flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full ${part.color}`} />
+            {part.label} {formatCount(part.value)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AccountingCardView({ card: item }: { card: AccountingCard }) {
+  const Icon = item.icon;
+  const featured = item.featured === true;
+  return (
+    <article
+      className={`flex h-full min-w-0 flex-col rounded-[20px] border p-5 sm:p-6 ${
+        featured ? "border-console-ink bg-console-ink text-white" : "border-console-line bg-white"
+      }`}
     >
       <span
-        className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-base sm:h-10 sm:w-10 sm:text-lg"
-        style={{ color: item.accent, background: `${item.accent}18` }}
+        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+          featured ? "bg-console-lime text-console-ink" : TONE_TILE[item.tone]
+        }`}
       >
-        {item.icon}
+        <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
       </span>
-      <p className="mb-0 mt-3 text-sm font-medium text-slate-600">{item.label}</p>
       <p
-        className="mb-2 mt-1 break-words text-2xl font-semibold leading-tight sm:text-3xl"
-        style={{ color: item.accent }}
+        className={`m-0 mt-5 text-[15px] font-semibold ${featured ? "text-white" : "text-console-ink"}`}
+      >
+        {item.label}
+      </p>
+      <p
+        className={`m-0 mt-1 break-words text-[32px] font-bold leading-[1.1] tracking-tight tabular-nums sm:text-[40px] ${
+          featured ? "text-console-lime" : "text-console-ink"
+        }`}
       >
         {item.value}
       </p>
-      <p className="mb-0 text-xs leading-5 text-slate-500">{item.description}</p>
+      <p
+        className={`m-0 mt-2 text-[15px] leading-relaxed ${
+          featured ? "text-white/80" : "text-console-muted"
+        }`}
+      >
+        {item.description}
+      </p>
       {item.detail ? (
-        <p className="mb-0 mt-2 break-words text-xs font-medium leading-5" style={{ color: item.accent }}>
-          {item.detail}
-        </p>
+        <ul className="m-0 mt-4 flex list-none flex-wrap gap-2 p-0">
+          {item.detail.split(" · ").map((part) => (
+            <li
+              key={part}
+              className={`inline-flex h-7 items-center rounded-full px-3 text-[13px] font-semibold ${
+                featured ? "bg-white/10 text-white" : "bg-[#F5F2EC] text-console-ink"
+              }`}
+            >
+              {part}
+            </li>
+          ))}
+        </ul>
       ) : null}
-    </div>
+      {item.split ? (
+        <>
+          {/* Keeps the bar at the bottom so cards in a row line up. */}
+          <div aria-hidden="true" className="flex-1" />
+          <SplitBar split={item.split} featured={featured} />
+        </>
+      ) : null}
+    </article>
   );
 }
 
@@ -351,34 +437,51 @@ export default function AccountingPage() {
   }
 
   if (error || !overview) {
-    return <Paragraph type="danger">{error ?? "Failed to load accounting"}</Paragraph>;
+    return (
+      <div className="flex items-start gap-3 rounded-[20px] border border-[#EFC9BF] bg-[#FBEEEA] px-5 py-4 text-[15px] text-console-danger">
+        <OctagonAlert className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+        <p className="m-0 min-w-0 break-words">{error ?? "Failed to load accounting"}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-w-0 max-w-full space-y-6 overflow-x-clip sm:space-y-8">
-      <div>
-        <Title level={3} className="!mb-1 !text-xl sm:!text-2xl">
+    <div className="w-full min-w-0 max-w-full overflow-x-clip text-console-ink">
+      <header>
+        <h1 className="m-0 text-[34px] font-bold leading-[1.1] tracking-tight text-console-ink sm:text-[44px]">
           Accounting
-        </Title>
-        <Paragraph type="secondary" className="!mb-0 break-words">
-          Updated {formatUpdated(overview.computedAt)} · refreshes hourly
-        </Paragraph>
-      </div>
-      {sections(overview).map((section) => (
-        <section key={section.title} className="min-w-0">
-          <Title level={4} className="!mb-1 !text-lg sm:!text-xl">
-            {section.title}
-          </Title>
-          <Paragraph type="secondary" className="!mb-3 break-words sm:!mb-4">
-            {section.intro}
-          </Paragraph>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {section.cards.map((item) => (
-              <AccountingCardView key={item.key} card={item} />
-            ))}
-          </div>
-        </section>
-      ))}
+        </h1>
+        <p className="m-0 mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-console-line bg-white px-3.5 py-1.5 text-[14px] text-console-ink">
+          <RefreshCw className="h-4 w-4 shrink-0 text-console-green" strokeWidth={1.75} aria-hidden="true" />
+          <span className="min-w-0 break-words">
+            Updated {formatUpdated(overview.computedAt)} · refreshes hourly
+          </span>
+        </p>
+      </header>
+
+      {sections(overview).map((section) => {
+        const headingId = `accounting-${section.title.toLowerCase()}`;
+        return (
+          <section key={section.title} aria-labelledby={headingId} className="mt-10 min-w-0">
+            <h2
+              id={headingId}
+              className="m-0 text-lg font-bold uppercase tracking-[0.02em] text-console-ink"
+            >
+              {section.title}
+            </h2>
+            <p className="m-0 mt-1 break-words text-[15px] text-console-muted">{section.intro}</p>
+            <div
+              className={`mt-4 grid grid-cols-1 gap-4 sm:gap-5 ${
+                GRID_BY_COUNT[section.cards.length] ?? "sm:grid-cols-2 xl:grid-cols-3"
+              }`}
+            >
+              {section.cards.map((item) => (
+                <AccountingCardView key={item.key} card={item} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

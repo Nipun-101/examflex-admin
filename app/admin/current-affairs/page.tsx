@@ -279,7 +279,7 @@ export default function CurrentAffairsPage() {
               htmlType="submit"
               size="large"
               icon={<PlusOutlined />}
-              className="w-full sm:w-auto min-h-11 bg-blue-600 hover:bg-blue-700"
+              className="w-full sm:w-auto min-h-11"
               loading={loading || imageUploading}
               disabled={imageUploading}
             >

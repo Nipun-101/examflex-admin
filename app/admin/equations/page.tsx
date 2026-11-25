@@ -1,9 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Table, Button, Space, message, Pagination, Tag, Input } from "antd";
-import { Select } from "@/app/components/SearchableSelect";
-import Link from "next/link";
+import { message, type TableColumnsType } from "antd";
+import { Pencil, Sigma, Trash2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import {
@@ -17,6 +16,26 @@ import {
 import { PageLoader } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 import { equationsEditHref } from "./equations-list-href";
+import { OverflowChips, TruncatedChip } from "../_components/OverflowChips";
+import {
+  ClampText,
+  ColumnTitle,
+  DependentFilter,
+  EmptyCell,
+  FilterSelect,
+  IconActionButton,
+  IconActionLink,
+  ListCard,
+  ListFooter,
+  ListPageHeader,
+  ListSearch,
+  ListTable,
+  ListToolbar,
+  PrimaryActionLink,
+  RowActions,
+  SubjectLabel,
+  TableEmptyState,
+} from "../_components/console-list";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number.parseInt(value || "", 10);
@@ -193,155 +212,175 @@ function EquationsPageContent() {
     });
   };
 
-  const columns = [
+  const submitSearch = (value: string) => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    updateQuery({ search: value.trim() || null, page: 1 });
+  };
+
+  const hasFilters = Boolean(
+    selectedExam || selectedSubject || selectedTopic || selectedSearch.trim()
+  );
+
+  const columns: TableColumnsType<Equation> = [
     {
-      title: "Title",
+      title: <ColumnTitle>Title</ColumnTitle>,
       key: "title",
-      render: (record: Equation) => (
-        <div>
-          <div className="font-medium">{record.title}</div>
-          <div className="text-gray-500 mt-1 text-sm line-clamp-1">
-            {record.shortDescription}
-          </div>
+      // Flexible: takes the space the fixed columns leave.
+      render: (_: unknown, record: Equation) => (
+        <div className="min-w-0">
+          <ClampText
+            text={record.title || "Untitled equation"}
+            lines={1}
+            className="text-[14px] font-semibold text-console-ink"
+          />
+          {record.shortDescription ? (
+            <ClampText
+              text={record.shortDescription}
+              lines={1}
+              className="mt-0.5 text-[12.5px] text-console-muted"
+            />
+          ) : null}
         </div>
       ),
     },
     {
-      title: "Subject",
+      title: <ColumnTitle>Subject</ColumnTitle>,
       key: "subject",
-      render: (record: Equation) => refName(record.subject) || "-",
+      width: "11%",
+      render: (_: unknown, record: Equation) => <SubjectLabel name={refName(record.subject)} />,
     },
     {
-      title: ChapterUi.singular,
+      title: <ColumnTitle>{ChapterUi.singular}</ColumnTitle>,
       key: "topic",
-      render: (record: Equation) =>
-        record.topic ? (
-          <Tag key={refId(record.topic)}>
-            {refName(record.topic) || refId(record.topic)}
-          </Tag>
-        ) : (
-          "-"
-        ),
+      width: "24%",
+      render: (_: unknown, record: Equation) => {
+        const name = record.topic ? refName(record.topic) || refId(record.topic) : "";
+        return name ? <TruncatedChip label={name} maxWidthClass="max-w-full" /> : <EmptyCell />;
+      },
     },
     {
-      title: "Exams",
+      title: <ColumnTitle>Exams</ColumnTitle>,
       key: "exams",
-      render: (record: Equation) => (
-        <>
-          {record.exams?.map((exam) => (
-            <Tag key={refId(exam)} color="blue">
-              {refName(exam) || refId(exam)}
-            </Tag>
-          ))}
-        </>
+      width: "17%",
+      render: (_: unknown, record: Equation) => (
+        <OverflowChips
+          items={(record.exams || [])
+            .map((exam) => refName(exam) || refId(exam) || "")
+            .filter(Boolean)}
+          tone="exam"
+          noun="exams"
+          empty={<EmptyCell />}
+        />
       ),
     },
     {
-      title: "Sort order",
+      title: <ColumnTitle>Sort order</ColumnTitle>,
       key: "sortOrder",
-      render: (record: Equation) => record.sortOrder ?? 0,
+      width: 104,
+      render: (_: unknown, record: Equation) => (
+        <span className="text-[14px] font-semibold tabular-nums text-console-ink">
+          {record.sortOrder ?? 0}
+        </span>
+      ),
     },
     {
-      title: "Actions",
+      title: <ColumnTitle>Actions</ColumnTitle>,
       key: "actions",
+      width: 104,
       render: (_: unknown, record: Equation) => (
-        <Space>
-          <Link href={equationsEditHref(record.id, searchParams)}>
-            <Button type="primary" className="bg-blue-600 hover:bg-blue-700">
-              Edit
-            </Button>
-          </Link>
-          <Button danger onClick={() => handleDelete(record.id)}>
-            Delete
-          </Button>
-        </Space>
+        <RowActions>
+          <IconActionLink
+            href={equationsEditHref(record.id, searchParams)}
+            label="Edit equation"
+            tooltip="Edit"
+            icon={Pencil}
+          />
+          <IconActionButton
+            label="Delete equation"
+            tooltip="Delete"
+            icon={Trash2}
+            tone="danger"
+            onClick={() => handleDelete(record.id)}
+          />
+        </RowActions>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold m-0">Equations</h1>
-
-      <div className="flex items-center gap-4 flex-wrap">
-        <Input.Search
-          allowClear
-          placeholder="Search by title"
-          value={searchInput}
-          onChange={(event) => handleSearchInputChange(event.target.value)}
-          className="w-64"
-        />
-        <Select
-          allowClear
-          placeholder="Filter by exam"
-          className="w-52"
-          value={selectedExam}
-          onChange={(value) =>
-            updateQuery({ examId: value || null, page: 1 })
-          }
-          options={exams.map((exam) => ({
-            value: exam._id,
-            label: exam.name,
-          }))}
-        />
-        <Select
-          allowClear
-          placeholder="Filter by subject"
-          className="w-52"
-          value={selectedSubject}
-          onChange={(value) =>
-            updateQuery({
-              subjectId: value || null,
-              topicId: null,
-              page: 1,
-            })
-          }
-          options={subjects.map((subject) => ({
-            value: subject._id,
-            label: subject.name,
-          }))}
-        />
-        <Select
-          allowClear
-          placeholder={ChapterUi.filterPlaceholder}
-          className="w-52"
-          value={selectedTopic}
-          disabled={!selectedSubject}
-          onChange={(value) =>
-            updateQuery({ topicId: value || null, page: 1 })
-          }
-          options={topics.map((topic) => ({
-            value: topic._id,
-            label: topic.name,
-          }))}
-        />
-        <Link href="/admin/equations/new" className="shrink-0 ml-auto">
-          <Button type="primary" className="bg-blue-600 hover:bg-blue-700">
-            Add Equation
-          </Button>
-        </Link>
-      </div>
-
-      <Table
-        rowKey="id"
-        loading={loading || tableLoading}
-        dataSource={equations}
-        columns={columns}
-        pagination={false}
+    <div className="w-full text-console-ink">
+      <ListPageHeader
+        eyebrow="Question bank"
+        title="Equations"
+        actions={<PrimaryActionLink href="/admin/equations/new">Add Equation</PrimaryActionLink>}
       />
 
-      <div className="flex justify-end">
-        <Pagination
-          current={page}
-          pageSize={pageSize}
-          total={total}
-          showSizeChanger
-          pageSizeOptions={[10, 20, 50]}
-          onChange={(nextPage, nextSize) =>
-            updateQuery({ page: nextPage, limit: nextSize })
+      <ListCard>
+        <ListToolbar className="xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
+          <ListSearch
+            placeholder="Search by title"
+            value={searchInput}
+            onChange={handleSearchInputChange}
+            onSubmit={submitSearch}
+            className="sm:col-span-2 xl:col-span-1"
+          />
+          <FilterSelect
+            placeholder="Filter by exam"
+            allowClear
+            value={selectedExam}
+            onChange={(value) => updateQuery({ examId: value, page: 1 })}
+            options={exams.map((exam) => ({ value: exam._id, label: exam.name }))}
+          />
+          <FilterSelect
+            placeholder="Filter by subject"
+            allowClear
+            value={selectedSubject}
+            onChange={(value) => updateQuery({ subjectId: value, topicId: null, page: 1 })}
+            options={subjects.map((subject) => ({ value: subject._id, label: subject.name }))}
+          />
+          <DependentFilter
+            enabled={Boolean(selectedSubject)}
+            hint="Pick a subject first"
+            placeholder={ChapterUi.filterPlaceholder}
+            allowClear
+            value={selectedTopic}
+            onChange={(value) => updateQuery({ topicId: value, page: 1 })}
+            options={topics.map((topic) => ({ value: topic._id, label: topic.name }))}
+          />
+        </ListToolbar>
+
+        <ListTable<Equation>
+          rowKey="id"
+          loading={loading || tableLoading}
+          dataSource={equations}
+          columns={columns}
+          // Fixed columns (sort order + actions) are 208px and the rest share 52%; the title
+          // column gets what is left. Below 900px the table scrolls instead of crushing.
+          scroll={{ x: 900 }}
+          empty={
+            <TableEmptyState
+              icon={Sigma}
+              message={
+                hasFilters
+                  ? "No equations match these filters."
+                  : "No equations yet. Add one to get started."
+              }
+            />
           }
         />
-      </div>
+
+        <ListFooter
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          shownCount={equations.length}
+          noun="equations"
+          onPageChange={(nextPage) => updateQuery({ page: nextPage })}
+          onPageSizeChange={(size) => updateQuery({ limit: size, page: 1 })}
+        />
+      </ListCard>
     </div>
   );
 }

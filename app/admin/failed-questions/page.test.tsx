@@ -141,7 +141,7 @@ async function renderReady(items: FailedQuestion[] = [makeItem()]) {
     },
   });
   render(<FailedQuestionsPage />);
-  expect(await screen.findByText("Failed Questions")).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Failed questions" })).toBeInTheDocument();
 }
 
 describe("FailedQuestionsPage", () => {
@@ -164,8 +164,8 @@ describe("FailedQuestionsPage", () => {
 
   it("lists failed questions and links to the fix page", async () => {
     await renderReady();
-    expect(screen.getByText("Who elects the Presi...")).toBeInTheDocument();
-    expect(screen.getByText("validation")).toBeInTheDocument();
+    expect(screen.getByText(/^Who elects the Presi/)).toHaveClass("line-clamp-2");
+    expect(screen.getByText("Validation")).toBeInTheDocument();
     expect(screen.getByText("Correct answer is missing")).toBeInTheDocument();
     expect(screen.getByText("Polity")).toBeInTheDocument();
     expect(screen.getByText("Medium")).toBeInTheDocument();
@@ -183,7 +183,10 @@ describe("FailedQuestionsPage", () => {
 
   it("shows an empty table when there are no items", async () => {
     await renderReady([]);
-    expect(await screen.findAllByText("No data")).not.toHaveLength(0);
+    expect(
+      await screen.findByText("Nothing to fix. Every imported question went live.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("No failed questions to show")).toBeInTheDocument();
   });
 
   it("deletes a failed question after confirm", async () => {
@@ -192,7 +195,7 @@ describe("FailedQuestionsPage", () => {
       data: { failedQuestionId: "fq-1", uploadId: "up-1", questionNumber: 4 },
     });
     await renderReady();
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete failed question" }));
     await waitFor(() =>
       expect(apiDelete).toHaveBeenCalledWith("/v1/imports/failed-questions/fq-1")
     );
@@ -213,7 +216,7 @@ describe("FailedQuestionsPage", () => {
   it("surfaces a delete error", async () => {
     apiDelete.mockRejectedValue(new Error("nope"));
     await renderReady();
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete failed question" }));
     await waitFor(() => expect(message.error).toHaveBeenCalled());
   });
 
@@ -235,7 +238,8 @@ describe("FailedQuestionsPage", () => {
         failureMessage: "x".repeat(50),
       }),
     ]);
-    expect(screen.getAllByText("-").length).toBeGreaterThan(0);
-    expect(screen.getByText(`${"x".repeat(40)}...`)).toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+    // Long failure messages are clamped by CSS (full text on hover), not cut in the DOM.
+    expect(screen.getByText("x".repeat(50))).toHaveClass("line-clamp-2");
   });
 });

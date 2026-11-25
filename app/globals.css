@@ -86,23 +86,60 @@
   background: rgba(0, 0, 0, 0.25) !important;
 }
 .ant-switch-checked {
-  background: #1677ff !important;
+  background: #173b30 !important;
 }
 
 /* DatePicker OK sits on a white panel. Base button resets leave it white until hover. */
 .ant-picker-dropdown .ant-picker-ok .ant-btn-primary:not(:disabled) {
-  background: #1677ff !important;
+  background: #173b30 !important;
   color: #fff !important;
-  border-color: #1677ff !important;
+  border-color: #173b30 !important;
 }
 .ant-picker-dropdown .ant-picker-ok .ant-btn-primary:not(:disabled):hover {
-  background: #4096ff !important;
-  border-color: #4096ff !important;
+  background: #557c3e !important;
+  border-color: #557c3e !important;
 }
 .ant-picker-dropdown .ant-picker-ok .ant-btn-primary:disabled {
   background: rgba(0, 0, 0, 0.04) !important;
   color: rgba(0, 0, 0, 0.25) !important;
   border-color: #d9d9d9 !important;
+}
+
+/*
+ * Primary buttons: Tailwind's base reset (`button { background-color: transparent }`) beats
+ * antd's low-specificity primary background, so solid buttons render white until hovered.
+ * Restore the fill app-wide in the admin console colour. Ghost and disabled buttons keep
+ * antd's own styling.
+ */
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):not(.ant-btn-dangerous) {
+  background-color: #173b30;
+  border-color: #173b30;
+  color: #fff;
+}
+/* Hover shifts to a mossy lime-green so it clearly reads as hover on the dark fill. */
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):not(.ant-btn-dangerous):hover {
+  background-color: #557c3e;
+  border-color: #557c3e;
+  color: #fff;
+}
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):not(.ant-btn-dangerous):active {
+  background-color: #4a6e35;
+  border-color: #4a6e35;
+}
+/* antd adds a 2px drop shadow under solid buttons; on the dark fill it shows as a grey strip. */
+.ant-btn-primary,
+.ant-btn-primary:hover,
+.ant-btn-primary:active {
+  box-shadow: none !important;
+}
+.ant-btn-primary.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost) {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+  color: #fff;
+}
+.ant-btn-primary.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-background-ghost):hover {
+  background-color: #ff7875;
+  border-color: #ff7875;
 }
 
 /* Ant Design Theme Overrides */
@@ -141,31 +178,156 @@
   border-radius: 6px !important;
 }
 
-/* Questions list toolbar: search text box ~210px after the search button */
-.questions-list-search {
-  width: 250px;
-  max-width: 250px;
+/* Admin list pages: pill-shaped filters that clip long labels with an ellipsis. */
+.console-filter.ant-select,
+.console-page-size.ant-select {
+  width: 100%;
+  min-width: 0;
 }
 
-.questions-list-search .ant-input-group-wrapper,
-.questions-list-search .ant-input-search {
-  width: 100% !important;
-}
-
-/* Questions list toolbar: fixed filter widths + ellipsis for long labels */
-.questions-list-filter.ant-select {
-  width: 180px !important;
-  max-width: 180px !important;
-}
-
-.questions-list-filter .ant-select-selector {
+.console-filter.ant-select .ant-select-selector,
+.console-page-size.ant-select .ant-select-selector {
+  border-radius: 9999px !important;
   overflow: hidden !important;
 }
 
-.questions-list-filter .ant-select-selection-item {
+.console-filter.ant-select .ant-select-selector {
+  padding-inline: 20px !important;
+  font-weight: 500;
+}
+
+.console-filter.ant-select .ant-select-arrow,
+.console-filter.ant-select .ant-select-clear {
+  inset-inline-end: 18px;
+}
+
+.console-filter.ant-select-disabled .ant-select-selector {
+  background: #f5f2ec !important;
+}
+
+.console-filter .ant-select-selection-item,
+.console-filter .ant-select-selection-placeholder {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+}
+
+.console-page-size.ant-select {
+  width: 118px;
+}
+
+.console-page-size.ant-select .ant-select-selector {
+  height: 40px !important;
+  padding-inline: 16px !important;
+}
+
+.console-page-size.ant-select .ant-select-selection-item {
+  line-height: 38px !important;
+}
+
+/* Section-based admin pages (ConsolePageShell): antd Cards as rounded white sections. */
+.console-shell .ant-card {
+  border-radius: 24px;
+  border-color: #e5e1d7;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.console-shell .ant-card .ant-card {
+  border-radius: 16px;
+}
+
+.console-shell .ant-card-head {
+  border-bottom-color: #ece8df;
+}
+
+.console-shell .ant-card-head-title,
+.console-shell .ant-card-head-title .ant-typography {
+  margin: 0 !important;
+  font-size: 17px !important;
+  font-weight: 700;
+  color: #173b30;
+}
+
+.console-shell .ant-table-thead > tr > th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(23, 59, 48, 0.8) !important;
+  white-space: nowrap;
+}
+
+.console-shell .ant-table-tbody > tr > td {
+  vertical-align: middle;
+}
+
+/*
+ * Small screens on section pages, mirroring the list pages: the page frame never scrolls
+ * sideways; wide content (tables) scrolls inside its own card instead.
+ */
+.console-shell {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.console-shell .ant-card,
+.console-shell .ant-table-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* antd only adds this scroller when a table passes `scroll`; give every table one. */
+.console-shell .ant-table-content {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Built-in table pagination (total + size changer) wraps instead of widening the card. */
+.console-shell .ant-pagination {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+@media (max-width: 767px) {
+  /* Keep columns readable (like the questions list) and let the card scroll them. */
+  .console-shell .ant-table-content > table {
+    min-width: 720px;
+  }
+
+  .console-shell .ant-card-head {
+    padding-inline: 16px;
+  }
+
+  .console-shell .ant-card-body {
+    padding: 16px;
+  }
+
+  /* Filters in a card header drop below the title and wrap. */
+  .console-shell .ant-card-head-wrapper {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .console-shell .ant-card-head-title {
+    flex-basis: 100%;
+  }
+
+  .console-shell .ant-card-extra {
+    margin-inline-start: 0;
+    width: 100%;
+    padding-bottom: 12px;
+  }
+
+  .console-shell .ant-card-extra > * {
+    max-width: 100%;
+  }
+}
+
+/* Keep row selection checkboxes vertically centred with the taller rows. */
+.console-table .ant-table-tbody > tr > td {
+  vertical-align: middle;
 }
 
 .ant-btn {

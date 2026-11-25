@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, Divider, Form, Input, InputNumber, message, Switch, Typography } from "antd";
+import { Button, Card, Divider, Form, Input, InputNumber, message, Switch } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import { use, useEffect, useState } from "react";
@@ -27,7 +28,6 @@ function normalizeExamSubjects(subjects?: ExamSubjectConfig[]): ExamSubjectConfi
   }));
 }
 
-const { Title } = Typography;
 
 export default function EditExamPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -134,9 +134,13 @@ export default function EditExamPage(props: { params: Promise<{ id: string }> })
 
   return (
     <EditPageShell loading={initialLoading}>
-    <div className="space-y-6">
+    <ConsolePageShell
+      eyebrow="Catalog"
+      title="Edit Exam"
+      back={{ label: "Back to Exams", onClick: () => router.push("/admin/exams") }}
+    >
       <Card
-        title={<Title level={4} className="mb-0">Edit Exam</Title>}
+        title="Details"
         className="w-full shadow-sm"
       >
         <Form
@@ -372,7 +376,6 @@ export default function EditExamPage(props: { params: Promise<{ id: string }> })
               type="primary" 
               htmlType="submit" 
               size="large" 
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               Update Exam
@@ -387,7 +390,7 @@ export default function EditExamPage(props: { params: Promise<{ id: string }> })
           </Form.Item>
         </Form>
       </Card>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 } 

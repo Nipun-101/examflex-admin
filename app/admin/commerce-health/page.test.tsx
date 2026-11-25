@@ -80,4 +80,36 @@ describe("CommerceHealthPage", () => {
     expect(await screen.findByText("Access enforcement")).toBeInTheDocument();
     expect(screen.getByText(/Paid papers stay open until this is ENFORCED/)).toBeInTheDocument();
   });
+
+  it("highlights cards that need attention and keeps every card description", async () => {
+    const report = emptyHealthReport("degraded");
+    report.needsReview = { count: 3, oldestAt: null, orderNumbers: [] };
+    getHealth.mockResolvedValue({ message: "ok", data: report });
+
+    render(<CommerceHealthPage />);
+
+    const title = await screen.findByText("Needs review");
+    const card = title.closest("article")!;
+    expect(card).toHaveTextContent("Orders flagged for someone to check by hand.");
+    const count = Array.from(card.querySelectorAll("span")).find((node) => node.textContent === "3");
+    expect(count).toHaveClass("bg-console-danger");
+    expect(screen.getByText("Pending past window").closest("article")).toHaveTextContent(
+      "Orders still waiting after the usual payment window."
+    );
+  });
+
+  it("shows a loader, then the error when the report cannot load", async () => {
+    let reject: ((reason: unknown) => void) | undefined;
+    getHealth.mockReturnValue(
+      new Promise((_, fail) => {
+        reject = fail;
+      })
+    );
+
+    render(<CommerceHealthPage />);
+    expect(screen.getByLabelText("Loading commerce health")).toBeInTheDocument();
+
+    reject?.(new Error("down"));
+    expect(await screen.findByText(/down|Failed to load commerce health/)).toBeInTheDocument();
+  });
 });

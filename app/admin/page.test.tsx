@@ -348,4 +348,26 @@ describe("AdminDashboardPage", () => {
 
     await waitFor(() => expect(message.error).toHaveBeenCalled());
   });
+
+  it("shows the needs-attention banner when failed questions exist", async () => {
+    await renderLoadedDashboard();
+
+    expect(screen.getByText("3 questions are waiting for a fix.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Review failed questions/ })).toHaveAttribute(
+      "href",
+      "/admin/failed-questions"
+    );
+  });
+
+  it("uses singular copy for one failed question and hides the banner at zero", async () => {
+    getSummary.mockResolvedValue({ message: "ok", data: { ...summary, failedQuestions: 1 } });
+    const { unmount } = render(<AdminDashboardPage />);
+    expect(await screen.findByText("1 question is waiting for a fix.")).toBeInTheDocument();
+    unmount();
+
+    getSummary.mockResolvedValue({ message: "ok", data: { ...summary, failedQuestions: 0 } });
+    render(<AdminDashboardPage />);
+    expect(await screen.findByText("Dashboard")).toBeInTheDocument();
+    expect(screen.queryByText("Needs attention")).not.toBeInTheDocument();
+  });
 });

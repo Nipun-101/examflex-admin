@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Form, Input, Table, Typography, message } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { Breakpoint } from "antd/es/_util/responsiveObserver";
@@ -121,7 +122,7 @@ export default function TopicsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <ConsolePageShell eyebrow="Catalog" title={ChapterUi.plural}>
       <Card
         title={<Title level={4} className="mb-0">{ChapterUi.addNewTitle}</Title>}
         className="w-full shadow-sm"
@@ -156,7 +157,6 @@ export default function TopicsPage() {
               htmlType="submit"
               size="large"
               icon={<PlusOutlined />}
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               {ChapterUi.createButton}
@@ -191,6 +191,6 @@ export default function TopicsPage() {
           }}
         />
       </Card>
-    </div>
+    </ConsolePageShell>
   );
 }

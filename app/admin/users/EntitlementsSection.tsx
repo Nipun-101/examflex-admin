@@ -281,7 +281,6 @@ export function EntitlementsSection({ userId }: { userId: string }) {
         </div>
         <Button
           type="primary"
-          className="bg-blue-600 hover:!bg-blue-700"
           icon={<PlusOutlined />}
           onClick={openGrantModal}
         >
@@ -311,7 +310,6 @@ export function EntitlementsSection({ userId }: { userId: string }) {
         okText="Grant"
         confirmLoading={grantSubmitting}
         destroyOnHidden
-        okButtonProps={{ className: "bg-blue-600 hover:!bg-blue-700" }}
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Form.Item

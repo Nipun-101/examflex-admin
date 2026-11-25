@@ -1,12 +1,24 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { Button, Card, Descriptions, Table, Tag, message } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Table, message, type TableColumnsType } from "antd";
+import { ClipboardList, ListChecks } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatEzPrepError, sprintTestsApi } from "../api";
 import { PageLoader } from "@/app/components/PageLoader";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
+import { OverflowChips, TruncatedChip } from "@/app/admin/_components/OverflowChips";
+import {
+  ClampText,
+  ConsolePageShell,
+  DifficultyPill,
+  Pill,
+} from "@/app/admin/_components/console-list";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+} from "@/app/admin/_components/console-detail";
 import { QuestionPreview } from "@/app/admin/full-mock-tests/QuestionPreview";
 import {
   questionPreviewExpandable,
@@ -14,18 +26,6 @@ import {
 } from "@/app/admin/full-mock-tests/questionTableExpand";
 import type { SafeQuestion } from "@/app/admin/full-mock-tests/types";
 import type { SprintQuestionItem, SprintTest } from "../types";
-
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: "green",
-  medium: "orange",
-  hard: "red",
-};
-
-function difficultyChip(level?: string) {
-  if (!level) return "-";
-  const label = level.charAt(0).toUpperCase() + level.slice(1);
-  return <Tag color={DIFFICULTY_COLORS[level] || "default"}>{label}</Tag>;
-}
 
 export default function PublishedSprintPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -53,71 +53,98 @@ export default function PublishedSprintPage(props: { params: Promise<{ id: strin
     return <PageLoader />;
   }
 
+  const columns: TableColumnsType<SprintQuestionItem> = [
+    {
+      title: "#",
+      dataIndex: "position",
+      key: "position",
+      width: 52,
+      render: (position: number) => (
+        <span className="text-[13px] font-semibold tabular-nums text-console-muted">
+          {position + 1}
+        </span>
+      ),
+    },
+    {
+      title: "Question",
+      key: "question",
+      // Flexible: takes what the other columns leave. Click the row for the full preview.
+      render: (_: unknown, record: SprintQuestionItem) => (
+        <ClampText
+          text={record.questionText?.en?.text?.slice(0, 120) || "Question"}
+          className="text-[14px] font-semibold leading-snug text-console-ink"
+        />
+      ),
+    },
+    {
+      title: "Difficulty",
+      dataIndex: "difficultyLevel",
+      key: "difficulty",
+      width: 108,
+      render: (level?: string) => <DifficultyPill level={level} />,
+    },
+    {
+      title: "Tags",
+      key: "tags",
+      width: "22%",
+      render: (_: unknown, record: SprintQuestionItem) => (
+        <OverflowChips
+          items={questionTagLabels((record as { tags?: unknown }).tags)}
+          noun="tags"
+          empty={<span className="text-[13px] text-console-muted">No tags</span>}
+        />
+      ),
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push("/admin/sprint-tests")}>
-            Back to Sprint Tests
-          </Button>
-          <h1 className="text-2xl font-bold">{test.title || "Sprint Test"}</h1>
-        </div>
-        <Card title="Sprint Test Details">
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
-            <Descriptions.Item label="Title">{test.title || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Status">
-              <Tag color={test.isActive ? "green" : "red"}>
-                {test.isActive ? "Active" : "Inactive"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Exam">
-              <Tag color="cyan">{test.exam?.name || "N/A"}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Questions">{test.totalQuestions}</Descriptions.Item>
-            <Descriptions.Item label="Duration">{test.durationInMinutes} minutes</Descriptions.Item>
-            <Descriptions.Item label="Marks Per Question">{test.marksPerQuestion}</Descriptions.Item>
-            <Descriptions.Item label="Negative Marking">{test.negativeMarking}</Descriptions.Item>
-            <Descriptions.Item label="Passing Score">{test.passingScore ?? "Not set"}</Descriptions.Item>
-            <Descriptions.Item label="Description">
-              {test.description || "No description"}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-        <Card title={`Questions (${test.questions?.length || 0})`}>
-          <Table
-            rowKey="_id"
-            dataSource={test.questions || []}
-            pagination={{ pageSize: 10 }}
-            onRow={questionPreviewOnRow}
-            expandable={questionPreviewExpandable(
-              (record: SprintQuestionItem) => (
-                <QuestionPreview question={record as SafeQuestion} />
-              )
+    <ConsolePageShell
+      eyebrow="Sprint test"
+      title={test.title || "Sprint Test"}
+      back={{ label: "Back to Sprint tests", onClick: () => router.push("/admin/sprint-tests") }}
+      badge={test.isActive ? <Pill tone="green">Active</Pill> : <Pill tone="red">Inactive</Pill>}
+    >
+      <DetailSection title="Test details" icon={ClipboardList} tone="green">
+        <DetailGrid>
+          <DetailItem label="Title">{test.title || "N/A"}</DetailItem>
+          <DetailItem label="Exam">
+            {test.exam?.name ? (
+              <TruncatedChip label={test.exam.name} tone="exam" maxWidthClass="max-w-full" />
+            ) : (
+              "N/A"
             )}
-            columns={[
-              {
-                title: "#",
-                dataIndex: "position",
-                key: "position",
-                render: (position: number) => position + 1,
-              },
-              {
-                title: "Question",
-                key: "question",
-                render: (record: SprintQuestionItem) =>
-                  record.questionText?.en?.text?.slice(0, 120) || "Question",
-              },
-              {
-                title: "Difficulty",
-                dataIndex: "difficultyLevel",
-                key: "difficulty",
-                render: (level?: string) => difficultyChip(level),
-              },
-              questionTagsColumn(),
-            ]}
-          />
-        </Card>
-      </div>
-    </div>
+          </DetailItem>
+          <DetailItem label="Questions">{test.totalQuestions}</DetailItem>
+          <DetailItem label="Duration">{test.durationInMinutes} minutes</DetailItem>
+          <DetailItem label="Marks Per Question">{test.marksPerQuestion}</DetailItem>
+          <DetailItem label="Negative Marking">{test.negativeMarking}</DetailItem>
+          <DetailItem label="Passing Score">{test.passingScore ?? "Not set"}</DetailItem>
+          <DetailItem label="Description" wide>
+            <span className="font-normal leading-relaxed">
+              {test.description || "No description"}
+            </span>
+          </DetailItem>
+        </DetailGrid>
+      </DetailSection>
+
+      <DetailSection
+        title={`Questions (${test.questions?.length || 0})`}
+        icon={ListChecks}
+        tone="violet"
+        flush
+      >
+        <Table<SprintQuestionItem>
+          rowKey="_id"
+          dataSource={test.questions || []}
+          tableLayout="fixed"
+          pagination={{ pageSize: 10, position: ["bottomCenter"] }}
+          onRow={questionPreviewOnRow}
+          expandable={questionPreviewExpandable((record: SprintQuestionItem) => (
+            <QuestionPreview question={record as SafeQuestion} />
+          ))}
+          columns={columns}
+        />
+      </DetailSection>
+    </ConsolePageShell>
   );
 }

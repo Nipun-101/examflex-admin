@@ -125,7 +125,7 @@ async function renderReady(uploads: BulkUpload[] = [makeUpload()]) {
     },
   });
   render(<BulkUploadPage />);
-  expect(await screen.findByText("Bulk Upload")).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Bulk upload" })).toBeInTheDocument();
 }
 
 describe("BulkUploadPage", () => {
@@ -155,7 +155,10 @@ describe("BulkUploadPage", () => {
     expect(screen.getByText("Uploaded")).toBeInTheDocument();
     expect(screen.getByText("Polity")).toBeInTheDocument();
     expect(screen.getByText("Parliament")).toBeInTheDocument();
-    expect(screen.getByText("+1")).toBeInTheDocument();
+    expect(screen.getByText("UPSC")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "2 more exams: SSC, State PSC" })
+    ).toHaveTextContent("+2");
     expect(screen.getByRole("link", { name: "Upload" })).toHaveAttribute(
       "href",
       "/admin/bulk-upload/upload"

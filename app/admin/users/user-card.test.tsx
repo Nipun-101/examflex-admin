@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { AppUser } from "@/app/services/ezprep-api/users";
 import { UserCard } from "./user-card";
@@ -145,5 +145,40 @@ describe("UserCard", () => {
     expect(screen.getByText("**********")).toBeInTheDocument();
     expect(screen.queryByText("anita.sharma@gmail.com")).not.toBeInTheDocument();
     expect(screen.queryByText("9876543210")).not.toBeInTheDocument();
+  });
+
+  it("uses the lime paid card treatment only for paid learners", () => {
+    const { unmount } = render(
+      <UserCard user={makeUser({ access: { paid: true, usableCount: 0 } })} />
+    );
+    const paidCard = screen.getByTestId("user-card");
+    expect(paidCard).toHaveAttribute("data-access", "paid");
+    expect(paidCard).toHaveClass("bg-[#F2F6E7]");
+    expect(screen.getByText("Paid")).toHaveClass("bg-console-lime");
+    unmount();
+
+    render(<UserCard user={makeUser()} />);
+    const freeCard = screen.getByTestId("user-card");
+    expect(freeCard).toHaveAttribute("data-access", "free");
+    expect(freeCard).toHaveClass("bg-white");
+  });
+
+  it("shows the profile photo when one is set, and initials otherwise", () => {
+    const { container, unmount } = render(
+      <UserCard user={makeUser({ avatarUrl: "https://cdn.example/a.png" })} />
+    );
+    const photo = container.querySelector("img");
+    expect(photo).toHaveAttribute("src", "https://cdn.example/a.png");
+    expect(photo).toHaveAttribute("referrerpolicy", "no-referrer");
+    expect(screen.queryByText("AS")).not.toBeInTheDocument();
+
+    // A photo that fails to load (e.g. an expired Google URL) falls back to initials.
+    fireEvent.error(photo!);
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("AS")).toBeInTheDocument();
+    unmount();
+
+    render(<UserCard user={makeUser()} />);
+    expect(screen.getByText("AS")).toBeInTheDocument();
   });
 });

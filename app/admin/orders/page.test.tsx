@@ -70,7 +70,14 @@ describe("OrdersPage flag filter", () => {
 
     render(<OrdersPage />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Anita Sharma" }));
-    expect(push).toHaveBeenCalledWith("/admin/users/u1");
+    expect(await screen.findByRole("link", { name: "Anita Sharma" })).toHaveAttribute(
+      "href",
+      "/admin/users/u1"
+    );
+    expect(screen.getByRole("link", { name: "ORD-1" })).toHaveAttribute(
+      "href",
+      "/admin/orders/o1"
+    );
+    expect(screen.getByText("Paid")).toBeInTheDocument();
   });
 });

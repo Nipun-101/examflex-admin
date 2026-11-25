@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, message } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,7 +12,6 @@ import {
 } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
 
-const { Title } = Typography;
 
 export default function EditExamGroupPage(props: {
   params: Promise<{ id: string }>;
@@ -83,13 +83,13 @@ export default function EditExamGroupPage(props: {
 
   return (
     <EditPageShell loading={initialLoading}>
-    <div className="space-y-6">
+    <ConsolePageShell
+      eyebrow="Catalog"
+      title="Edit Exam Group"
+      back={{ label: "Back to Exam groups", onClick: () => router.push("/admin/exam-groups") }}
+    >
       <Card
-        title={
-          <Title level={4} className="mb-0">
-            Edit Exam Group
-          </Title>
-        }
+        title="Details"
         className="w-full shadow-sm"
       >
         <Form
@@ -141,7 +141,6 @@ export default function EditExamGroupPage(props: {
               type="primary"
               htmlType="submit"
               size="large"
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               Update Exam Group
@@ -156,7 +155,7 @@ export default function EditExamGroupPage(props: {
           </Form.Item>
         </Form>
       </Card>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }

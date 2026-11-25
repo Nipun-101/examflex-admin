@@ -405,7 +405,6 @@ export default function EditProductPage(props: {
               {product?.status === "DRAFT" || product?.status === "PUBLISHED" ? (
                 <Button
                   type="primary"
-                  className="bg-blue-600 hover:!bg-blue-700"
                   loading={actionLoading}
                   onClick={handlePublish}
                 >
@@ -471,7 +470,6 @@ export default function EditProductPage(props: {
                   type="primary"
                   htmlType="submit"
                   size="large"
-                  className="bg-blue-600 hover:bg-blue-700"
                   loading={loading}
                 >
                   Update Product
@@ -499,7 +497,6 @@ export default function EditProductPage(props: {
           extra={
             <Button
               type="primary"
-              className="bg-blue-600 hover:!bg-blue-700"
               icon={<PlusOutlined />}
               onClick={openCreateOffer}
               disabled={isArchived}
@@ -599,7 +596,6 @@ export default function EditProductPage(props: {
                 type="primary"
                 htmlType="submit"
                 loading={offerSaving}
-                className="bg-blue-600 hover:bg-blue-700"
               >
                 {editingOffer ? "Update Offer" : "Create Offer"}
               </Button>

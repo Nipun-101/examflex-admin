@@ -11,6 +11,7 @@ import {
   Tooltip,
   message,
 } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { Select } from "@/app/components/SearchableSelect";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import { use, useEffect, useMemo, useState } from "react";
@@ -301,18 +302,22 @@ export default function FixFailedQuestionPage(props: {
 
   return (
     <EditPageShell loading={pageLoading}>
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <ConsolePageShell
+      eyebrow="Question bank"
+      title="Fix question"
+      back={{ label: "Back to Failed questions", onClick: () => router.push("/admin/failed-questions") }}
+    >
         {failedQuestion && (
           <Alert
             type="error"
             showIcon
+            className="!rounded-[20px]"
             message={`Failed at stage: ${failedQuestion.failureStage}`}
             description={
               <div className="space-y-2">
                 <p>{failedQuestion.failureMessage}</p>
                 {failedQuestion.matchedQuestion?.question && (
-                  <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+                  <div className="mt-2 rounded-xl bg-[#F5F2EC] p-3 text-sm text-console-ink">
                     <p className="font-medium">Matched source text:</p>
                     <p className="whitespace-pre-wrap mt-1">
                       {failedQuestion.matchedQuestion.question}
@@ -324,7 +329,7 @@ export default function FixFailedQuestionPage(props: {
           />
         )}
 
-        <Card title="Fix Question">
+        <Card title="Question">
           <Form
             form={form}
             layout="vertical"
@@ -617,7 +622,6 @@ export default function FixFailedQuestionPage(props: {
                   htmlType="submit"
                   loading={loading}
                   disabled={deleting || !canFix}
-                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Fix
                 </Button>
@@ -633,8 +637,7 @@ export default function FixFailedQuestionPage(props: {
             </Form.Item>
           </Form>
         </Card>
-      </div>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }

@@ -10,6 +10,7 @@ import {
   Typography,
   message,
 } from "antd";
+import { ConsolePageShell } from "../_components/console-list";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { Breakpoint } from "antd/es/_util/responsiveObserver";
@@ -163,7 +164,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <ConsolePageShell eyebrow="Catalog" title="Categories">
       <Card
         title={
           <Title level={4} className="mb-0">
@@ -241,7 +242,6 @@ export default function CategoriesPage() {
               htmlType="submit"
               size="large"
               icon={<PlusOutlined />}
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               Create Category
@@ -253,7 +253,7 @@ export default function CategoriesPage() {
       <Card
         title={
           <Title level={4} className="mb-0">
-            Categories
+            All categories
           </Title>
         }
         className="w-full shadow-sm"
@@ -279,6 +279,6 @@ export default function CategoriesPage() {
           }}
         />
       </Card>
-    </div>
+    </ConsolePageShell>
   );
 }

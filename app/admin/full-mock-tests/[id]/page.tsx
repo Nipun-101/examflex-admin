@@ -1,14 +1,28 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { Button, Card, Descriptions, Space, Table, Tag, message } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Table, message, type TableColumnsType } from "antd";
+import { ClipboardList, Layers, ListChecks } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatEzPrepError, fullMockApi } from "../api";
 import { loadTopicNamesForQuestions } from "../topic-names";
 import { PageLoader } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
-import { questionTagsColumn } from "@/app/components/QuestionTags";
+import { questionTagLabels } from "@/app/components/QuestionTags";
+import { OverflowChips, TruncatedChip } from "@/app/admin/_components/OverflowChips";
+import {
+  ConsolePageShell,
+  DifficultyPill,
+  EmptyCell,
+  Pill,
+} from "@/app/admin/_components/console-list";
+import {
+  DetailGrid,
+  DetailItem,
+  DetailSection,
+  YesNoPill,
+} from "@/app/admin/_components/console-detail";
+import { MarksCell, QuestionSnippetCell, SubjectMetaPills } from "../paper-ui";
 import { QuestionPreview } from "../QuestionPreview";
 import { CourseCutoffsCard } from "../CourseCutoffsCard";
 import { TopicTag } from "../TopicTag";
@@ -18,16 +32,9 @@ import {
 } from "../questionTableExpand";
 import type {
   DraftQuestionItem,
-  DraftSubjectBlock,
   FullMockSubjectConfig,
   FullMockTestListItem,
 } from "../types";
-
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: "green",
-  medium: "orange",
-  hard: "red",
-};
 
 export default function PublishedFullMockPage(props: {
   params: Promise<{ id: string }>;
@@ -73,90 +80,92 @@ export default function PublishedFullMockPage(props: {
     };
   }, [test]);
 
-  const subjectColumns = [
+  const subjectColumns: TableColumnsType<FullMockSubjectConfig> = [
     {
       title: "Subject",
       dataIndex: "name",
       key: "name",
+      render: (name: string) => (
+        <span className="block truncate text-[14px] font-semibold text-console-ink" title={name}>
+          {name}
+        </span>
+      ),
     },
-    {
-      title: "Questions",
-      dataIndex: "numberOfQuestions",
-      key: "numberOfQuestions",
-    },
-    {
-      title: "Marks / Q",
-      dataIndex: "marksPerQuestion",
-      key: "marksPerQuestion",
-    },
+    { title: "Questions", dataIndex: "numberOfQuestions", key: "numberOfQuestions", width: "13%" },
+    { title: "Marks / Q", dataIndex: "marksPerQuestion", key: "marksPerQuestion", width: "13%" },
     {
       title: "Negative",
       key: "negative",
-      render: (record: FullMockSubjectConfig) =>
-        record.hasNegativeMarking
-          ? `-${record.negativeMarksPerQuestion}`
-          : "None",
+      width: "13%",
+      render: (_: unknown, record: FullMockSubjectConfig) =>
+        record.hasNegativeMarking ? `-${record.negativeMarksPerQuestion}` : "None",
     },
     {
       title: "Session",
       dataIndex: "sessionTime",
       key: "sessionTime",
-      render: (sessionTime?: number) =>
-        sessionTime != null ? `${sessionTime} mins` : "-",
+      width: "14%",
+      render: (sessionTime?: number) => (sessionTime != null ? `${sessionTime} mins` : "-"),
     },
     {
       title: "Range",
       key: "range",
-      render: (record: FullMockSubjectConfig) =>
+      width: "15%",
+      render: (_: unknown, record: FullMockSubjectConfig) =>
         `Q${record.questionStartIndex + 1}–Q${record.questionEndIndex + 1}`,
     },
   ];
 
-  const questionColumns = (subject: DraftSubjectBlock) => [
+  const questionColumns = (): TableColumnsType<DraftQuestionItem> => [
     {
       title: "#",
       dataIndex: "position",
       key: "position",
-      width: 60,
-      render: (position: number) => position + 1,
+      width: 52,
+      render: (position: number) => (
+        <span className="text-[13px] font-semibold tabular-nums text-console-muted">
+          {position + 1}
+        </span>
+      ),
     },
     {
       title: "Question",
       key: "question",
-      render: (record: DraftQuestionItem) => (
-        <QuestionPreview question={record} snippetOnly />
-      ),
+      // Flexible: takes what the other columns leave. Click the row for the full preview.
+      render: (_: unknown, record: DraftQuestionItem) => <QuestionSnippetCell question={record} />,
     },
     {
       title: ChapterUi.singular,
       dataIndex: "topic",
       key: "topic",
+      width: "20%",
       render: (topicId?: string) =>
-        topicId ? (
-          <TopicTag name={topicNameById.get(topicId) || topicId} />
-        ) : (
-          "-"
-        ),
+        topicId ? <TopicTag name={topicNameById.get(topicId) || topicId} /> : <EmptyCell />,
     },
     {
       title: "Difficulty",
       dataIndex: "difficultyLevel",
       key: "difficultyLevel",
-      render: (level?: string) =>
-        level ? (
-          <Tag color={DIFFICULTY_COLORS[level] || "default"}>{level}</Tag>
-        ) : (
-          "-"
-        ),
+      width: 108,
+      render: (level?: string) => <DifficultyPill level={level} />,
     },
-    questionTagsColumn({ truncate: true }),
+    {
+      title: "Tags",
+      key: "tags",
+      width: "15%",
+      render: (_: unknown, record: DraftQuestionItem) => (
+        <OverflowChips
+          items={questionTagLabels((record as { tags?: unknown }).tags)}
+          noun="tags"
+          empty={<span className="text-[13px] text-console-muted">No tags</span>}
+        />
+      ),
+    },
     {
       title: "Marks",
       key: "marks",
-      render: (record: DraftQuestionItem) =>
-        record.negativeMarking
-          ? `${record.marksPerQuestion} / -${record.negativeMarking}`
-          : record.marksPerQuestion,
+      width: 88,
+      render: (_: unknown, record: DraftQuestionItem) => <MarksCell record={record} />,
     },
   ];
 
@@ -169,148 +178,97 @@ export default function PublishedFullMockPage(props: {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push("/admin/full-mock-tests")}
-          >
-            Back to Full Mock Tests
-          </Button>
-          <h1 className="text-2xl font-bold">
-            {test.title || "Full Mock Test"}
-          </h1>
-        </div>
-
-        <Card title="Full Mock Test Details">
-          <Descriptions
-            bordered
-            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-          >
-            <Descriptions.Item label="Title">
-              {test.title || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              <Tag color={test.isActive ? "green" : "red"}>
-                {test.isActive ? "Active" : "Inactive"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Exam">
-              <Tag color="cyan">{test.exam?.name || "N/A"}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Mode">
-              <Tag color={test.isSessionWise ? "purple" : "blue"}>
-                {test.isSessionWise ? "Session-wise" : "Mixed"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Questions">
-              {test.totalQuestions}
-            </Descriptions.Item>
-            <Descriptions.Item label="Duration">
-              {test.durationInMinutes} minutes
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Marks">
-              {test.totalMarks ?? "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Passing Score">
-              {test.passingScore ?? "Not set"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Marks Per Question">
-              {test.marksPerQuestion}
-            </Descriptions.Item>
-            <Descriptions.Item label="Negative Marking">
-              {test.negativeMarking}
-            </Descriptions.Item>
-            <Descriptions.Item label="Allow Retake">
-              <Tag color={test.allowRetake ? "green" : "red"}>
-                {test.allowRetake ? "Yes" : "No"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Shuffle Options">
-              <Tag color={test.shuffleOptions ? "green" : "red"}>
-                {test.shuffleOptions ? "Yes" : "No"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Show Results Immediately" span="filled">
-              <Tag color={test.showResultsImmediately ? "green" : "red"}>
-                {test.showResultsImmediately ? "Yes" : "No"}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item
-              label="Description"
-              span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            >
+    <ConsolePageShell
+      eyebrow="Full mock test"
+      title={test.title || "Full Mock Test"}
+      back={{ label: "Back to Full mock tests", onClick: () => router.push("/admin/full-mock-tests") }}
+      badge={test.isActive ? <Pill tone="green">Active</Pill> : <Pill tone="red">Inactive</Pill>}
+    >
+      <DetailSection title="Test details" icon={ClipboardList} tone="green">
+        <DetailGrid>
+          <DetailItem label="Title">{test.title || "N/A"}</DetailItem>
+          <DetailItem label="Exam">
+            {test.exam?.name ? (
+              <TruncatedChip label={test.exam.name} tone="exam" maxWidthClass="max-w-full" />
+            ) : (
+              "N/A"
+            )}
+          </DetailItem>
+          <DetailItem label="Mode">
+            {test.isSessionWise ? (
+              <Pill tone="violet">Session-wise</Pill>
+            ) : (
+              <Pill tone="blue">Mixed</Pill>
+            )}
+          </DetailItem>
+          <DetailItem label="Total Questions">{test.totalQuestions}</DetailItem>
+          <DetailItem label="Duration">{test.durationInMinutes} minutes</DetailItem>
+          <DetailItem label="Total Marks">{test.totalMarks ?? "N/A"}</DetailItem>
+          <DetailItem label="Passing Score">{test.passingScore ?? "Not set"}</DetailItem>
+          <DetailItem label="Marks Per Question">{test.marksPerQuestion}</DetailItem>
+          <DetailItem label="Negative Marking">{test.negativeMarking}</DetailItem>
+          <DetailItem label="Allow Retake">
+            <YesNoPill value={test.allowRetake} />
+          </DetailItem>
+          <DetailItem label="Shuffle Options">
+            <YesNoPill value={test.shuffleOptions} />
+          </DetailItem>
+          <DetailItem label="Show Results Immediately">
+            <YesNoPill value={test.showResultsImmediately} />
+          </DetailItem>
+          <DetailItem label="Created At" wide>
+            {test.createdAt ? new Date(test.createdAt).toLocaleString() : "N/A"}
+          </DetailItem>
+          <DetailItem label="Description" wide>
+            <span className="font-normal leading-relaxed">
               {test.description || "No description"}
-            </Descriptions.Item>
-            <Descriptions.Item
-              label="Created At"
-              span={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            >
-              {test.createdAt
-                ? new Date(test.createdAt).toLocaleString()
-                : "N/A"}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
+            </span>
+          </DetailItem>
+        </DetailGrid>
+      </DetailSection>
 
-        <CourseCutoffsCard
-          test={test}
-          onSaved={(courseCutoffs) =>
-            setTest((previous) =>
-              previous ? { ...previous, courseCutoffs } : previous
-            )
-          }
+      <CourseCutoffsCard
+        test={test}
+        onSaved={(courseCutoffs) =>
+          setTest((previous) => (previous ? { ...previous, courseCutoffs } : previous))
+        }
+      />
+
+      <DetailSection
+        title={`Subjects (${test.subjectConfig?.length || 0})`}
+        icon={Layers}
+        tone="sand"
+        flush
+      >
+        <Table<FullMockSubjectConfig>
+          columns={subjectColumns}
+          dataSource={test.subjectConfig}
+          rowKey={(record) => `${record.subject}-${record.questionStartIndex}`}
+          tableLayout="fixed"
+          pagination={false}
         />
+      </DetailSection>
 
-        <Card title={`Subjects (${test.subjectConfig?.length || 0})`}>
-          <Table
-            columns={subjectColumns}
-            dataSource={test.subjectConfig}
-            rowKey={(record) =>
-              `${record.subject}-${record.questionStartIndex}`
-            }
+      {test.subjects?.map((subject) => (
+        <DetailSection
+          key={subject.subjectId}
+          title={subject.name}
+          icon={ListChecks}
+          tone="violet"
+          extra={<SubjectMetaPills subject={subject} />}
+          flush
+        >
+          <Table<DraftQuestionItem>
+            columns={questionColumns()}
+            dataSource={subject.questions}
+            rowKey={(record: DraftQuestionItem) => `${record.position}-${record._id}`}
+            tableLayout="fixed"
             pagination={false}
+            onRow={questionPreviewOnRow}
+            expandable={questionPreviewExpandable((record) => <QuestionPreview question={record} />)}
           />
-        </Card>
-
-        {test.subjects?.map((subject) => (
-          <Card
-            key={subject.subjectId}
-            title={
-              <Space wrap>
-                <span>{subject.name}</span>
-                <Tag>{subject.questions.length} questions</Tag>
-                <Tag>
-                  {subject.marksPerQuestion} mark
-                  {subject.marksPerQuestion === 1 ? "" : "s"} / Q
-                </Tag>
-                {subject.hasNegativeMarking ? (
-                  <Tag color="red">-{subject.negativeMarksPerQuestion}</Tag>
-                ) : (
-                  <Tag>No negative</Tag>
-                )}
-                {subject.sessionTime != null ? (
-                  <Tag color="purple">{subject.sessionTime} min session</Tag>
-                ) : null}
-              </Space>
-            }
-          >
-            <Table
-              columns={questionColumns(subject)}
-              dataSource={subject.questions}
-              rowKey={(record: DraftQuestionItem) =>
-                `${record.position}-${record._id}`
-              }
-              pagination={false}
-              onRow={questionPreviewOnRow}
-              expandable={questionPreviewExpandable((record) => (
-                <QuestionPreview question={record} />
-              ))}
-            />
-          </Card>
-        ))}
-      </div>
-    </div>
+        </DetailSection>
+      ))}
+    </ConsolePageShell>
   );
 }

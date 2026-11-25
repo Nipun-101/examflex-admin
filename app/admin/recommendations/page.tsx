@@ -1,9 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Button, Pagination, Space, Table, Tag, message } from "antd";
-import { Select } from "@/app/components/SearchableSelect";
-import Link from "next/link";
+import { message, type TableColumnsType } from "antd";
+import { Pencil, Trash2, TrendingUp } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { showConfirmModal } from "@/components/ConfirmModal";
 import {
@@ -13,6 +12,24 @@ import {
   type RecommendationOffering,
 } from "@/app/services/ezprep-api";
 import { PageLoader } from "@/app/components/PageLoader";
+import { TruncatedChip } from "../_components/OverflowChips";
+import {
+  ClampText,
+  ColumnTitle,
+  EmptyCell,
+  FilterSelect,
+  IconActionButton,
+  IconActionLink,
+  ListCard,
+  ListFooter,
+  ListPageHeader,
+  ListTable,
+  ListToolbar,
+  Pill,
+  PrimaryActionLink,
+  RowActions,
+  TableEmptyState,
+} from "../_components/console-list";
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const parsed = Number.parseInt(value || "", 10);
@@ -111,111 +128,123 @@ function RecommendationsPageContent() {
     });
   };
 
-  const columns = [
+  const columns: TableColumnsType<RecommendationOffering> = [
     {
-      title: "Title",
-      dataIndex: "title",
+      title: <ColumnTitle>Title</ColumnTitle>,
       key: "title",
+      // Flexible: takes the space the other columns leave.
+      render: (_: unknown, record: RecommendationOffering) => (
+        <div className="min-w-0">
+          <ClampText
+            text={record.title}
+            lines={1}
+            className="text-[14px] font-semibold text-console-ink"
+          />
+          {record.subtitle ? (
+            <ClampText
+              text={record.subtitle}
+              lines={1}
+              className="mt-0.5 text-[12.5px] text-console-muted"
+            />
+          ) : null}
+        </div>
+      ),
     },
     {
-      title: "Exam",
+      title: <ColumnTitle>Exam</ColumnTitle>,
       key: "exam",
-      render: (record: RecommendationOffering) => record.exam?.name ?? "—",
-    },
-    {
-      title: "Status",
-      key: "isActive",
-      width: 100,
-      render: (record: RecommendationOffering) =>
-        record.isActive ? (
-          <Tag color="green">Active</Tag>
+      width: "24%",
+      render: (_: unknown, record: RecommendationOffering) =>
+        record.exam?.name ? (
+          <TruncatedChip label={record.exam.name} tone="exam" maxWidthClass="max-w-full" />
         ) : (
-          <Tag>Inactive</Tag>
+          <EmptyCell />
         ),
     },
     {
-      title: "Actions",
+      title: <ColumnTitle>Status</ColumnTitle>,
+      key: "isActive",
+      width: 120,
+      render: (_: unknown, record: RecommendationOffering) =>
+        record.isActive ? (
+          <Pill tone="green">Active</Pill>
+        ) : (
+          <Pill tone="neutral">Inactive</Pill>
+        ),
+    },
+    {
+      title: <ColumnTitle>Actions</ColumnTitle>,
       key: "actions",
-      width: 160,
+      width: 104,
       render: (_: unknown, record: RecommendationOffering) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            className="px-1"
-            onClick={() =>
-              router.push(`/admin/recommendations/${record.id}`)
-            }
-          >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            className="px-1"
+        <RowActions>
+          <IconActionLink
+            href={`/admin/recommendations/${record.id}`}
+            label="Edit course"
+            tooltip="Edit"
+            icon={Pencil}
+          />
+          <IconActionButton
+            label="Delete course"
+            tooltip="Delete"
+            icon={Trash2}
+            tone="danger"
             onClick={() => handleDelete(record.id)}
-          >
-            Delete
-          </Button>
-        </Space>
+          />
+        </RowActions>
       ),
     },
   ];
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-gray-900">
-          Recommendations
-        </h1>
-        <p className="text-sm text-gray-500">
-          Course pathways per exam (e.g. MBBS under NEET). Cut-off marks for
-          each course are entered on every full mock. College targets can be
-          added later under the same module.
-        </p>
-      </div>
+    <div className="w-full text-console-ink">
+      <ListPageHeader
+        eyebrow="Content"
+        title="Recommendations"
+        description="Course pathways per exam (e.g. MBBS under NEET). Cut-off marks for each course are entered on every full mock. College targets can be added later under the same module."
+        actions={<PrimaryActionLink href="/admin/recommendations/new">Add course</PrimaryActionLink>}
+      />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Select
-          allowClear
-          placeholder="Filter by exam"
-          className="min-w-[220px]"
-          options={exams}
-          value={selectedExam}
-          onChange={(value) =>
-            updateQuery({ examId: (value as string) || null, page: 1 })
+      <ListCard>
+        <ListToolbar className="xl:grid-cols-3">
+          <FilterSelect
+            placeholder="Filter by exam"
+            allowClear
+            value={selectedExam}
+            onChange={(value) => updateQuery({ examId: value, page: 1 })}
+            options={exams}
+          />
+        </ListToolbar>
+
+        <ListTable<RecommendationOffering>
+          rowKey="id"
+          loading={loading || tableLoading}
+          columns={columns}
+          dataSource={items}
+          scroll={{ x: 640 }}
+          empty={
+            <TableEmptyState
+              icon={TrendingUp}
+              message={
+                selectedExam
+                  ? "No courses for this exam yet."
+                  : "No course pathways yet. Add one to get started."
+              }
+            />
           }
-          showSearch
-          optionFilterProp="label"
         />
-        <Link href="/admin/recommendations/new" className="shrink-0 ml-auto">
-          <Button
-            type="primary"
-            className="!border-blue-600 !bg-blue-600 !text-white hover:!border-blue-700 hover:!bg-blue-700"
-          >
-            Add course
-          </Button>
-        </Link>
-      </div>
 
-      <Table
-        rowKey="id"
-        loading={loading || tableLoading}
-        columns={columns}
-        dataSource={items}
-        pagination={false}
-      />
-
-      <Pagination
-        current={page}
-        pageSize={pageSize}
-        total={total}
-        showSizeChanger
-        onChange={(nextPage, nextSize) =>
-          updateQuery({ page: nextPage, limit: nextSize })
-        }
-      />
+        <ListFooter
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          shownCount={items.length}
+          noun="courses"
+          pageSizes={[10, 20, 50]}
+          onPageChange={(nextPage) => updateQuery({ page: nextPage })}
+          onPageSizeChange={(size) => updateQuery({ limit: size, page: 1 })}
+        />
+      </ListCard>
     </div>
   );
 }

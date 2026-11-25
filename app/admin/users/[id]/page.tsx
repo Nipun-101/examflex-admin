@@ -79,7 +79,7 @@ export default function UserDetailPage(props: {
       <div className="mb-4">
         <Link
           href="/admin/users"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 no-underline hover:text-[#1677ff]"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 no-underline hover:text-console-green"
         >
           <ArrowLeftOutlined />
           Learners

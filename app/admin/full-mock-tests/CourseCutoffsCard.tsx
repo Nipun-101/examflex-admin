@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Card, Space, message } from "antd";
+import { Button, Space, message } from "antd";
+import { GraduationCap } from "lucide-react";
+import { DetailSection } from "@/app/admin/_components/console-detail";
 import { formatEzPrepError, fullMockApi } from "./api";
 import { CourseCutoffFields } from "./CourseCutoffFields";
 import {
@@ -67,8 +69,10 @@ export function CourseCutoffsCard({ test, onSaved }: CourseCutoffsCardProps) {
   };
 
   return (
-    <Card
+    <DetailSection
       title="Course cut-offs"
+      icon={GraduationCap}
+      tone="amber"
       extra={
         editing ? (
           <Space>
@@ -79,7 +83,6 @@ export function CourseCutoffsCard({ test, onSaved }: CourseCutoffsCardProps) {
               type="primary"
               loading={saving}
               onClick={() => void save()}
-              className="bg-blue-600 hover:bg-blue-700"
             >
               Save cut-offs
             </Button>
@@ -89,7 +92,7 @@ export function CourseCutoffsCard({ test, onSaved }: CourseCutoffsCardProps) {
         )
       }
     >
-      <p className="mb-4 text-sm text-gray-500">
+      <p className="m-0 mb-4 text-[14.5px] leading-relaxed text-console-muted">
         Marks a student needs for each course on this paper
         {totalMarks ? ` (out of ${totalMarks})` : ""}. Leave a course blank if
         you have not decided its cut-off. This is the only part of a published
@@ -103,6 +106,6 @@ export function CourseCutoffsCard({ test, onSaved }: CourseCutoffsCardProps) {
         readOnly={!editing}
         onCoursesLoaded={setVisibleIds}
       />
-    </Card>
+    </DetailSection>
   );
 }

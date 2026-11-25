@@ -1,13 +1,13 @@
 "use client";
 
-import { Button, Card, Form, Input, Typography, message } from "antd";
+import { Button, Card, Form, Input, message } from "antd";
+import { ConsolePageShell } from "@/app/admin/_components/console-list";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { catalogApi, formatEzPrepError } from "@/app/services/ezprep-api";
 import { EditPageShell } from "@/app/components/PageLoader";
 import { ChapterUi } from "@/app/lib/chapter-ui";
 
-const { Title } = Typography;
 
 export default function EditTopicPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -52,9 +52,13 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
 
   return (
     <EditPageShell loading={initialLoading}>
-    <div className="space-y-6">
+    <ConsolePageShell
+      eyebrow="Catalog"
+      title={ChapterUi.editTitle}
+      back={{ label: `Back to ${ChapterUi.plural}`, onClick: () => router.push("/admin/topics") }}
+    >
       <Card
-        title={<Title level={4} className="mb-0">{ChapterUi.editTitle}</Title>}
+        title="Details"
         className="w-full shadow-sm"
       >
         <Form
@@ -86,7 +90,6 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
               type="primary"
               htmlType="submit"
               size="large"
-              className="bg-blue-600 hover:bg-blue-700"
               loading={loading}
             >
               {ChapterUi.updateButton}
@@ -101,7 +104,7 @@ export default function EditTopicPage(props: { params: Promise<{ id: string }> }
           </Form.Item>
         </Form>
       </Card>
-    </div>
+    </ConsolePageShell>
     </EditPageShell>
   );
 }
