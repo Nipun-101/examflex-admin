@@ -262,6 +262,69 @@
   vertical-align: middle;
 }
 
+/*
+ * Small screens on section pages, mirroring the list pages: the page frame never scrolls
+ * sideways; wide content (tables) scrolls inside its own card instead.
+ */
+.console-shell {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.console-shell .ant-card,
+.console-shell .ant-table-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* antd only adds this scroller when a table passes `scroll`; give every table one. */
+.console-shell .ant-table-content {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Built-in table pagination (total + size changer) wraps instead of widening the card. */
+.console-shell .ant-pagination {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+@media (max-width: 767px) {
+  /* Keep columns readable (like the questions list) and let the card scroll them. */
+  .console-shell .ant-table-content > table {
+    min-width: 720px;
+  }
+
+  .console-shell .ant-card-head {
+    padding-inline: 16px;
+  }
+
+  .console-shell .ant-card-body {
+    padding: 16px;
+  }
+
+  /* Filters in a card header drop below the title and wrap. */
+  .console-shell .ant-card-head-wrapper {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .console-shell .ant-card-head-title {
+    flex-basis: 100%;
+  }
+
+  .console-shell .ant-card-extra {
+    margin-inline-start: 0;
+    width: 100%;
+    padding-bottom: 12px;
+  }
+
+  .console-shell .ant-card-extra > * {
+    max-width: 100%;
+  }
+}
+
 /* Keep row selection checkboxes vertically centred with the taller rows. */
 .console-table .ant-table-tbody > tr > td {
   vertical-align: middle;
