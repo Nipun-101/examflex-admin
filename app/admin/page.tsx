@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Col, Modal, Row, Table, Typography, message } from "antd";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Modal, Table, Typography, message } from "antd";
 import {
-  BookOutlined,
-  CloseCircleOutlined,
-  ExperimentOutlined,
-  FileProtectOutlined,
-  ThunderboltOutlined,
-  FormOutlined,
-  PlayCircleOutlined,
-  QuestionCircleOutlined,
-  TagOutlined,
-  TagsOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
+  ArrowRight,
+  Book,
+  CircleHelp,
+  CirclePlay,
+  CircleX,
+  FileCheck,
+  FlaskConical,
+  Layers,
+  List,
+  Tag,
+  Users,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import {
   adminDashboardApi,
   formatEzPrepError,
@@ -41,127 +44,147 @@ type DashboardCard = {
   label: string;
   countKey: keyof AdminDashboardSummary;
   description: string;
-  icon: ReactNode;
-  accent: string;
-  tint: string;
-  shadow: string;
+  icon: LucideIcon;
+  /** Tailwind classes for the icon tile (background + icon colour). */
+  tile: string;
+  /** Render a non-zero count in the alert colour. */
+  alert?: boolean;
 };
 
-const USAGE_CARDS: DashboardCard[] = [
+type DashboardSection = {
+  title: string;
+  description: string;
+  /** Tailwind grid classes; desktop column count follows the design. */
+  grid: string;
+  cards: DashboardCard[];
+};
+
+const TILE = {
+  green: "bg-[#E3EEE5] text-[#2F6B4F]",
+  violet: "bg-[#E8E6F6] text-[#5A4FB3]",
+  red: "bg-[#F6E0DA] text-[#B5432F]",
+  lime: "bg-[#EEF3D3] text-[#56651B]",
+  sand: "bg-[#F1ECE1] text-[#7A5A2E]",
+  rose: "bg-[#F7E1E5] text-[#B23A58]",
+} as const;
+
+const FOUR_UP = "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4";
+const THREE_UP = "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3";
+
+const SECTIONS: DashboardSection[] = [
   {
-    key: "users",
-    label: "Active learners",
-    countKey: "activeLearners",
-    description: "Signed-up students who can take tests right now.",
-    icon: <TeamOutlined />,
-    accent: "#1677ff",
-    tint: "linear-gradient(180deg, #e6f4ff 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(22, 119, 255, 0.16)",
+    title: "Learners and content",
+    description: "Who is practising, and what is live in the question bank.",
+    grid: FOUR_UP,
+    cards: [
+      {
+        key: "users",
+        label: "Active learners",
+        countKey: "activeLearners",
+        description: "Signed-up students who can take tests right now.",
+        icon: Users,
+        tile: TILE.green,
+      },
+      {
+        key: "questions",
+        label: "Active questions",
+        countKey: "activeQuestions",
+        description: "Live bank items available to papers and attempts.",
+        icon: CircleHelp,
+        tile: TILE.violet,
+      },
+      {
+        key: "failed-questions",
+        label: "Failed questions",
+        countKey: "failedQuestions",
+        description: "Import rows that still need a fix before they can go live.",
+        icon: CircleX,
+        tile: TILE.red,
+        alert: true,
+      },
+      {
+        key: "attempts",
+        label: "Attempts",
+        countKey: "attempts",
+        description: "All student sittings, including in-progress and completed.",
+        icon: CirclePlay,
+        tile: TILE.lime,
+      },
+    ],
   },
   {
-    key: "questions",
-    label: "Active questions",
-    countKey: "activeQuestions",
-    description: "Live bank items available to papers and attempts.",
-    icon: <QuestionCircleOutlined />,
-    accent: "#722ed1",
-    tint: "linear-gradient(180deg, #f9f0ff 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(114, 46, 209, 0.16)",
+    title: "Papers",
+    description: "Published papers plus draft pipeline status.",
+    grid: THREE_UP,
+    cards: [
+      {
+        key: "mock-tests",
+        label: "Mock tests",
+        countKey: "mockTests",
+        description: ChapterUi.dashboardPapersDescription,
+        icon: FlaskConical,
+        tile: TILE.green,
+      },
+      {
+        key: "full-mock-tests",
+        label: "Full mock tests",
+        countKey: "fullMockTests",
+        description: "Published full-exam papers plus draft pipeline status.",
+        icon: FileCheck,
+        tile: TILE.sand,
+      },
+      {
+        key: "sprint-tests",
+        label: "Sprint tests",
+        countKey: "sprintTests",
+        description: "Published short mixed papers plus draft pipeline status.",
+        icon: Zap,
+        tile: TILE.rose,
+      },
+    ],
   },
   {
-    key: "failed-questions",
-    label: "Failed questions",
-    countKey: "failedQuestions",
-    description: "Import rows that still need a fix before they can go live.",
-    icon: <CloseCircleOutlined />,
-    accent: "#f5222d",
-    tint: "linear-gradient(180deg, #fff1f0 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(245, 34, 45, 0.16)",
-  },
-  {
-    key: "mock-tests",
-    label: "Mock tests",
-    countKey: "mockTests",
-    description: ChapterUi.dashboardPapersDescription,
-    icon: <ExperimentOutlined />,
-    accent: "#13c2c2",
-    tint: "linear-gradient(180deg, #e6fffb 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(19, 194, 194, 0.16)",
-  },
-  {
-    key: "full-mock-tests",
-    label: "Full mock tests",
-    countKey: "fullMockTests",
-    description: "Published full-exam papers plus draft pipeline status.",
-    icon: <FileProtectOutlined />,
-    accent: "#fa8c16",
-    tint: "linear-gradient(180deg, #fff7e6 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(250, 140, 22, 0.16)",
-  },
-  {
-    key: "sprint-tests",
-    label: "Sprint tests",
-    countKey: "sprintTests",
-    description: "Published short mixed papers plus draft pipeline status.",
-    icon: <ThunderboltOutlined />,
-    accent: "#eb2f96",
-    tint: "linear-gradient(180deg, #fff0f6 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(235, 47, 150, 0.16)",
-  },
-  {
-    key: "attempts",
-    label: "Attempts",
-    countKey: "attempts",
-    description: "All student sittings, including in-progress and completed.",
-    icon: <PlayCircleOutlined />,
-    accent: "#52c41a",
-    tint: "linear-gradient(180deg, #f6ffed 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(82, 196, 26, 0.16)",
+    title: "Catalog",
+    description: "Active exams, subjects, chapters, and tags that questions attach to.",
+    grid: FOUR_UP,
+    cards: [
+      {
+        key: "exams",
+        label: "Exams",
+        countKey: "exams",
+        description: "Active exams in the catalog.",
+        icon: Book,
+        tile: TILE.lime,
+      },
+      {
+        key: "subjects",
+        label: "Subjects",
+        countKey: "subjects",
+        description: "Active subjects under each exam.",
+        icon: Layers,
+        tile: TILE.violet,
+      },
+      {
+        key: "topics",
+        label: ChapterUi.plural,
+        countKey: "topics",
+        description: "Chapters that questions attach to.",
+        icon: List,
+        tile: TILE.green,
+      },
+      {
+        key: "tags",
+        label: "Tags",
+        countKey: "tags",
+        description: "Tags used to group and filter questions.",
+        icon: Tag,
+        tile: TILE.sand,
+      },
+    ],
   },
 ];
 
-const CATALOG_CARDS: DashboardCard[] = [
-  {
-    key: "exams",
-    label: "Exams",
-    countKey: "exams",
-    description: "Active exams that papers and attempts can attach to.",
-    icon: <FormOutlined />,
-    accent: "#2f54eb",
-    tint: "linear-gradient(180deg, #f0f5ff 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(47, 84, 235, 0.16)",
-  },
-  {
-    key: "subjects",
-    label: "Subjects",
-    countKey: "subjects",
-    description: ChapterUi.subjectsWithChaptersDescription,
-    icon: <BookOutlined />,
-    accent: "#08979c",
-    tint: "linear-gradient(180deg, #e6fffb 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(8, 151, 156, 0.16)",
-  },
-  {
-    key: "topics",
-    label: ChapterUi.plural,
-    countKey: "topics",
-    description: ChapterUi.dashboardCatalogDescription,
-    icon: <TagOutlined />,
-    accent: "#eb2f96",
-    tint: "linear-gradient(180deg, #fff0f6 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(235, 47, 150, 0.16)",
-  },
-  {
-    key: "tags",
-    label: "Tags",
-    countKey: "tags",
-    description: ChapterUi.tagsBySubjectAndChapter,
-    icon: <TagsOutlined />,
-    accent: "#d48806",
-    tint: "linear-gradient(180deg, #fffbe6 0%, #ffffff 72%)",
-    shadow: "0 10px 24px rgba(212, 136, 6, 0.16)",
-  },
-];
+const ALL_CARDS = SECTIONS.flatMap((section) => section.cards);
 
 const DETAIL_FETCHERS: Record<MetricKey, () => Promise<{ data: unknown }>> = {
   users: () => adminDashboardApi.getUsers(),
@@ -422,66 +445,84 @@ function DetailTables({ metric, data }: { metric: MetricKey; data: unknown }) {
   );
 }
 
-function MetricCardGrid({
-  cards,
-  summary,
+function MetricCard({
+  card,
+  count,
   onOpen,
 }: {
-  cards: DashboardCard[];
-  summary: AdminDashboardSummary;
+  card: DashboardCard;
+  count: number;
   onOpen: (key: MetricKey) => void;
 }) {
+  const Icon = card.icon;
+  const alerting = card.alert && count > 0;
+
   return (
-    <Row gutter={[16, 16]}>
-      {cards.map((card) => (
-        <Col xs={24} sm={12} lg={8} xl={6} key={card.key}>
-          <button
-            type="button"
-            onClick={() => onOpen(card.key)}
-            className="group w-full text-left rounded-2xl border-0 p-0 cursor-pointer transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{ outlineColor: card.accent }}
-          >
-            <div
-              className="h-full min-h-[168px] rounded-2xl px-5 py-4 border border-solid"
-              style={{
-                background: card.tint,
-                borderColor: `${card.accent}33`,
-                borderTopWidth: 4,
-                borderTopColor: card.accent,
-                boxShadow: card.shadow,
-              }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg"
-                  style={{
-                    color: card.accent,
-                    background: `${card.accent}18`,
-                  }}
-                >
-                  {card.icon}
-                </span>
-                <span className="text-xs font-medium text-slate-400 group-hover:text-slate-500">
-                  View details
-                </span>
-              </div>
-              <p className="mt-3 mb-0 text-sm font-medium text-slate-600">
-                {card.label}
-              </p>
-              <p
-                className="mt-1 mb-2 text-3xl font-semibold leading-none"
-                style={{ color: card.accent }}
-              >
-                {summary[card.countKey].toLocaleString()}
-              </p>
-              <p className="mb-0 text-xs leading-5 text-slate-500">
-                {card.description}
-              </p>
-            </div>
-          </button>
-        </Col>
-      ))}
-    </Row>
+    <button
+      type="button"
+      onClick={() => onOpen(card.key)}
+      className="group flex h-full w-full cursor-pointer flex-col rounded-[20px] border border-solid border-console-line bg-white p-5 text-left transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-console-green/30 hover:shadow-[0_12px_28px_-16px_rgba(23,59,48,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-green sm:p-6"
+    >
+      <span className="flex w-full items-center justify-between gap-3">
+        <span
+          className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.tile}`}
+        >
+          <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-console-green">
+          View details
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </span>
+      </span>
+      <p className="mb-0 mt-5 text-[15px] font-semibold text-console-ink">
+        {card.label}
+      </p>
+      <span
+        className={`mt-1 block text-[40px] font-bold leading-[1.1] tracking-tight tabular-nums sm:text-[44px] ${
+          alerting ? "text-console-danger" : "text-console-ink"
+        }`}
+      >
+        {count.toLocaleString()}
+      </span>
+      <span className="mt-2 block text-[15px] leading-relaxed text-console-muted">
+        {card.description}
+      </span>
+    </button>
+  );
+}
+
+function AttentionBanner({ failedCount }: { failedCount: number }) {
+  const noun = failedCount === 1 ? "question is" : "questions are";
+  return (
+    <section
+      aria-labelledby="dashboard-attention-title"
+      className="mt-8 flex flex-col gap-5 rounded-3xl bg-console-ink px-6 py-6 sm:px-8 sm:py-7 md:flex-row md:items-center md:justify-between"
+    >
+      <div className="min-w-0">
+        <p className="m-0 text-xs font-semibold uppercase tracking-[0.14em] text-console-lime">
+          Needs attention
+        </p>
+        <h2
+          id="dashboard-attention-title"
+          className="m-0 mt-2 text-[22px] font-bold leading-tight tracking-tight text-white sm:text-[26px]"
+        >
+          {`${failedCount.toLocaleString()} ${noun} waiting for a fix.`}
+        </h2>
+        <p className="m-0 mt-2 text-[15px] text-white/80">
+          Import rows that still need a fix before they can go live.
+        </p>
+      </div>
+      <Link
+        href="/admin/failed-questions"
+        className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-console-lime px-6 text-[15px] font-semibold text-console-ink transition-colors hover:bg-[#E6EFAE] hover:text-console-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-console-lime"
+      >
+        Review failed questions
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </Link>
+    </section>
   );
 }
 
@@ -537,25 +578,53 @@ export default function AdminDashboardPage() {
   }
 
   const modalTitle =
-    [...USAGE_CARDS, ...CATALOG_CARDS].find((card) => card.key === activeMetric)
-      ?.label || "Details";
+    ALL_CARDS.find((card) => card.key === activeMetric)?.label || "Details";
 
   return (
-    <div>
-      <Typography.Title level={3} className="!mb-1">
-        Dashboard
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" className="!mb-6">
-        Snapshot of learners, content, and papers. Click a card for the breakdown.
-      </Typography.Paragraph>
-      <MetricCardGrid cards={USAGE_CARDS} summary={summary} onOpen={openMetric} />
-      <Typography.Title level={4} className="!mt-10 !mb-1">
-        Catalog
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" className="!mb-6">
-        Active exams, subjects, topics, and tags that questions attach to.
-      </Typography.Paragraph>
-      <MetricCardGrid cards={CATALOG_CARDS} summary={summary} onOpen={openMetric} />
+    <div className="text-console-ink">
+      <header>
+        <p className="m-0 text-xs font-semibold uppercase tracking-[0.14em] text-console-green">
+          Admin console
+        </p>
+        <h1 className="m-0 mt-2 text-[34px] font-bold leading-[1.1] tracking-tight text-console-ink sm:text-[44px]">
+          Dashboard
+        </h1>
+        <p className="m-0 mt-3 text-[15px] text-console-muted sm:text-base">
+          Snapshot of learners, content, and papers. Click a card for the breakdown.
+        </p>
+      </header>
+
+      {summary.failedQuestions > 0 ? (
+        <AttentionBanner failedCount={summary.failedQuestions} />
+      ) : null}
+
+      {SECTIONS.map((section) => {
+        const headingId = `dashboard-section-${section.title.toLowerCase().replace(/\s+/g, "-")}`;
+        return (
+          <section key={section.title} aria-labelledby={headingId} className="mt-10">
+            <h2
+              id={headingId}
+              className="m-0 text-lg font-bold uppercase tracking-[0.02em] text-console-ink"
+            >
+              {section.title}
+            </h2>
+            <p className="m-0 mt-1 text-[15px] text-console-muted">
+              {section.description}
+            </p>
+            <div className={`mt-4 ${section.grid}`}>
+              {section.cards.map((card) => (
+                <MetricCard
+                  key={card.key}
+                  card={card}
+                  count={summary[card.countKey] ?? 0}
+                  onOpen={openMetric}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+
       <Modal
         open={activeMetric !== null}
         title={modalTitle}

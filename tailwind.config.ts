@@ -50,6 +50,17 @@ const config: Config = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        // Admin console palette (dashboard + sidebar refresh).
+        console: {
+          ink: '#173B30',
+          green: '#2F6B4F',
+          lime: '#DDE89C',
+          canvas: '#F6F4EF',
+          line: '#E5E1D7',
+          hover: '#ECE8DF',
+          muted: '#5B6661',
+          danger: '#B5432F',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
