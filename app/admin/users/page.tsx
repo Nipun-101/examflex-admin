@@ -129,7 +129,7 @@ export default function UsersPage() {
                   handleSearch(searchInput);
                 }
               }}
-              className="h-11 w-full rounded-full border border-console-line bg-white pl-11 pr-10 text-[15px] text-console-ink outline-none transition-colors placeholder:text-console-muted/80 hover:border-console-green/30 focus:border-console-green focus:ring-2 focus:ring-console-green/15 [&::-webkit-search-cancel-button]:hidden"
+              className="h-11 w-full rounded-full border border-console-line bg-white pl-11 pr-10 text-[15px] text-console-ink outline-none transition-colors placeholder:text-console-muted/80 hover:border-console-green/30 focus:border-console-green focus:ring-2 focus:ring-console-green/[0.15] [&::-webkit-search-cancel-button]:hidden"
             />
             {searchInput ? (
               <button

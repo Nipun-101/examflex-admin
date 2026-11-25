@@ -261,7 +261,7 @@ export default function CommerceHealthPage() {
           </dl>
           <div className="flex min-w-0 items-start gap-3 self-start rounded-2xl bg-[#F0F3E6] px-5 py-4">
             <Info className="mt-1 h-[18px] w-[18px] shrink-0 text-console-green" strokeWidth={1.75} aria-hidden="true" />
-            <p className="m-0 min-w-0 text-[14.5px] leading-[1.7] text-console-ink/85">
+            <p className="m-0 min-w-0 text-[14.5px] leading-[1.7] text-console-ink/[0.85]">
               {WEBHOOK_REENABLE_NOTE}
             </p>
           </div>

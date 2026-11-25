@@ -82,4 +82,47 @@ describe("AccountingPage", () => {
       expect(getOverview).toHaveBeenCalledTimes(1);
     });
   });
+
+  it("shows the paid/free and entitlement split bars with their values", async () => {
+    getOverview.mockResolvedValue({ message: "ok", data: overview });
+
+    render(<AccountingPage />);
+
+    expect(
+      await screen.findByRole("img", { name: "Paid and free learners: Paid 42, Free 18" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Entitlements by status: Active 50, Expired 12, Revoked 6" })
+    ).toBeInTheDocument();
+    // The lead entitlements metric is the dark featured card.
+    expect(screen.getByText("Entitlements issued").closest("article")).toHaveClass(
+      "bg-console-ink"
+    );
+    // Order details become separate chips.
+    expect(screen.getByText("Pending payment 5")).toBeInTheDocument();
+    expect(screen.getByText("Failed 2")).toBeInTheDocument();
+  });
+
+  it("draws an empty bar instead of dividing by zero when there is no data", async () => {
+    getOverview.mockResolvedValue({
+      message: "ok",
+      data: {
+        ...overview,
+        people: { paidUsers: 0, freeUsers: 0, learners: 0 },
+      },
+    });
+
+    render(<AccountingPage />);
+
+    const bar = await screen.findByRole("img", { name: "Paid and free learners: Paid 0, Free 0" });
+    expect(bar.children).toHaveLength(0);
+  });
+
+  it("shows the error when the overview cannot load", async () => {
+    getOverview.mockRejectedValue(new Error("offline"));
+
+    render(<AccountingPage />);
+
+    expect(await screen.findByText(/offline|Failed to load accounting/)).toBeInTheDocument();
+  });
 });
